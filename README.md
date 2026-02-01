@@ -378,13 +378,22 @@ python -m bot.main
 - Document functions with docstrings
 - Keep functions focused and small
 
-## 🎨 Bot Icon
+## 🎨 Bot Avatar
 
-Want to set a custom icon for your bot in Telegram? Download the high-resolution icon and send it to [@BotFather](https://t.me/BotFather) using the `/setuserpic` command.
+You can use the official bot avatar for your own instance:
 
-<p align="center">
+<p align="left">
   <img src="https://raw.githubusercontent.com/ArtCC/postflow-telegram-bot/main/assets/postflow-telegram-bot.png" alt="PostFlow Logo" width="200">
 </p>
+
+**Download**: [postflow-telegram-bot.png](https://raw.githubusercontent.com/ArtCC/postflow-telegram-bot/main/assets/postflow-telegram-bot.png)
+
+To set this image as your bot's profile picture:
+1. Download the image from the link above
+2. Open [@BotFather](https://t.me/botfather) on Telegram
+3. Send `/setuserpic`
+4. Select your bot
+5. Upload the downloaded image
 
 ## 🙏 Acknowledgments
 
