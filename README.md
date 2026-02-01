@@ -383,9 +383,7 @@ python -m bot.main
 Want to set a custom icon for your bot in Telegram? Download the high-resolution icon and send it to [@BotFather](https://t.me/BotFather) using the `/setuserpic` command.
 
 <p align="center">
-  <a href="https://github.com/ArtCC/postflow-telegram-bot/blob/main/assets/postflow-telegram-bot.png">
-    <img src="https://raw.githubusercontent.com/ArtCC/postflow-telegram-bot/main/assets/postflow-telegram-bot.png" alt="PostFlow Bot Icon" width="200">
-  </a>
+  <img src="https://raw.githubusercontent.com/ArtCC/postflow-telegram-bot/main/assets/postflow-telegram-bot.png" alt="PostFlow Logo" width="200">
 </p>
 
 ## 🙏 Acknowledgments
