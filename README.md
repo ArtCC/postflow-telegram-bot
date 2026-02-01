@@ -1,6 +1,6 @@
 # PostFlow Telegram Bot ✍️
 
-<p align="center">
+<p align="left">
   <img src="assets/postflow-telegram-bot.png" alt="PostFlow Logo" width="150">
 </p>
 
@@ -378,9 +378,15 @@ python -m bot.main
 - Document functions with docstrings
 - Keep functions focused and small
 
-## 📄 License
+## 🎨 Bot Icon
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+Want to set a custom icon for your bot in Telegram? Download the high-resolution icon and send it to [@BotFather](https://t.me/BotFather) using the `/setuserpic` command.
+
+<p align="center">
+  <a href="https://github.com/ArtCC/postflow-telegram-bot/blob/main/assets/postflow-telegram-bot.png">
+    <img src="https://raw.githubusercontent.com/ArtCC/postflow-telegram-bot/main/assets/postflow-telegram-bot.png" alt="PostFlow Bot Icon" width="200">
+  </a>
+</p>
 
 ## 🙏 Acknowledgments
 
@@ -397,9 +403,13 @@ If you encounter any issues or have questions:
 2. Search existing [GitHub Issues](https://github.com/artcc/postflow-telegram-bot/issues)
 3. Open a new issue with detailed information
 
+## 📄 License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
 ---
 
-<p align="center">
-  <sub>Made with ❤️ by the open source community</sub><br>
-  <sub>100% built with GitHub Copilot (Claude Sonnet 4.5)</sub>
+<p align="left">
+  <sub>100% built with GitHub Copilot (Claude Sonnet 4.5)</sub><br>
+  <sub>Arturo Carretero Calvo — 2026</sub>
 </p>
