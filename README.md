@@ -383,10 +383,10 @@ python -m bot.main
 You can use the official bot avatar for your own instance:
 
 <p align="left">
-  <img src="https://raw.githubusercontent.com/ArtCC/postflow-telegram-bot/main/assets/postflow-telegram-bot.png" alt="PostFlow Logo" width="200">
+  <img src="https://github.com/ArtCC/postflow-telegram-bot/blob/main/assets/postflow-telegram-bot.png" alt="PostFlow Logo" width="200">
 </p>
 
-**Download**: [postflow-telegram-bot.png](https://raw.githubusercontent.com/ArtCC/postflow-telegram-bot/main/assets/postflow-telegram-bot.png)
+**Download**: [postflow-telegram-bot.png](https://github.com/ArtCC/postflow-telegram-bot/blob/main/assets/postflow-telegram-bot.png)
 
 To set this image as your bot's profile picture:
 1. Download the image from the link above
