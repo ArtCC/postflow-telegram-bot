@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  postflow-bot:
+    build: .
+    container_name: postflow-bot
+    env_file:
+      - .env
+    volumes:
+      - ./data:/data  # Database persistence
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
