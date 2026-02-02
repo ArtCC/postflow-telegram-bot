@@ -441,15 +441,11 @@ You need at least **Basic** access tier from Twitter's Developer Portal to post 
 ## 🔮 Roadmap (Future Features)
 
 - [ ] Support for images and videos in posts
-- [ ] Multi-platform support (Instagram, LinkedIn, Facebook)
+- [ ] Multi-platform support (Instagram, LinkedIn, Facebook, etc.)
 - [ ] Post templates
-- [ ] Analytics dashboard
-- [ ] Best time to post suggestions
-- [ ] Hashtag recommendations
 - [ ] Draft system
 - [ ] Post editing after creation
 - [ ] Recurring posts
-- [ ] Web dashboard (optional)
 
 ## 🤝 Contributing
 
@@ -491,7 +487,7 @@ python -m bot.main
 
 You can use the official bot avatar for your own instance:
 
-<p align="center">
+<p align="left">
   <img src="https://raw.githubusercontent.com/ArtCC/postflow-telegram-bot/main/assets/postflow-telegram-bot.png" alt="PostFlow Bot Avatar" width="200">
 </p>
 
@@ -524,6 +520,6 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 ---
 
 <p align="left">
-  <sub>100% built with GitHub Copilot (Claude Sonnet 4.5)</sub><br>
+  <sub>100% built with GitHub Copilot (Claude Opus 4.5)</sub><br>
   <sub>Arturo Carretero Calvo — 2026</sub>
 </p>
