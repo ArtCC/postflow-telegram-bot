@@ -4,8 +4,22 @@ services:
   postflow-bot:
     image: ghcr.io/artcc/postflow-telegram-bot:latest
     container_name: postflow-bot
-    env_file:
-      - .env
+    environment:
+      # Telegram Bot Configuration
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_USER_ID=${TELEGRAM_USER_ID}
+      
+      # Twitter/X API Credentials
+      - TWITTER_API_KEY=${TWITTER_API_KEY}
+      - TWITTER_API_SECRET=${TWITTER_API_SECRET}
+      - TWITTER_ACCESS_TOKEN=${TWITTER_ACCESS_TOKEN}
+      - TWITTER_ACCESS_TOKEN_SECRET=${TWITTER_ACCESS_TOKEN_SECRET}
+      
+      # OpenAI API (optional)
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      
+      # Database Configuration
+      - DATABASE_PATH=${DATABASE_PATH:-/data/postflow.db}
     volumes:
       - ./data:/data  # Database persistence
     restart: unless-stopped

@@ -69,36 +69,64 @@ cp .env.example .env
 Edit the `.env` file with your credentials:
 
 ```env
-# Telegram Bot
+# Telegram Bot Configuration
 TELEGRAM_BOT_TOKEN=1234567890:ABCdefGHIjklMNOpqrsTUVwxyz
 TELEGRAM_USER_ID=123456789
 
-# Twitter/X API
-TWITTER_API_KEY=your_api_key
-TWITTER_API_SECRET=your_api_secret
-TWITTER_ACCESS_TOKEN=your_access_token
-TWITTER_ACCESS_TOKEN_SECRET=your_access_token_secret
+# Twitter/X API Credentials
+TWITTER_API_KEY=your_api_key_here
+TWITTER_API_SECRET=your_api_secret_here
+TWITTER_ACCESS_TOKEN=your_access_token_here
+TWITTER_ACCESS_TOKEN_SECRET=your_access_token_secret_here
 
-# OpenAI (optional)
-OPENAI_API_KEY=sk-your-key-here
+# OpenAI API (optional - leave empty to disable AI features)
+OPENAI_API_KEY=sk-your-openai-api-key-here
 
-# Database
+# Database Configuration (default: /data/postflow.db)
 DATABASE_PATH=/data/postflow.db
 ```
+
+> **Important:** All variables are **required** except `OPENAI_API_KEY` (optional). The bot won't start without the required credentials.
 
 ### 5. Deploy with Docker Compose
 
 ```bash
+# Start the bot in detached mode
 docker-compose up -d
 ```
+
+The `docker-compose.yml` automatically:
+- Pulls the latest image from GitHub Container Registry
+- Loads environment variables from `.env` file
+- Creates a persistent volume for the database (`./data`)
+- Configures automatic restarts
+- Sets up log rotation
+
+> **Note:** The image is pulled from `ghcr.io/artcc/postflow-telegram-bot:latest` - no build required!
 
 ### 6. Verify the Bot is Running
 
 ```bash
+# Check container status
+docker ps | grep postflow-bot
+
+# View real-time logs
 docker logs -f postflow-bot
 ```
 
-You should see: `Bot is running...`
+**Expected output:**
+```
+2026-02-02 10:30:15 - bot.config - INFO - Bot configured for user ID: 123456789
+2026-02-02 10:30:15 - bot.config - INFO - Twitter API: Enabled
+2026-02-02 10:30:15 - bot.config - INFO - OpenAI API: Enabled
+2026-02-02 10:30:15 - bot.main - INFO - Starting PostFlow Telegram Bot...
+2026-02-02 10:30:16 - bot.main - INFO - Bot is running... Press Ctrl+C to stop.
+```
+
+**Troubleshooting startup:**
+- If you see errors about missing variables, check your `.env` file
+- If container exits immediately, check logs: `docker logs postflow-bot`
+- Verify all required credentials are set correctly
 
 ## 💬 Using the Bot
 
@@ -230,26 +258,72 @@ postflow-telegram-bot/
 
 ## 📦 Installing via Portainer
 
+### Method 1: Using Git Repository (Recommended)
+
 1. Go to your Portainer instance
 2. Navigate to **Stacks** → **Add Stack**
 3. Name it: `postflow-bot`
-4. Paste the contents of `docker-compose.yml`
-5. Add your environment variables in the "Environment variables" section
-6. Click **Deploy the stack**
+4. Select **Repository** as build method
+5. Enter repository URL: `https://github.com/artcc/postflow-telegram-bot`
+6. Compose path: `docker-compose.yml`
+7. Add environment variables:
+   ```
+   TELEGRAM_BOT_TOKEN=your_bot_token
+   TELEGRAM_USER_ID=your_user_id
+   TWITTER_API_KEY=your_api_key
+   TWITTER_API_SECRET=your_api_secret
+   TWITTER_ACCESS_TOKEN=your_access_token
+   TWITTER_ACCESS_TOKEN_SECRET=your_access_token_secret
+   OPENAI_API_KEY=your_openai_key
+   DATABASE_PATH=/data/postflow.db
+   ```
+8. Click **Deploy the stack**
+
+### Method 2: Manual Compose File
+
+1. Go to your Portainer instance
+2. Navigate to **Stacks** → **Add Stack**
+3. Name it: `postflow-bot`
+4. Select **Web editor**
+5. Paste the `docker-compose.yml` content
+6. Add the environment variables as shown above
+7. Click **Deploy the stack**
+
+> **Tip:** In Portainer, you can easily edit environment variables after deployment without recreating the stack.
 
 ## 🔄 Updating
 
 ### With Docker Compose
 
 ```bash
+# Pull the latest image
 docker-compose pull
+
+# Recreate and start the container
 docker-compose up -d
+
+# Verify the update
+docker logs -f postflow-bot
 ```
+
+> **Note:** Your data is safe! The `./data` volume persists your database across updates.
 
 ### With Portainer
 
-1. Go to your stack
-2. Click **Pull and redeploy**
+1. Go to **Stacks** → Select `postflow-bot`
+2. Click **Pull and redeploy** button
+3. Wait for the update to complete
+4. Check **Containers** to verify it's running
+
+### Verify Current Version
+
+```bash
+# Check image version
+docker images | grep postflow-telegram-bot
+
+# Check when the image was pulled
+docker inspect ghcr.io/artcc/postflow-telegram-bot:latest | grep Created
+```
 
 ### Auto-Updates
 
