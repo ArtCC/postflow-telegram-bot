@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   postflow-bot:
-    build: .
+    image: ghcr.io/artcc/postflow-telegram-bot:latest
     container_name: postflow-bot
     env_file:
       - .env

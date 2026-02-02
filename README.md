@@ -9,6 +9,7 @@ A powerful Telegram bot for managing and scheduling social media posts with AI s
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://telegram.org/)
+[![GitHub Container Registry](https://img.shields.io/badge/ghcr.io-package-blue?style=for-the-badge&logo=github)](https://github.com/ArtCC/postflow-telegram-bot/pkgs/container/postflow-telegram-bot)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg?style=for-the-badge)](LICENSE)
 
 ## ✨ Features
@@ -250,6 +251,18 @@ docker-compose up -d
 1. Go to your stack
 2. Click **Pull and redeploy**
 
+### Auto-Updates
+
+Every push to the `main` branch automatically:
+
+1. Builds a new Docker image
+2. Publishes it to GitHub Container Registry
+3. Tags it as `latest`
+
+The bot uses the pre-built image from `ghcr.io/artcc/postflow-telegram-bot:latest`, so you just need to pull the latest version.
+
+> **Note:** The GitHub Container Registry package is public, so anyone can pull the image without authentication.
+
 ## 🛡️ Security Notes
 
 - **Never commit your `.env` file** - it contains sensitive tokens
@@ -329,6 +342,28 @@ The bot tracks:
 
 View with `/status` command.
 
+## ❓ FAQ
+
+### Can I use this bot for multiple Twitter accounts?
+
+Currently, the bot is designed for single-user, single-account use. Each instance manages one Twitter account. To manage multiple accounts, deploy separate instances with different configurations.
+
+### Does the bot store my API keys securely?
+
+Yes. All API keys are stored in environment variables (`.env` file) which is never committed to git. The keys are only used by your self-hosted instance.
+
+### What happens if the bot crashes while scheduling posts?
+
+Scheduled posts are stored in the SQLite database. When the bot restarts, APScheduler automatically reschedules all pending posts.
+
+### Can I use this bot without OpenAI?
+
+Yes. OpenAI is optional. If you don't configure `OPENAI_API_KEY`, the bot will work perfectly fine for manual post creation and scheduling. You just won't have AI generation features.
+
+### What Twitter API plan do I need?
+
+You need at least **Basic** access tier from Twitter's Developer Portal to post tweets. The Free tier has very limited posting capabilities.
+
 ## 🔮 Roadmap (Future Features)
 
 - [ ] Support for images and videos in posts
@@ -382,14 +417,12 @@ python -m bot.main
 
 You can use the official bot avatar for your own instance:
 
-<p align="left">
-  <img src="https://github.com/ArtCC/postflow-telegram-bot/blob/main/assets/postflow-telegram-bot.png" alt="PostFlow Logo" width="200">
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ArtCC/postflow-telegram-bot/main/assets/postflow-telegram-bot.png" alt="PostFlow Bot Avatar" width="200">
 </p>
 
-**Download**: [postflow-telegram-bot.png](https://github.com/ArtCC/postflow-telegram-bot/blob/main/assets/postflow-telegram-bot.png)
-
 To set this image as your bot's profile picture:
-1. Download the image from the link above
+1. Right-click the image above and save it
 2. Open [@BotFather](https://t.me/botfather) on Telegram
 3. Send `/setuserpic`
 4. Select your bot
