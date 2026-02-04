@@ -68,7 +68,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "• `/help` \\- Help\n"
         "• `/menu` \\- Main menu\n"
         "• `/status` \\- System status\n"
-        "• `/chatid` \\- Your user ID\n\n"
+        "• `/chatid` \\- Your user ID\n"
+        "• `/author` \\- About the author\n\n"
         "*Highlights*\n"
         "• Manual or AI posts\n"
         "• Scheduling\n"
@@ -120,6 +121,29 @@ async def chatid_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     
     await update.message.reply_text(
         chat_id_message,
+        parse_mode="MarkdownV2",
+        reply_markup=get_back_keyboard()
+    )
+
+
+async def author_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /author command."""
+    user_id = update.effective_user.id
+
+    if not is_authorized(user_id):
+        await update.message.reply_text(
+            "⛔ You are not authorized to use this bot\.",
+            parse_mode="MarkdownV2"
+        )
+        return
+
+    author_message = (
+        "👤 *AUTHOR*\n\n"
+        f"• GitHub: {escape_markdown_v2('https://github.com/ArtCC')}"
+    )
+
+    await update.message.reply_text(
+        author_message,
         parse_mode="MarkdownV2",
         reply_markup=get_back_keyboard()
     )
