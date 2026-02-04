@@ -57,7 +57,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             "📝 Type your post content:\n\n"
             "💡 Tips:\n"
             "   • Max 280 chars for single tweet\n"
-            "   • Longer = auto thread\n"
+            "   • Longer \\= auto thread\n"
             "   • Type /cancel to abort",
             parse_mode="MarkdownV2"
         )
