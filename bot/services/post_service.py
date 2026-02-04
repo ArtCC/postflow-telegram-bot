@@ -141,6 +141,48 @@ class PostService:
             return False
     
     @staticmethod
+    def update_post_content(post_id: int, content: str) -> bool:
+        """
+        Update post content.
+        
+        Args:
+            post_id: Post ID
+            content: New content
+            
+        Returns:
+            True if updated successfully
+        """
+        try:
+            with get_session() as session:
+                post = session.query(Post).filter(Post.id == post_id).first()
+                if not post:
+                    return False
+                
+                post.content = content
+                
+                # Delete existing threads and recreate if needed
+                session.query(Thread).filter(Thread.post_id == post_id).delete()
+                
+                # Create new thread entries if content is long
+                tweets = split_into_tweets(content)
+                if len(tweets) > 1:
+                    for index, tweet_content in enumerate(tweets, 1):
+                        thread = Thread(
+                            post_id=post.id,
+                            tweet_index=index,
+                            content=tweet_content,
+                        )
+                        session.add(thread)
+                
+                session.commit()
+                logger.info(f"Updated post {post_id} content")
+                return True
+                
+        except Exception as e:
+            logger.error(f"Failed to update post {post_id} content: {e}")
+            return False
+    
+    @staticmethod
     def delete_post(post_id: int) -> bool:
         """
         Delete a post.
@@ -324,3 +366,33 @@ class PostService:
         except Exception as e:
             logger.error(f"Failed to get statistics: {e}")
             return {"total": 0, "published": 0, "scheduled": 0, "failed": 0, "draft": 0}
+
+    @staticmethod
+    def reschedule_post(post_id: int, new_scheduled_for: datetime) -> bool:
+        """
+        Update the scheduled time for a post.
+        
+        Args:
+            post_id: Post ID
+            new_scheduled_for: New scheduled datetime
+            
+        Returns:
+            True if rescheduled successfully
+        """
+        try:
+            with get_session() as session:
+                scheduled_post = session.query(ScheduledPost).filter(
+                    ScheduledPost.post_id == post_id
+                ).first()
+                
+                if not scheduled_post:
+                    return False
+                
+                scheduled_post.scheduled_for = new_scheduled_for
+                session.commit()
+                logger.info(f"Rescheduled post {post_id} to {new_scheduled_for}")
+                return True
+                
+        except Exception as e:
+            logger.error(f"Failed to reschedule post {post_id}: {e}")
+            return False

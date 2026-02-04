@@ -84,17 +84,51 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         from bot.handlers.posts import handle_publish_post
         await handle_publish_post(query, context)
     
-    elif data.startswith("schedule_"):
+    elif data.startswith("schedule_") and not data.startswith("scheduled"):
         from bot.handlers.posts import handle_schedule_menu
         await handle_schedule_menu(query, context)
+    
+    elif data.startswith("quick_schedule_"):
+        from bot.handlers.posts import handle_quick_schedule
+        await handle_quick_schedule(query, context)
+    
+    elif data.startswith("custom_schedule_"):
+        from bot.handlers.posts import handle_custom_schedule_prompt
+        await handle_custom_schedule_prompt(query, context)
+    
+    elif data.startswith("edit_"):
+        from bot.handlers.posts import handle_edit_post
+        await handle_edit_post(query, context)
+    
+    elif data.startswith("cancel_delete_"):
+        # User cancelled deletion - go back to preview
+        post_id = int(data.split("_")[-1])
+        from bot.handlers.posts import show_post_preview_edit
+        await show_post_preview_edit(query, post_id)
     
     elif data.startswith("delete_") or data.startswith("confirm_delete_"):
         from bot.handlers.posts import handle_delete_post
         await handle_delete_post(query, context)
     
     elif data.startswith("preview_"):
-        from bot.handlers.posts import handle_preview_post
-        await handle_preview_post(query, context)
+        from bot.handlers.posts import show_post_preview_edit
+        post_id = int(data.split("_")[1])
+        await show_post_preview_edit(query, post_id)
+    
+    elif data.startswith("view_scheduled_"):
+        from bot.handlers.posts import handle_view_scheduled_post
+        await handle_view_scheduled_post(query, context)
+    
+    elif data.startswith("scheduled_page_"):
+        from bot.handlers.posts import handle_scheduled_page
+        await handle_scheduled_page(query, context)
+    
+    elif data.startswith("reschedule_"):
+        from bot.handlers.posts import handle_reschedule_prompt
+        await handle_reschedule_prompt(query, context)
+    
+    elif data == "retry_last_action":
+        await show_main_menu(query)
     
     else:
         logger.warning(f"Unhandled callback data: {data}")
