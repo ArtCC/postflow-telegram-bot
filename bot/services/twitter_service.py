@@ -31,6 +31,12 @@ class TwitterService:
         
         if self.enabled:
             try:
+                # Log credential status (not the actual values!)
+                logger.info(f"Twitter API Key configured: {bool(TWITTER_API_KEY)}")
+                logger.info(f"Twitter API Secret configured: {bool(TWITTER_API_SECRET)}")
+                logger.info(f"Twitter Access Token configured: {bool(TWITTER_ACCESS_TOKEN)}")
+                logger.info(f"Twitter Access Token Secret configured: {bool(TWITTER_ACCESS_TOKEN_SECRET)}")
+                
                 # Initialize Twitter API v2 client
                 self.client = tweepy.Client(
                     consumer_key=TWITTER_API_KEY,
@@ -40,11 +46,15 @@ class TwitterService:
                 )
                 
                 # Test authentication
-                self.client.get_me()
-                logger.info("Twitter API initialized successfully")
+                me = self.client.get_me()
+                if me.data:
+                    logger.info(f"Twitter API initialized successfully. Logged in as @{me.data.username}")
+                else:
+                    logger.warning("Twitter API initialized but could not verify user")
                 
             except tweepy.TweepyException as e:
                 logger.error(f"Failed to initialize Twitter API: {e}")
+                logger.error(f"Full error details: {repr(e)}")
                 self.enabled = False
                 raise TwitterServiceError(f"Twitter authentication failed: {str(e)}")
     

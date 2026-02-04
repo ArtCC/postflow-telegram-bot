@@ -6,9 +6,9 @@ Central router for all inline button callbacks.
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from bot.config import logger
+from bot.config import logger, TWITTER_ENABLED, OPENAI_ENABLED
 from bot.utils import is_authorized, escape_markdown_v2, get_main_menu_keyboard, get_back_keyboard, get_new_post_keyboard
-from bot.handlers.commands import help_command, status_command
+from bot.handlers.commands import help_command
 
 
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -33,8 +33,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         await show_help(query)
     
     elif data == "status":
-        # Reuse status_command logic
-        await status_command(update, context)
+        await show_status(query)
     
     elif data == "new_post":
         await show_new_post_options(query)
@@ -250,6 +249,64 @@ async def show_settings(query) -> None:
     
     await query.edit_message_text(
         settings_message,
+        parse_mode="MarkdownV2",
+        reply_markup=get_back_keyboard()
+    )
+
+
+async def show_status(query) -> None:
+    """Show system status."""
+    from bot.services.twitter_service import TwitterService
+    from bot.services.openai_service import OpenAIService
+    from bot.services.post_service import PostService
+    
+    # Check service status
+    twitter_service = TwitterService() if TWITTER_ENABLED else None
+    openai_service = OpenAIService() if OPENAI_ENABLED else None
+    
+    twitter_status = "🟢 Connected"
+    openai_status = "🟢 Available"
+    
+    if twitter_service:
+        success, message = twitter_service.test_connection()
+        if success:
+            twitter_status = f"🟢 {escape_markdown_v2(message)}"
+        else:
+            twitter_status = f"🔴 {escape_markdown_v2(message)}"
+    else:
+        twitter_status = "⚪ Not configured"
+    
+    if openai_service:
+        success, message = openai_service.test_connection()
+        if success:
+            openai_status = "🟢 Available"
+        else:
+            openai_status = f"🔴 {escape_markdown_v2(message[:50])}"
+    else:
+        openai_status = "⚪ Disabled"
+    
+    # Get statistics
+    stats = PostService.get_post_statistics()
+    
+    status_message = (
+        f"━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"📊 *SYSTEM STATUS*\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"🤖 *Bot:* `ONLINE`\n"
+        f"🐦 *Twitter:* {twitter_status}\n"
+        f"🤖 *OpenAI:* {openai_status}\n"
+        f"💾 *Database:* `Healthy`\n\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"📊 *Statistics:*\n"
+        f"   • Total posts: `{stats['total']}`\n"
+        f"   • Published: `{stats['published']}`\n"
+        f"   • Scheduled: `{stats['scheduled']}`\n"
+        f"   • Failed: `{stats['failed']}`\n\n"
+        f"🕐 Last check: `Now`"
+    )
+    
+    await query.edit_message_text(
+        status_message,
         parse_mode="MarkdownV2",
         reply_markup=get_back_keyboard()
     )
