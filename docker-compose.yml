@@ -9,6 +9,9 @@ services:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_USER_ID=${TELEGRAM_USER_ID}
       
+      # Timezone (required) - e.g., Europe/Madrid, America/New_York
+      - TZ=${TZ}
+      
       # Twitter/X API Credentials
       - TWITTER_API_KEY=${TWITTER_API_KEY}
       - TWITTER_API_SECRET=${TWITTER_API_SECRET}

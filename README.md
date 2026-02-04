@@ -73,6 +73,10 @@ Edit the `.env` file with your credentials:
 TELEGRAM_BOT_TOKEN=1234567890:ABCdefGHIjklMNOpqrsTUVwxyz
 TELEGRAM_USER_ID=123456789
 
+# Timezone (required) - Your local timezone for scheduling
+# Examples: Europe/Madrid, America/New_York, Asia/Tokyo
+TZ=Europe/Madrid
+
 # Twitter/X API Credentials
 TWITTER_API_KEY=your_api_key_here
 TWITTER_API_SECRET=your_api_secret_here
@@ -87,6 +91,8 @@ DATABASE_PATH=/data/postflow.db
 ```
 
 > **Important:** All variables are **required** except `OPENAI_API_KEY` (optional). The bot won't start without the required credentials.
+
+> **Timezone:** Use standard timezone names from [IANA Time Zone Database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g., `Europe/Madrid`, `America/New_York`, `Asia/Tokyo`).
 
 ### 5. Deploy with Docker Compose
 
@@ -103,6 +109,9 @@ services:
       # Telegram Bot Configuration
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_USER_ID=${TELEGRAM_USER_ID}
+      
+      # Timezone (required) - e.g., Europe/Madrid, America/New_York
+      - TZ=${TZ}
       
       # Twitter/X API Credentials
       - TWITTER_API_KEY=${TWITTER_API_KEY}
@@ -318,6 +327,7 @@ postflow-telegram-bot/
    ```
    TELEGRAM_BOT_TOKEN=your_bot_token
    TELEGRAM_USER_ID=your_user_id
+   TZ=Europe/Madrid
    TWITTER_API_KEY=your_api_key
    TWITTER_API_SECRET=your_api_secret
    TWITTER_ACCESS_TOKEN=your_access_token

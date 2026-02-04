@@ -6,6 +6,7 @@ Environment variables and global settings.
 import os
 import logging
 from pathlib import Path
+import pytz
 
 # Configure logging
 logging.basicConfig(
@@ -20,6 +21,14 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 # Configuration from environment variables
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_USER_ID = os.getenv("TELEGRAM_USER_ID")
+
+# Timezone configuration (required)
+TZ = os.getenv("TZ", "UTC")
+try:
+    USER_TIMEZONE = pytz.timezone(TZ)
+    logger.info(f"Timezone configured: {TZ}")
+except pytz.exceptions.UnknownTimeZoneError:
+    raise ValueError(f"Invalid timezone: {TZ}. Use format like 'Europe/Madrid', 'America/New_York', etc.")
 
 # Twitter/X API credentials
 TWITTER_API_KEY = os.getenv("TWITTER_API_KEY")

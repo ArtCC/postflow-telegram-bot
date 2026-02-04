@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from bot.config import logger, MAX_TWEET_LENGTH
+from bot.config import logger, MAX_TWEET_LENGTH, USER_TIMEZONE, TZ
 from bot.utils import (
     is_authorized,
     escape_markdown_v2,
@@ -404,11 +404,16 @@ async def show_scheduled_posts(query, context: ContextTypes.DEFAULT_TYPE) -> Non
         )
         return
     
-    # Format scheduled posts for display
+    # Format scheduled posts for display (convert UTC to user's timezone)
     posts_data = []
     for post, sched in scheduled:
         preview = truncate_text(post.content, 40)
-        posts_data.append((post.id, preview, sched.scheduled_for))
+        # Convert UTC to user's timezone for display
+        scheduled_for_utc = sched.scheduled_for
+        if scheduled_for_utc.tzinfo is None:
+            scheduled_for_utc = pytz.UTC.localize(scheduled_for_utc)
+        scheduled_for_local = scheduled_for_utc.astimezone(USER_TIMEZONE)
+        posts_data.append((post.id, preview, scheduled_for_local))
     
     count = len(posts_data)
     
@@ -426,6 +431,7 @@ async def show_scheduled_posts(query, context: ContextTypes.DEFAULT_TYPE) -> Non
         f"📅 *SCHEDULED POSTS* \\(`{count}`\\)\n"
         f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
         f"{posts_list}\n\n"
+        f"🌍 Timezone: `{escape_markdown_v2(TZ)}`\n\n"
         f"💡 Click to view details"
     )
     
@@ -581,18 +587,19 @@ async def handle_quick_schedule(query, context: ContextTypes.DEFAULT_TYPE) -> No
     post_id = int(parts[-1])
     schedule_type = parts[2]  # "1h", "3h", or "tomorrow"
     
-    now = datetime.utcnow()
+    # Work in user's timezone
+    now_local = datetime.now(USER_TIMEZONE)
     
     if schedule_type == "1h":
-        scheduled_time = now + timedelta(hours=1)
+        scheduled_time_local = now_local + timedelta(hours=1)
         time_label = "in 1 hour"
     elif schedule_type == "3h":
-        scheduled_time = now + timedelta(hours=3)
+        scheduled_time_local = now_local + timedelta(hours=3)
         time_label = "in 3 hours"
     elif schedule_type == "tomorrow":
-        # Tomorrow at 9:00 AM UTC
-        tomorrow = now + timedelta(days=1)
-        scheduled_time = tomorrow.replace(hour=9, minute=0, second=0, microsecond=0)
+        # Tomorrow at 9:00 AM in user's timezone
+        tomorrow = now_local + timedelta(days=1)
+        scheduled_time_local = tomorrow.replace(hour=9, minute=0, second=0, microsecond=0)
         time_label = "tomorrow at 9:00 AM"
     else:
         await query.edit_message_text(
@@ -601,6 +608,9 @@ async def handle_quick_schedule(query, context: ContextTypes.DEFAULT_TYPE) -> No
             reply_markup=get_back_keyboard()
         )
         return
+    
+    # Convert to UTC for storage and scheduling
+    scheduled_time_utc = scheduled_time_local.astimezone(pytz.UTC)
     
     # Schedule the post
     post = PostService.get_post(post_id)
@@ -633,12 +643,12 @@ async def handle_quick_schedule(query, context: ContextTypes.DEFAULT_TYPE) -> No
     
     job_id = scheduler_service.schedule_post(
         post_id=post_id,
-        scheduled_time=scheduled_time,
+        scheduled_time=scheduled_time_utc,
         callback=publish_scheduled_post
     )
     
     if job_id:
-        PostService.schedule_post(post_id, scheduled_time, job_id)
+        PostService.schedule_post(post_id, scheduled_time_utc, job_id)
         
         await query.edit_message_text(
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -646,7 +656,8 @@ async def handle_quick_schedule(query, context: ContextTypes.DEFAULT_TYPE) -> No
             f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
             f"📅 Your post will be published\n"
             f"   *{escape_markdown_v2(time_label)}*\n\n"
-            f"⏰ {escape_markdown_v2(format_datetime(scheduled_time))}\n\n"
+            f"⏰ {escape_markdown_v2(format_datetime(scheduled_time_local))}\n"
+            f"🌍 Timezone: `{escape_markdown_v2(TZ)}`\n\n"
             f"💡 View scheduled posts in menu\\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
@@ -667,15 +678,15 @@ async def handle_custom_schedule_prompt(query, context: ContextTypes.DEFAULT_TYP
     context.user_data['awaiting'] = 'custom_schedule'
     
     await query.edit_message_text(
-        "━━━━━━━━━━━━━━━━━━━━━━\n"
-        "📆 *CUSTOM SCHEDULE*\n"
-        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        "Enter the date and time:\n\n"
-        "📝 *Format:* `YYYY\\-MM\\-DD HH:MM`\n\n"
-        "📌 *Example:*\n"
-        "   `2026\\-02\\-05 14:30`\n\n"
-        "⚠️ Time is in UTC\\.\n\n"
-        "Type /cancel to abort\\.",
+        f"━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"📆 *CUSTOM SCHEDULE*\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"Enter the date and time:\n\n"
+        f"📝 *Format:* `YYYY\\-MM\\-DD HH:MM`\n\n"
+        f"📌 *Example:*\n"
+        f"   `2026\\-02\\-05 14:30`\n\n"
+        f"🌍 Timezone: `{escape_markdown_v2(TZ)}`\n\n"
+        f"Type /cancel to abort\\.",
         parse_mode="MarkdownV2"
     )
 
@@ -693,10 +704,12 @@ async def process_custom_schedule(update: Update, context: ContextTypes.DEFAULT_
         )
         return
     
-    # Parse the date
+    # Parse the date (user inputs in their local timezone)
     try:
         scheduled_time = datetime.strptime(text.strip(), "%Y-%m-%d %H:%M")
-        scheduled_time = pytz.UTC.localize(scheduled_time)
+        # Localize to user's timezone, then convert to UTC for storage
+        scheduled_time = USER_TIMEZONE.localize(scheduled_time)
+        scheduled_time_utc = scheduled_time.astimezone(pytz.UTC)
     except ValueError:
         await update.message.reply_text(
             "━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -710,8 +723,9 @@ async def process_custom_schedule(update: Update, context: ContextTypes.DEFAULT_
         )
         return
     
-    # Validate it's in the future
-    if scheduled_time <= datetime.now(pytz.UTC):
+    # Validate it's in the future (compare in user's timezone)
+    now_local = datetime.now(USER_TIMEZONE)
+    if scheduled_time <= now_local:
         await update.message.reply_text(
             "❌ Scheduled time must be in the future\\!",
             parse_mode="MarkdownV2",
@@ -748,19 +762,21 @@ async def process_custom_schedule(update: Update, context: ContextTypes.DEFAULT_
     
     job_id = scheduler_service.schedule_post(
         post_id=post_id,
-        scheduled_time=scheduled_time,
+        scheduled_time=scheduled_time_utc,
         callback=publish_scheduled_post
     )
     
     if job_id:
-        PostService.schedule_post(post_id, scheduled_time, job_id)
+        PostService.schedule_post(post_id, scheduled_time_utc, job_id)
         
+        # Show confirmation with time in user's timezone
         await update.message.reply_text(
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
             f"✅ *POST SCHEDULED*\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
             f"📅 Your post will be published:\n\n"
-            f"⏰ {escape_markdown_v2(format_datetime(scheduled_time))}\n\n"
+            f"⏰ {escape_markdown_v2(format_datetime(scheduled_time))}\n"
+            f"🌍 Timezone: `{escape_markdown_v2(TZ)}`\n\n"
             f"💡 View scheduled posts in menu\\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
@@ -786,7 +802,11 @@ async def handle_view_scheduled_post(query, context: ContextTypes.DEFAULT_TYPE) 
         )
         return
     
-    scheduled_for = post.scheduled_post.scheduled_for
+    # Convert UTC to user's timezone for display
+    scheduled_for_utc = post.scheduled_post.scheduled_for
+    if scheduled_for_utc.tzinfo is None:
+        scheduled_for_utc = pytz.UTC.localize(scheduled_for_utc)
+    scheduled_for_local = scheduled_for_utc.astimezone(USER_TIMEZONE)
     
     await query.edit_message_text(
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -796,8 +816,9 @@ async def handle_view_scheduled_post(query, context: ContextTypes.DEFAULT_TYPE) 
         f"{escape_markdown_v2(truncate_text(post.content, 200))}\n\n"
         f"━━━━━━━━━━━━━━━━━━━━\n\n"
         f"⏰ *Scheduled for:*\n"
-        f"   {escape_markdown_v2(format_datetime(scheduled_for))}\n"
-        f"   {escape_markdown_v2(format_relative_time(scheduled_for))}\n\n"
+        f"   {escape_markdown_v2(format_datetime(scheduled_for_local))}\n"
+        f"   {escape_markdown_v2(format_relative_time(scheduled_for_local))}\n"
+        f"🌍 Timezone: `{escape_markdown_v2(TZ)}`\n\n"
         f"Choose an action:",
         parse_mode="MarkdownV2",
         reply_markup=get_scheduled_post_actions_keyboard(post_id)
@@ -818,10 +839,15 @@ async def handle_scheduled_page(query, context: ContextTypes.DEFAULT_TYPE) -> No
         )
         return
     
+    # Convert UTC to user's timezone for display
     posts_data = []
     for post, sched in scheduled:
         preview = truncate_text(post.content, 40)
-        posts_data.append((post.id, preview, sched.scheduled_for))
+        scheduled_for_utc = sched.scheduled_for
+        if scheduled_for_utc.tzinfo is None:
+            scheduled_for_utc = pytz.UTC.localize(scheduled_for_utc)
+        scheduled_for_local = scheduled_for_utc.astimezone(USER_TIMEZONE)
+        posts_data.append((post.id, preview, scheduled_for_local))
     
     count = len(posts_data)
     per_page = 5
@@ -840,6 +866,7 @@ async def handle_scheduled_page(query, context: ContextTypes.DEFAULT_TYPE) -> No
         f"📅 *SCHEDULED POSTS* \\(`{count}`\\)\n"
         f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
         f"{posts_list}\n\n"
+        f"🌍 Timezone: `{escape_markdown_v2(TZ)}`\n\n"
         f"💡 Click to view details"
     )
     
@@ -858,15 +885,15 @@ async def handle_reschedule_prompt(query, context: ContextTypes.DEFAULT_TYPE) ->
     context.user_data['awaiting'] = 'reschedule'
     
     await query.edit_message_text(
-        "━━━━━━━━━━━━━━━━━━━━━━\n"
-        "📆 *RESCHEDULE POST*\n"
-        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        "Enter the new date and time:\n\n"
-        "📝 *Format:* `YYYY\\-MM\\-DD HH:MM`\n\n"
-        "📌 *Example:*\n"
-        "   `2026\\-02\\-05 14:30`\n\n"
-        "⚠️ Time is in UTC\\.\n\n"
-        "Type /cancel to abort\\.",
+        f"━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"📆 *RESCHEDULE POST*\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"Enter the new date and time:\n\n"
+        f"📝 *Format:* `YYYY\\-MM\\-DD HH:MM`\n\n"
+        f"📌 *Example:*\n"
+        f"   `2026\\-02\\-05 14:30`\n\n"
+        f"🌍 Timezone: `{escape_markdown_v2(TZ)}`\n\n"
+        f"Type /cancel to abort\\.",
         parse_mode="MarkdownV2"
     )
 
@@ -884,10 +911,12 @@ async def process_reschedule(update: Update, context: ContextTypes.DEFAULT_TYPE,
         )
         return
     
-    # Parse the date
+    # Parse the date (user inputs in their local timezone)
     try:
         new_time = datetime.strptime(text.strip(), "%Y-%m-%d %H:%M")
-        new_time = pytz.UTC.localize(new_time)
+        # Localize to user's timezone, then convert to UTC
+        new_time_local = USER_TIMEZONE.localize(new_time)
+        new_time_utc = new_time_local.astimezone(pytz.UTC)
     except ValueError:
         await update.message.reply_text(
             "━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -901,8 +930,9 @@ async def process_reschedule(update: Update, context: ContextTypes.DEFAULT_TYPE,
         )
         return
     
-    # Validate it's in the future
-    if new_time <= datetime.now(pytz.UTC):
+    # Validate it's in the future (compare in user's timezone)
+    now_local = datetime.now(USER_TIMEZONE)
+    if new_time_local <= now_local:
         await update.message.reply_text(
             "❌ Scheduled time must be in the future\\!",
             parse_mode="MarkdownV2",
@@ -922,19 +952,21 @@ async def process_reschedule(update: Update, context: ContextTypes.DEFAULT_TYPE,
     
     job_id = post.scheduled_post.job_id
     
-    # Reschedule in APScheduler
-    success = scheduler_service.reschedule_post(job_id, new_time)
+    # Reschedule in APScheduler (use UTC time)
+    success = scheduler_service.reschedule_post(job_id, new_time_utc)
     
     if success:
-        # Update in database
-        PostService.reschedule_post(post_id, new_time)
+        # Update in database (store UTC)
+        PostService.reschedule_post(post_id, new_time_utc)
         
+        # Show confirmation with time in user's timezone
         await update.message.reply_text(
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
             f"✅ *POST RESCHEDULED*\n"
             f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
             f"📅 New scheduled time:\n\n"
-            f"⏰ {escape_markdown_v2(format_datetime(new_time))}\n\n"
+            f"⏰ {escape_markdown_v2(format_datetime(new_time_local))}\n"
+            f"🌍 Timezone: `{escape_markdown_v2(TZ)}`\n\n"
             f"💡 View scheduled posts in menu\\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
