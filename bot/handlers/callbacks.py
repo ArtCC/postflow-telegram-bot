@@ -41,6 +41,10 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     elif data == "scheduled":
         from bot.handlers.posts import show_scheduled_posts
         await show_scheduled_posts(query, context)
+
+    elif data == "drafts":
+        from bot.handlers.posts import show_drafts
+        await show_drafts(query, context)
     
     elif data == "statistics":
         await show_statistics(query)
@@ -112,6 +116,10 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     elif data.startswith("scheduled_page_"):
         from bot.handlers.posts import handle_scheduled_page
         await handle_scheduled_page(query, context)
+
+    elif data.startswith("drafts_page_"):
+        from bot.handlers.posts import handle_drafts_page
+        await handle_drafts_page(query, context)
     
     elif data.startswith("reschedule_"):
         from bot.handlers.posts import handle_reschedule_prompt
@@ -147,11 +155,18 @@ async def show_help(query) -> None:
         "• `/start` \\- Welcome\n"
         "• `/help` \\- Help\n"
         "• `/menu` \\- Main menu\n"
-        "• `/status` \\- System status\n\n"
+        "• `/drafts` \\- Drafts\n"
+        "• `/status` \\- System status\n"
+        "• `/settings` \\- Settings\n"
+        "• `/chatid` \\- Your user ID\n"
+        "• `/help` \\- Help\n"
+        "• `/author` \\- About the author\n"
+        "• `/cancel` \\- Cancel\n\n"
         "*Highlights*\n"
         "• Manual or AI posts\n"
         "• Scheduling\n"
-        "• Threads for long posts"
+        "• Threads for long posts\n"
+        "• Stats overview"
     )
     
     await query.edit_message_text(

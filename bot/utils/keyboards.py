@@ -12,10 +12,13 @@ def get_main_menu_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
         [
             InlineKeyboardButton("✍️ New", callback_data="new_post"),
-            InlineKeyboardButton("📅 Scheduled", callback_data="scheduled"),
+            InlineKeyboardButton("📝 Drafts", callback_data="drafts"),
         ],
         [
+            InlineKeyboardButton("📅 Scheduled", callback_data="scheduled"),
             InlineKeyboardButton("📊 Stats", callback_data="statistics"),
+        ],
+        [
             InlineKeyboardButton("🔄 Status", callback_data="status"),
         ],
     ]
@@ -126,6 +129,36 @@ def get_scheduled_posts_keyboard(scheduled_posts: List[tuple], page: int = 0, pe
     # Add back button
     keyboard.append([InlineKeyboardButton("🔙 Menu", callback_data="menu")])
     
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_drafts_keyboard(drafts: List[tuple], page: int = 0, per_page: int = 5) -> InlineKeyboardMarkup:
+    """Create keyboard for drafts list with pagination."""
+    keyboard = []
+
+    start = page * per_page
+    end = start + per_page
+    page_drafts = drafts[start:end]
+
+    for post_id, preview, _ in page_drafts:
+        keyboard.append([
+            InlineKeyboardButton(
+                f"📝 {preview}",
+                callback_data=f"preview_{post_id}"
+            )
+        ])
+
+    nav_buttons = []
+    if page > 0:
+        nav_buttons.append(InlineKeyboardButton("◀️ Previous", callback_data=f"drafts_page_{page-1}"))
+    if end < len(drafts):
+        nav_buttons.append(InlineKeyboardButton("Next ▶️", callback_data=f"drafts_page_{page+1}"))
+
+    if nav_buttons:
+        keyboard.append(nav_buttons)
+
+    keyboard.append([InlineKeyboardButton("🔙 Menu", callback_data="menu")])
+
     return InlineKeyboardMarkup(keyboard)
 
 

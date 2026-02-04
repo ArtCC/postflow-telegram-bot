@@ -7,7 +7,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.config import logger, TELEGRAM_USER_ID, TWITTER_ENABLED, OPENAI_ENABLED
-from bot.utils import is_authorized, escape_markdown_v2, get_main_menu_keyboard, get_back_keyboard
+from bot.utils import is_authorized, escape_markdown_v2, get_main_menu_keyboard, get_back_keyboard, get_new_post_keyboard
 from bot.services.post_service import PostService
 from bot.services.twitter_service import TwitterService
 from bot.services.openai_service import OpenAIService
@@ -66,6 +66,10 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "*Commands*\n"
         "• `/start` \\- Welcome\n"
         "• `/menu` \\- Main menu\n"
+        "• `/new` \\- New post\n"
+        "• `/drafts` \\- Drafts\n"
+        "• `/scheduled` \\- Scheduled posts\n"
+        "• `/stats` \\- Statistics\n"
         "• `/status` \\- System status\n"
         "• `/settings` \\- Settings\n"
         "• `/chatid` \\- Your user ID\n"
@@ -109,6 +113,29 @@ async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     )
 
 
+async def new_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /new command."""
+    user_id = update.effective_user.id
+
+    if not is_authorized(user_id):
+        await update.message.reply_text(
+            "⛔ You are not authorized to use this bot\.",
+            parse_mode="MarkdownV2"
+        )
+        return
+
+    message = (
+        "✍️ *NEW POST*\n\n"
+        "Choose a method:"
+    )
+
+    await update.message.reply_text(
+        message,
+        parse_mode="MarkdownV2",
+        reply_markup=get_new_post_keyboard()
+    )
+
+
 async def chatid_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle /chatid command."""
     user_id = update.effective_user.id
@@ -146,6 +173,83 @@ async def author_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     await update.message.reply_text(
         author_message,
+        parse_mode="MarkdownV2",
+        reply_markup=get_back_keyboard()
+    )
+
+
+async def drafts_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /drafts command."""
+    user_id = update.effective_user.id
+
+    if not is_authorized(user_id):
+        await update.message.reply_text(
+            "⛔ You are not authorized to use this bot\.",
+            parse_mode="MarkdownV2"
+        )
+        return
+
+    from bot.handlers.posts import build_drafts_list
+
+    message, keyboard = build_drafts_list(page=0)
+    await update.message.reply_text(
+        message,
+        parse_mode="MarkdownV2",
+        reply_markup=keyboard
+    )
+
+
+async def scheduled_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /scheduled command."""
+    user_id = update.effective_user.id
+
+    if not is_authorized(user_id):
+        await update.message.reply_text(
+            "⛔ You are not authorized to use this bot\.",
+            parse_mode="MarkdownV2"
+        )
+        return
+
+    from bot.handlers.posts import build_scheduled_posts_list
+
+    message, keyboard = build_scheduled_posts_list(page=0)
+    await update.message.reply_text(
+        message,
+        parse_mode="MarkdownV2",
+        reply_markup=keyboard
+    )
+
+
+async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /stats command."""
+    user_id = update.effective_user.id
+
+    if not is_authorized(user_id):
+        await update.message.reply_text(
+            "⛔ You are not authorized to use this bot\.",
+            parse_mode="MarkdownV2"
+        )
+        return
+
+    stats = PostService.get_post_statistics()
+
+    total_attempts = stats['published'] + stats['failed']
+    success_rate = (stats['published'] / total_attempts * 100) if total_attempts > 0 else 0
+
+    stats_message = (
+        f"📊 *STATISTICS*\n\n"
+        f"*Overview*\n"
+        f"• Total: `{stats['total']}`\n"
+        f"• Published: `{stats['published']}`\n"
+        f"• Scheduled: `{stats['scheduled']}`\n"
+        f"• Draft: `{stats['draft']}`\n"
+        f"• Failed: `{stats['failed']}`\n\n"
+        f"*Performance*\n"
+        f"• Success rate: `{success_rate:.1f}%`"
+    )
+
+    await update.message.reply_text(
+        stats_message,
         parse_mode="MarkdownV2",
         reply_markup=get_back_keyboard()
     )

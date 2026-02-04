@@ -23,6 +23,7 @@ from bot.utils import (
     get_confirm_delete_keyboard,
     get_error_keyboard,
     get_back_keyboard,
+    get_drafts_keyboard,
 )
 from bot.services.post_service import PostService
 from bot.services.twitter_service import TwitterService
@@ -418,49 +419,102 @@ async def handle_schedule_menu(query, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 async def show_scheduled_posts(query, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Show list of scheduled posts."""
+    message, keyboard = build_scheduled_posts_list(page=0)
+    await query.edit_message_text(
+        message,
+        parse_mode="MarkdownV2",
+        reply_markup=keyboard
+    )
+
+
+def build_scheduled_posts_list(page: int = 0, per_page: int = 5):
+    """Build scheduled posts list message and keyboard."""
     scheduled = PostService.get_scheduled_posts()
-    
+
     if not scheduled:
-        await query.edit_message_text(
+        message = (
             "📅 *NO SCHEDULED POSTS*\n\n"
-            "Create a post and choose Schedule to get started\\.",
-            parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            "Create a post and choose Schedule to get started\\."
         )
-        return
-    
-    # Format scheduled posts for display (convert UTC to user's timezone)
+        return message, get_back_keyboard()
+
     posts_data = []
     for post, sched in scheduled:
         preview = truncate_text(post.content, 40)
-        # Convert UTC to user's timezone for display
         scheduled_for_utc = sched.scheduled_for
         if scheduled_for_utc.tzinfo is None:
             scheduled_for_utc = pytz.UTC.localize(scheduled_for_utc)
         scheduled_for_local = scheduled_for_utc.astimezone(USER_TIMEZONE)
         posts_data.append((post.id, preview, scheduled_for_local))
-    
+
     count = len(posts_data)
-    
-    # Create message with list
+    start = page * per_page
+    end = start + per_page
+
     posts_list = "\n\n".join([
         f"📌 *Post \\#{pid}*\n"
         f"{escape_markdown_v2(preview)}\n"
         f"⏰ {escape_markdown_v2(format_datetime(scheduled_for))} \\({escape_markdown_v2(TZ)}\\)\n"
         f"⏳ {escape_markdown_v2(format_relative_time(scheduled_for))}"
-        for pid, preview, scheduled_for in posts_data[:5]
+        for pid, preview, scheduled_for in posts_data[start:end]
     ])
-    
+
     message = (
         f"📅 *SCHEDULED POSTS* \\(`{count}`\\)\n\n"
         f"{posts_list}\n\n"
         f"Select a post to view details\\."
     )
-    
+
+    return message, get_scheduled_posts_keyboard(posts_data, page=page, per_page=per_page)
+
+
+def build_drafts_list(page: int = 0, per_page: int = 5):
+    """Build drafts list message and keyboard."""
+    drafts = PostService.get_draft_posts()
+
+    if not drafts:
+        message = (
+            "📝 *NO DRAFTS*\n\n"
+            "Create a post and save it as a draft\\."
+        )
+        return message, get_back_keyboard()
+
+    drafts_data = []
+    for post in drafts:
+        preview = truncate_text(post.content, 40)
+        created_at_utc = post.created_at
+        if created_at_utc.tzinfo is None:
+            created_at_utc = pytz.UTC.localize(created_at_utc)
+        created_at_local = created_at_utc.astimezone(USER_TIMEZONE)
+        drafts_data.append((post.id, preview, created_at_local))
+
+    count = len(drafts_data)
+    start = page * per_page
+    end = start + per_page
+
+    drafts_list = "\n\n".join([
+        f"📝 *Draft \\#{pid}*\n"
+        f"{escape_markdown_v2(preview)}\n"
+        f"⏰ {escape_markdown_v2(format_datetime(created_at))} \\({escape_markdown_v2(TZ)}\\)"
+        for pid, preview, created_at in drafts_data[start:end]
+    ])
+
+    message = (
+        f"📝 *DRAFTS* \\(`{count}`\\)\n\n"
+        f"{drafts_list}\n\n"
+        f"Select a draft to view details\\."
+    )
+
+    return message, get_drafts_keyboard(drafts_data, page=page, per_page=per_page)
+
+
+async def show_drafts(query, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Show list of drafts."""
+    message, keyboard = build_drafts_list(page=0)
     await query.edit_message_text(
         message,
         parse_mode="MarkdownV2",
-        reply_markup=get_scheduled_posts_keyboard(posts_data)
+        reply_markup=keyboard
     )
 
 
@@ -804,49 +858,23 @@ async def handle_view_scheduled_post(query, context: ContextTypes.DEFAULT_TYPE) 
 async def handle_scheduled_page(query, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle pagination for scheduled posts."""
     page = int(query.data.split("_")[-1])
-    
-    scheduled = PostService.get_scheduled_posts()
-    
-    if not scheduled:
-        await query.edit_message_text(
-            "📅 No scheduled posts found\\.",
-            parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
-        )
-        return
-    
-    # Convert UTC to user's timezone for display
-    posts_data = []
-    for post, sched in scheduled:
-        preview = truncate_text(post.content, 40)
-        scheduled_for_utc = sched.scheduled_for
-        if scheduled_for_utc.tzinfo is None:
-            scheduled_for_utc = pytz.UTC.localize(scheduled_for_utc)
-        scheduled_for_local = scheduled_for_utc.astimezone(USER_TIMEZONE)
-        posts_data.append((post.id, preview, scheduled_for_local))
-    
-    count = len(posts_data)
-    per_page = 5
-    start = page * per_page
-    end = start + per_page
-    
-    posts_list = "\n\n".join([
-        f"📌 *Post \\#{pid}*\n"
-        f"{escape_markdown_v2(preview)}\n"
-        f"⏰ {escape_markdown_v2(format_datetime(scheduled_for))} \\({escape_markdown_v2(TZ)}\\)"
-        for pid, preview, scheduled_for in posts_data[start:end]
-    ])
-    
-    message = (
-        f"📅 *SCHEDULED POSTS* \\(`{count}`\\)\n\n"
-        f"{posts_list}\n\n"
-        f"Select a post to view details\\."
-    )
-    
+
+    message, keyboard = build_scheduled_posts_list(page=page)
     await query.edit_message_text(
         message,
         parse_mode="MarkdownV2",
-        reply_markup=get_scheduled_posts_keyboard(posts_data, page=page)
+        reply_markup=keyboard
+    )
+
+
+async def handle_drafts_page(query, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle pagination for drafts list."""
+    page = int(query.data.split("_")[-1])
+    message, keyboard = build_drafts_list(page=page)
+    await query.edit_message_text(
+        message,
+        parse_mode="MarkdownV2",
+        reply_markup=keyboard
     )
 
 

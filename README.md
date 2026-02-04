@@ -24,6 +24,7 @@ A powerful Telegram bot for managing and scheduling social media posts with AI s
 - 🔒 **Secure & Private** - Self-hosted, only you have access
 - 🐳 **Docker Ready** - Easy deployment with docker-compose
 - 📊 **Statistics** - Track your posting performance
+- 📝 **Drafts** - Save posts and finish later
 - 💾 **Persistent Storage** - SQLite database for reliability
 - 🎨 **Beautiful UI** - Interactive menus and inline buttons
 
@@ -183,17 +184,17 @@ docker logs -f postflow-bot
 1. Open Telegram and find your bot
 2. Send `/start` to verify authorization
 3. Use `/menu` to access the main menu
-4. Click "✍️ New Post" to create your first post
+4. Click "✍️ New" to create your first post
 
 ### Creating Posts
 
 #### Manual Post
-1. Click "✍️ New Post" → "✏️ Write Manually"
+1. Click "✍️ New" → "✏️ Write Manually"
 2. Type your content
 3. Preview and choose "🚀 Publish Now" or "📅 Schedule"
 
 #### AI-Generated Post
-1. Click "✍️ New Post" → "🤖 Generate with AI"
+1. Click "✍️ New" → "🤖 AI"
 2. Describe what you want: *"Post about Python advantages"*
 3. Review generated content
 4. Publish or schedule
@@ -248,13 +249,25 @@ When a scheduled post is published (or fails), you'll receive a notification:
    - ✏️ Edit schedule time
    - 🗑️ Delete
 
+### Managing Drafts
+
+1. Click "📝 Drafts" in main menu
+2. Select a draft to preview
+3. Edit, publish, or schedule from the preview
+
 ### Available Commands
 
 - `/start` - Welcome message and authorization check
 - `/help` - Show help information
 - `/menu` - Open interactive main menu
+- `/new` - New post
+- `/drafts` - List drafts
+- `/scheduled` - List scheduled posts
+- `/stats` - Show statistics
 - `/status` - Check bot and API status
+- `/settings` - Show settings
 - `/chatid` - Show your Telegram User ID
+- `/author` - About the author
 - `/cancel` - Cancel current operation
 
 ### 📊 Statistics & Monitoring
@@ -528,7 +541,7 @@ sudo chmod -R 755 ./data
 
 ### Phase 2: Future Features
 
-- [ ] Draft system
+- [x] Draft system
 - [ ] Post templates
 - [ ] Publication calendar with weekly view
 - [ ] Recurring posts

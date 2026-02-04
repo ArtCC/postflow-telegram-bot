@@ -231,6 +231,35 @@ class PostService:
         except Exception as e:
             logger.error(f"Failed to get posts: {e}")
             return []
+
+    @staticmethod
+    def get_draft_posts(limit: int = 50) -> List[Post]:
+        """
+        Get draft posts.
+
+        Args:
+            limit: Maximum number of drafts to return
+
+        Returns:
+            List of Post objects
+        """
+        try:
+            with get_session() as session:
+                posts = (
+                    session.query(Post)
+                    .filter(Post.status == PostStatus.DRAFT)
+                    .order_by(Post.created_at.desc())
+                    .limit(limit)
+                    .all()
+                )
+                for post in posts:
+                    _ = post.threads
+                    _ = post.scheduled_post
+                    session.expunge(post)
+                return posts
+        except Exception as e:
+            logger.error(f"Failed to get draft posts: {e}")
+            return []
     
     @staticmethod
     def get_scheduled_posts() -> List[Tuple[Post, ScheduledPost]]:
