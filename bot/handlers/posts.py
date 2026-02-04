@@ -319,7 +319,7 @@ async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
     # Update message to show publishing status
         await query.edit_message_text(
             "🚀 *PUBLISHING*\n\n"
-                "⏳ Posting to Twitter",
+            "⏳ Posting to Twitter",
             parse_mode="MarkdownV2"
         )
     
@@ -338,15 +338,15 @@ async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
             
             first_tweet_url = f"https://twitter.com/i/web/status/{tweet_ids[0]}"
             
-                await query.edit_message_text(
-                    f"✅ *THREAD PUBLISHED*\n\n"
-                    f"• Tweets: `{len(tweet_ids)}`\n"
-                    f"• Post ID: `#{post_id}`\n\n"
-                    f"🔗 [View on Twitter]({escape_markdown_v2(first_tweet_url)})",
-                    parse_mode="MarkdownV2",
-                    reply_markup=get_back_keyboard(),
-                    disable_web_page_preview=True
-                )
+            await query.edit_message_text(
+                f"✅ *THREAD PUBLISHED*\n\n"
+                f"• Tweets: `{len(tweet_ids)}`\n"
+                f"• Post ID: `#{post_id}`\n\n"
+                f"🔗 [View on Twitter]({escape_markdown_v2(first_tweet_url)})",
+                parse_mode="MarkdownV2",
+                reply_markup=get_back_keyboard(),
+                disable_web_page_preview=True
+            )
         else:
             # Failed
             PostService.update_post_status(
@@ -355,13 +355,13 @@ async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
                 error_message=error
             )
             
-                await query.edit_message_text(
-                    f"❌ *PUBLISH FAILED*\n\n"
-                    f"⚠️ {escape_markdown_v2(error or 'Unknown error')}\n\n"
-                    f"Saved as `#{post_id}`\\. You can retry\\.",
-                    parse_mode="MarkdownV2",
-                    reply_markup=get_error_keyboard(show_retry=True)
-                )
+            await query.edit_message_text(
+                f"❌ *PUBLISH FAILED*\n\n"
+                f"⚠️ {escape_markdown_v2(error or 'Unknown error')}\n\n"
+                f"Saved as `#{post_id}`\\. You can retry\\.",
+                parse_mode="MarkdownV2",
+                reply_markup=get_error_keyboard(show_retry=True)
+            )
     else:
         # Single tweet
         success, tweet_id, error = twitter_service.post_tweet(post.content)
@@ -375,15 +375,15 @@ async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
             
             tweet_url = f"https://twitter.com/i/web/status/{tweet_id}"
             
-                await query.edit_message_text(
-                    f"✅ *PUBLISHED*\n\n"
-                    f"• Post ID: `#{post_id}`\n"
-                    f"• Tweet ID: `{tweet_id}`\n\n"
-                    f"🔗 [View on Twitter]({escape_markdown_v2(tweet_url)})",
-                    parse_mode="MarkdownV2",
-                    reply_markup=get_back_keyboard(),
-                    disable_web_page_preview=True
-                )
+            await query.edit_message_text(
+                f"✅ *PUBLISHED*\n\n"
+                f"• Post ID: `#{post_id}`\n"
+                f"• Tweet ID: `{tweet_id}`\n\n"
+                f"🔗 [View on Twitter]({escape_markdown_v2(tweet_url)})",
+                parse_mode="MarkdownV2",
+                reply_markup=get_back_keyboard(),
+                disable_web_page_preview=True
+            )
         else:
             PostService.update_post_status(
                 post_id,
@@ -391,13 +391,13 @@ async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
                 error_message=error
             )
             
-                await query.edit_message_text(
-                    f"❌ *PUBLISH FAILED*\n\n"
-                    f"⚠️ {escape_markdown_v2(error or 'Unknown error')}\n\n"
-                    f"Saved as `#{post_id}`\\. You can retry\\.",
-                    parse_mode="MarkdownV2",
-                    reply_markup=get_error_keyboard(show_retry=True)
-                )
+            await query.edit_message_text(
+                f"❌ *PUBLISH FAILED*\n\n"
+                f"⚠️ {escape_markdown_v2(error or 'Unknown error')}\n\n"
+                f"Saved as `#{post_id}`\\. You can retry\\.",
+                parse_mode="MarkdownV2",
+                reply_markup=get_error_keyboard(show_retry=True)
+            )
 
 
 async def handle_schedule_menu(query, context: ContextTypes.DEFAULT_TYPE) -> None:
