@@ -27,6 +27,7 @@ class SchedulerService:
         scheduled_time: datetime,
         callback: Callable,
         *args,
+        job_id: Optional[str] = None,
         **kwargs
     ) -> Optional[str]:
         """
@@ -43,8 +44,9 @@ class SchedulerService:
             Job ID if scheduled successfully, None otherwise
         """
         try:
-            # Create unique job ID
-            job_id = f"post_{post_id}_{int(scheduled_time.timestamp())}"
+            # Create unique job ID if not provided
+            if not job_id:
+                job_id = f"post_{post_id}_{int(scheduled_time.timestamp())}"
             
             # Ensure scheduled_time is timezone-aware (UTC)
             if scheduled_time.tzinfo is None:

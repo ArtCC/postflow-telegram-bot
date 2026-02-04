@@ -6,6 +6,8 @@ Main entry point for the bot application.
 
 import signal
 import sys
+from datetime import datetime, timedelta
+import pytz
 from telegram import Update, BotCommand
 from telegram.ext import (
     Application,
@@ -25,8 +27,10 @@ from bot.handlers import (
     status_command,
     handle_callback,
 )
-from bot.handlers.posts import handle_text_message
+from bot.handlers.posts import handle_text_message, publish_scheduled_post
 from bot.handlers.conversations import cancel_command
+from bot.services.scheduler_service import SchedulerService
+from bot.services.post_service import PostService
 
 
 # Global application instance for graceful shutdown
@@ -80,6 +84,47 @@ def signal_handler(signum, frame):
     sys.exit(0)
 
 
+def rehydrate_scheduled_posts(application: Application) -> None:
+    """Recreate scheduler jobs from persisted scheduled posts."""
+    scheduler_service = application.bot_data.get("scheduler_service")
+    if not scheduler_service:
+        logger.warning("Scheduler service not available; skipping rehydration")
+        return
+
+    scheduled = PostService.get_scheduled_posts()
+    if not scheduled:
+        logger.info("No scheduled posts to rehydrate")
+        return
+
+    now_utc = datetime.utcnow().replace(tzinfo=pytz.UTC)
+    restored = 0
+
+    for post, sched in scheduled:
+        scheduled_for = sched.scheduled_for
+        if scheduled_for.tzinfo is None:
+            scheduled_for = pytz.UTC.localize(scheduled_for)
+
+        run_time = scheduled_for
+        if run_time <= now_utc:
+            run_time = now_utc + timedelta(seconds=5)
+
+        job_id = scheduler_service.schedule_post(
+            post.id,
+            run_time,
+            publish_scheduled_post,
+            post.id,
+            bot=application.bot,
+            job_id=sched.job_id
+        )
+
+        if job_id:
+            restored += 1
+            if job_id != sched.job_id:
+                PostService.update_scheduled_job_id(post.id, job_id)
+
+    logger.info(f"Rehydrated {restored} scheduled post(s)")
+
+
 def main() -> None:
     """Start the bot."""
     global app_instance
@@ -99,6 +144,10 @@ def main() -> None:
     
     # Set up bot commands
     application.post_init = setup_bot_commands
+
+    # Initialize scheduler service and rehydrate pending jobs
+    application.bot_data["scheduler_service"] = SchedulerService()
+    rehydrate_scheduled_posts(application)
     
     # Register command handlers
     application.add_handler(CommandHandler("start", start_command))

@@ -396,3 +396,32 @@ class PostService:
         except Exception as e:
             logger.error(f"Failed to reschedule post {post_id}: {e}")
             return False
+
+    @staticmethod
+    def update_scheduled_job_id(post_id: int, job_id: str) -> bool:
+        """
+        Update the job ID for a scheduled post.
+
+        Args:
+            post_id: Post ID
+            job_id: New job ID
+
+        Returns:
+            True if updated successfully
+        """
+        try:
+            with get_session() as session:
+                scheduled_post = session.query(ScheduledPost).filter(
+                    ScheduledPost.post_id == post_id
+                ).first()
+
+                if not scheduled_post:
+                    return False
+
+                scheduled_post.job_id = job_id
+                session.commit()
+                logger.info(f"Updated scheduled job ID for post {post_id}")
+                return True
+        except Exception as e:
+            logger.error(f"Failed to update scheduled job ID for post {post_id}: {e}")
+            return False
