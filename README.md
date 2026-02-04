@@ -528,11 +528,12 @@ sudo chmod -R 755 ./data
 
 ### Phase 2: Future Features
 
+- [ ] Draft system
+- [ ] Post templates
+- [ ] Publication calendar with weekly view
+- [ ] Recurring posts
 - [ ] Support for images and videos in posts
 - [ ] Multi-platform support (Instagram, LinkedIn, Facebook, etc.)
-- [ ] Post templates
-- [ ] Draft system
-- [ ] Recurring posts
 
 ## 🤝 Contributing
 
