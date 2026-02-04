@@ -224,6 +224,17 @@ Posts longer than 280 characters are automatically converted to threads:
 - `/chatid` - Show your Telegram User ID
 - `/cancel` - Cancel current operation
 
+### 📊 Statistics & Monitoring
+
+The bot tracks:
+- Total posts created
+- Published posts count
+- Scheduled posts pending
+- Failed posts (with error details)
+- Success rate percentage
+
+Access statistics via the "📊 Statistics" button in the main menu or with `/status` command.
+
 ## 🔧 Architecture
 
 ```
@@ -383,6 +394,28 @@ The bot uses the pre-built image from `ghcr.io/artcc/postflow-telegram-bot:lates
 - API keys are stored securely in environment variables
 - Database is stored in a persistent Docker volume
 
+## ❓ FAQ
+
+### Can I use this bot for multiple Twitter accounts?
+
+Currently, the bot is designed for single-user, single-account use. Each instance manages one Twitter account. To manage multiple accounts, deploy separate instances with different configurations.
+
+### Does the bot store my API keys securely?
+
+Yes. All API keys are stored in environment variables (`.env` file) which is never committed to git. The keys are only used by your self-hosted instance.
+
+### What happens if the bot crashes while scheduling posts?
+
+Scheduled posts are stored in the SQLite database. When the bot restarts, APScheduler automatically reschedules all pending posts.
+
+### Can I use this bot without OpenAI?
+
+Yes. OpenAI is optional. If you don't configure `OPENAI_API_KEY`, the bot will work perfectly fine for manual post creation and scheduling. You just won't have AI generation features.
+
+### What Twitter API plan do I need?
+
+You need at least **Basic** access tier from Twitter's Developer Portal to post tweets. The Free tier has very limited posting capabilities.
+
 ## 🐛 Troubleshooting
 
 ### Bot doesn't respond
@@ -442,46 +475,27 @@ sudo chown -R 1000:1000 ./data
 sudo chmod -R 755 ./data
 ```
 
-## 📊 Statistics & Monitoring
+## 🔮 Roadmap
 
-The bot tracks:
-- Total posts created
-- Published posts count
-- Scheduled posts pending
-- Failed posts (with error details)
-- Success rate
+### Phase 1: MVP ✅
 
-View with `/status` command.
+- [x] Manual post creation
+- [x] AI-powered content generation (OpenAI GPT)
+- [x] Twitter/X publishing
+- [x] Auto thread creation for long posts
+- [x] Post scheduling (quick & custom)
+- [x] Scheduled posts management
+- [x] Post editing after creation
+- [x] Statistics & monitoring
+- [x] Docker deployment
+- [x] SQLite persistent storage
 
-## ❓ FAQ
-
-### Can I use this bot for multiple Twitter accounts?
-
-Currently, the bot is designed for single-user, single-account use. Each instance manages one Twitter account. To manage multiple accounts, deploy separate instances with different configurations.
-
-### Does the bot store my API keys securely?
-
-Yes. All API keys are stored in environment variables (`.env` file) which is never committed to git. The keys are only used by your self-hosted instance.
-
-### What happens if the bot crashes while scheduling posts?
-
-Scheduled posts are stored in the SQLite database. When the bot restarts, APScheduler automatically reschedules all pending posts.
-
-### Can I use this bot without OpenAI?
-
-Yes. OpenAI is optional. If you don't configure `OPENAI_API_KEY`, the bot will work perfectly fine for manual post creation and scheduling. You just won't have AI generation features.
-
-### What Twitter API plan do I need?
-
-You need at least **Basic** access tier from Twitter's Developer Portal to post tweets. The Free tier has very limited posting capabilities.
-
-## 🔮 Roadmap (Future Features)
+### Phase 2: Future Features
 
 - [ ] Support for images and videos in posts
 - [ ] Multi-platform support (Instagram, LinkedIn, Facebook, etc.)
 - [ ] Post templates
 - [ ] Draft system
-- [ ] Post editing after creation
 - [ ] Recurring posts
 
 ## 🤝 Contributing
@@ -493,13 +507,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
-
-### Code Style
-
-- Follow PEP 8
-- Use type hints
-- Document functions with docstrings
-- Keep functions focused and small
 
 ## 🎨 Bot Avatar
 
