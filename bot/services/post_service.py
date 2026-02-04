@@ -56,9 +56,17 @@ class PostService:
                         )
                         session.add(thread)
                     session.commit()
+                    session.refresh(post)
                     logger.info(f"Created post {post.id} with {len(tweets)} tweets")
                 else:
                     logger.info(f"Created post {post.id}")
+                
+                # Load relationships before session closes
+                _ = post.threads
+                _ = post.scheduled_post
+                
+                # Detach from session so it can be used outside
+                session.expunge(post)
                 
                 return post
                 
@@ -81,10 +89,11 @@ class PostService:
             with get_session() as session:
                 post = session.query(Post).filter(Post.id == post_id).first()
                 if post:
-                    # Eagerly load relationships
-                    session.refresh(post)
+                    # Eagerly load relationships before session closes
                     _ = post.threads
                     _ = post.scheduled_post
+                    # Detach from session
+                    session.expunge(post)
                 return post
         except Exception as e:
             logger.error(f"Failed to get post {post_id}: {e}")
@@ -171,6 +180,11 @@ class PostService:
         try:
             with get_session() as session:
                 posts = session.query(Post).order_by(Post.created_at.desc()).limit(limit).all()
+                # Load relationships and detach
+                for post in posts:
+                    _ = post.threads
+                    _ = post.scheduled_post
+                    session.expunge(post)
                 return posts
         except Exception as e:
             logger.error(f"Failed to get posts: {e}")
@@ -194,6 +208,11 @@ class PostService:
                     .order_by(ScheduledPost.scheduled_for)
                     .all()
                 )
+                # Detach objects from session
+                for post, scheduled in results:
+                    _ = post.threads
+                    session.expunge(post)
+                    session.expunge(scheduled)
                 return results
         except Exception as e:
             logger.error(f"Failed to get scheduled posts: {e}")
@@ -237,6 +256,9 @@ class PostService:
                 session.refresh(scheduled_post)
                 
                 logger.info(f"Scheduled post {post_id} for {scheduled_for}")
+                
+                # Detach from session
+                session.expunge(scheduled_post)
                 return scheduled_post
                 
         except Exception as e:

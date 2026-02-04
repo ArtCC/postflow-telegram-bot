@@ -20,8 +20,17 @@ def escape_markdown_v2(text: str) -> str:
         Escaped text safe for MarkdownV2
     """
     # Characters that need to be escaped in MarkdownV2
-    escape_chars = r'_*[]()~`>#+-=|{}.!'
-    return ''.join('\\' + char if char in escape_chars else char for char in text)
+    # Note: backslash must be escaped first to avoid double-escaping
+    escape_chars = r'\_*[]()~`>#+-=|{}.!'
+    result = []
+    for char in text:
+        if char == '\\':
+            result.append('\\\\')
+        elif char in escape_chars:
+            result.append('\\' + char)
+        else:
+            result.append(char)
+    return ''.join(result)
 
 
 def format_datetime(dt: datetime, include_time: bool = True) -> str:

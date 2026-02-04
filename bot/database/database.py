@@ -18,7 +18,8 @@ engine = create_engine(
 )
 
 # Create session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# expire_on_commit=False allows objects to be used after session closes
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)
 
 # Session type alias
 Session = SQLAlchemySession
