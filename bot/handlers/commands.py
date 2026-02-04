@@ -69,6 +69,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "• `/menu` \\- Main menu\n"
         "• `/status` \\- System status\n"
         "• `/chatid` \\- Your user ID\n"
+        "• `/settings` \\- Settings\n"
         "• `/author` \\- About the author\n\n"
         "*Highlights*\n"
         "• Manual or AI posts\n"
@@ -144,6 +145,34 @@ async def author_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     await update.message.reply_text(
         author_message,
+        parse_mode="MarkdownV2",
+        reply_markup=get_back_keyboard()
+    )
+
+
+async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /settings command."""
+    user_id = update.effective_user.id
+
+    if not is_authorized(user_id):
+        await update.message.reply_text(
+            "⛔ You are not authorized to use this bot\.",
+            parse_mode="MarkdownV2"
+        )
+        return
+
+    twitter_status = "✅ Enabled" if TWITTER_ENABLED else "⚪ Disabled"
+    openai_status = "✅ Enabled" if OPENAI_ENABLED else "⚪ Disabled"
+
+    settings_message = (
+        f"⚙️ *SETTINGS*\n\n"
+        f"• Twitter API: {escape_markdown_v2(twitter_status)}\n"
+        f"• OpenAI API: {escape_markdown_v2(openai_status)}\n\n"
+        f"Edit `.env` and restart the bot to apply changes\."
+    )
+
+    await update.message.reply_text(
+        settings_message,
         parse_mode="MarkdownV2",
         reply_markup=get_back_keyboard()
     )

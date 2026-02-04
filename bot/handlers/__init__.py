@@ -9,6 +9,7 @@ from bot.handlers.commands import (
     menu_command,
     chatid_command,
     author_command,
+    settings_command,
     status_command,
 )
 from bot.handlers.callbacks import handle_callback
@@ -23,6 +24,7 @@ __all__ = [
     'menu_command',
     'chatid_command',
     'author_command',
+    'settings_command',
     'status_command',
     'handle_callback',
     'post_conversation_handler',

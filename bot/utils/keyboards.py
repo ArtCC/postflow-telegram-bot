@@ -16,10 +16,6 @@ def get_main_menu_keyboard() -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton("📊 Stats", callback_data="statistics"),
-            InlineKeyboardButton("⚙️ Settings", callback_data="settings"),
-        ],
-        [
-            InlineKeyboardButton("ℹ️ Help", callback_data="help"),
             InlineKeyboardButton("🔄 Status", callback_data="status"),
         ],
     ]

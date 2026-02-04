@@ -25,6 +25,7 @@ from bot.handlers import (
     menu_command,
     chatid_command,
     author_command,
+    settings_command,
     status_command,
     handle_callback,
 )
@@ -42,10 +43,11 @@ async def setup_bot_commands(application: Application) -> None:
     """Set up bot commands in Telegram UI."""
     commands = [
         BotCommand("start", "Welcome message and authorization check"),
-        BotCommand("help", "Show help and available commands"),
         BotCommand("menu", "Show main menu"),
         BotCommand("status", "Check bot and API status"),
+        BotCommand("settings", "Settings"),
         BotCommand("chatid", "Show your Telegram User ID"),
+        BotCommand("help", "Show help and available commands"),
         BotCommand("author", "About the author"),
         BotCommand("cancel", "Cancel current operation"),
     ]
@@ -157,6 +159,7 @@ def main() -> None:
     application.add_handler(CommandHandler("menu", menu_command))
     application.add_handler(CommandHandler("chatid", chatid_command))
     application.add_handler(CommandHandler("author", author_command))
+    application.add_handler(CommandHandler("settings", settings_command))
     application.add_handler(CommandHandler("status", status_command))
     application.add_handler(CommandHandler("cancel", cancel_command))
     
