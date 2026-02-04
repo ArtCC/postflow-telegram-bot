@@ -11,11 +11,11 @@ def get_main_menu_keyboard() -> InlineKeyboardMarkup:
     """Create the main menu keyboard with inline buttons."""
     keyboard = [
         [
-            InlineKeyboardButton("✍️ New Post", callback_data="new_post"),
+            InlineKeyboardButton("✍️ New", callback_data="new_post"),
             InlineKeyboardButton("📅 Scheduled", callback_data="scheduled"),
         ],
         [
-            InlineKeyboardButton("📊 Statistics", callback_data="statistics"),
+            InlineKeyboardButton("📊 Stats", callback_data="statistics"),
             InlineKeyboardButton("⚙️ Settings", callback_data="settings"),
         ],
         [
@@ -28,7 +28,7 @@ def get_main_menu_keyboard() -> InlineKeyboardMarkup:
 
 def get_back_keyboard() -> InlineKeyboardMarkup:
     """Create a keyboard with a back button."""
-    keyboard = [[InlineKeyboardButton("🔙 Back to Menu", callback_data="menu")]]
+    keyboard = [[InlineKeyboardButton("🔙 Menu", callback_data="menu")]]
     return InlineKeyboardMarkup(keyboard)
 
 
@@ -41,7 +41,7 @@ def get_new_post_keyboard() -> InlineKeyboardMarkup:
     # Add AI option only if OpenAI is enabled
     from bot.config import OPENAI_ENABLED
     if OPENAI_ENABLED:
-        keyboard.insert(0, [InlineKeyboardButton("🤖 Generate with AI", callback_data="post_ai")])
+        keyboard.insert(0, [InlineKeyboardButton("🤖 AI", callback_data="post_ai")])
     
     keyboard.append([InlineKeyboardButton("🔙 Back", callback_data="menu")])
     return InlineKeyboardMarkup(keyboard)
@@ -58,7 +58,7 @@ def get_post_preview_keyboard(post_id: int, is_thread: bool = False) -> InlineKe
     Returns:
         Inline keyboard markup
     """
-    label = "🚀 Publish Thread" if is_thread else "🚀 Publish Now"
+    label = "🚀 Publish Thread" if is_thread else "🚀 Publish"
     
     keyboard = [
         [
@@ -67,7 +67,7 @@ def get_post_preview_keyboard(post_id: int, is_thread: bool = False) -> InlineKe
         ],
         [
             InlineKeyboardButton("✏️ Edit", callback_data=f"edit_{post_id}"),
-            InlineKeyboardButton("❌ Cancel", callback_data=f"delete_{post_id}"),
+            InlineKeyboardButton("🗑️ Delete", callback_data=f"delete_{post_id}"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -77,12 +77,12 @@ def get_schedule_keyboard(post_id: int) -> InlineKeyboardMarkup:
     """Create keyboard for scheduling options."""
     keyboard = [
         [
-            InlineKeyboardButton("⏰ In 1 hour", callback_data=f"quick_schedule_1h_{post_id}"),
-            InlineKeyboardButton("⏰ In 3 hours", callback_data=f"quick_schedule_3h_{post_id}"),
+            InlineKeyboardButton("⏰ In 1h", callback_data=f"quick_schedule_1h_{post_id}"),
+            InlineKeyboardButton("⏰ In 3h", callback_data=f"quick_schedule_3h_{post_id}"),
         ],
         [
             InlineKeyboardButton("📆 Tomorrow 9am", callback_data=f"quick_schedule_tomorrow_{post_id}"),
-            InlineKeyboardButton("📆 Custom date", callback_data=f"custom_schedule_{post_id}"),
+            InlineKeyboardButton("📆 Custom", callback_data=f"custom_schedule_{post_id}"),
         ],
         [InlineKeyboardButton("🔙 Back", callback_data=f"preview_{post_id}")],
     ]
@@ -128,7 +128,7 @@ def get_scheduled_posts_keyboard(scheduled_posts: List[tuple], page: int = 0, pe
         keyboard.append(nav_buttons)
     
     # Add back button
-    keyboard.append([InlineKeyboardButton("🔙 Back to Menu", callback_data="menu")])
+    keyboard.append([InlineKeyboardButton("🔙 Menu", callback_data="menu")])
     
     return InlineKeyboardMarkup(keyboard)
 
@@ -138,7 +138,7 @@ def get_scheduled_post_actions_keyboard(post_id: int) -> InlineKeyboardMarkup:
     keyboard = [
         [
             InlineKeyboardButton("👁️ View", callback_data=f"preview_{post_id}"),
-            InlineKeyboardButton("✏️ Edit Time", callback_data=f"reschedule_{post_id}"),
+            InlineKeyboardButton("✏️ Reschedule", callback_data=f"reschedule_{post_id}"),
         ],
         [
             InlineKeyboardButton("🗑️ Delete", callback_data=f"confirm_delete_scheduled_{post_id}"),
@@ -153,8 +153,8 @@ def get_confirm_delete_keyboard(post_id: int, is_scheduled: bool = False) -> Inl
     callback_prefix = "scheduled" if is_scheduled else "post"
     keyboard = [
         [
-            InlineKeyboardButton("✅ Yes, delete", callback_data=f"confirm_delete_{callback_prefix}_{post_id}"),
-            InlineKeyboardButton("❌ No, cancel", callback_data=f"cancel_delete_{post_id}"),
+            InlineKeyboardButton("✅ Delete", callback_data=f"confirm_delete_{callback_prefix}_{post_id}"),
+            InlineKeyboardButton("❌ Cancel", callback_data=f"cancel_delete_{post_id}"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)

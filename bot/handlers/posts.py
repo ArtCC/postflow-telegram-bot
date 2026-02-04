@@ -85,22 +85,15 @@ async def notify_scheduled_post_result(bot, post_id: int, success: bool, tweet_i
             tweet_url = f"https://twitter.com/i/web/status/{tweet_id}" if tweet_id else ""
             post_type = "Thread" if is_thread else "Post"
             message = (
-                f"━━━━━━━━━━━━━━━━━━━━━━\n"
-                f"🎉 *SCHEDULED {post_type.upper()} PUBLISHED*\n"
-                f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                f"✅ Your scheduled post \\#`{post_id}` has been\n"
-                f"   published successfully\\!\n\n"
+                f"✅ *SCHEDULED {post_type.upper()} PUBLISHED*\n\n"
+                f"Post `#{post_id}` is live\n\n"
                 f"🔗 [View on Twitter]({escape_markdown_v2(tweet_url)})"
             )
         else:
             message = (
-                f"━━━━━━━━━━━━━━━━━━━━━━\n"
-                f"❌ *SCHEDULED POST FAILED*\n"
-                f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                f"⚠️ Your scheduled post \\#`{post_id}` could\n"
-                f"   not be published\\.\n\n"
-                f"📝 Error: {escape_markdown_v2(error or 'Unknown error')}\n\n"
-                f"💡 Check /menu to retry or reschedule\\."
+                f"❌ *SCHEDULED POST FAILED*\n\n"
+                f"Post `#{post_id}` was not published\n\n"
+                f"📝 {escape_markdown_v2(error or 'Unknown error')}"
             )
         
         await bot.send_message(
@@ -137,7 +130,7 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     else:
         # No specific action expected, show helpful message
         await update.message.reply_text(
-            "💡 Use /menu to see available options",
+            "💡 Open the menu to continue",
             reply_markup=get_back_keyboard()
         )
 
@@ -148,11 +141,8 @@ async def process_manual_post(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     if not content or len(content.strip()) == 0:
         await update.message.reply_text(
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "⚠️ *EMPTY CONTENT*\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "Cannot create empty post\\!\n\n"
-            "Please write some content\\.",
+            "⚠️ *EMPTY CONTENT*\n\n"
+            "Write something to create a post\\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
@@ -163,7 +153,7 @@ async def process_manual_post(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     if not post:
         await update.message.reply_text(
-            "❌ Failed to create post\\. Please try again\\.",
+            "❌ Failed to create the post\\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
@@ -180,7 +170,7 @@ async def process_edit_post(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     
     if not post_id:
         await update.message.reply_text(
-            "❌ No post to edit\\. Please try again\\.",
+            "❌ No post to edit\\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
@@ -188,11 +178,8 @@ async def process_edit_post(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     
     if not content or len(content.strip()) == 0:
         await update.message.reply_text(
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "⚠️ *EMPTY CONTENT*\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "Cannot update with empty content\\!\n\n"
-            "Please write some content\\.",
+            "⚠️ *EMPTY CONTENT*\n\n"
+            "Write something to update the post\\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
@@ -203,17 +190,14 @@ async def process_edit_post(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     
     if not success:
         await update.message.reply_text(
-            "❌ Failed to update post\\. Please try again\\.",
+            "❌ Failed to update the post\\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
         return
     
     await update.message.reply_text(
-        "━━━━━━━━━━━━━━━━━━━━━━\n"
-        "✅ *POST UPDATED*\n"
-        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        "Your post has been updated\\!",
+        "✅ *POST UPDATED*",
         parse_mode="MarkdownV2"
     )
     
@@ -227,11 +211,8 @@ async def process_ai_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     
     # Send "generating" message
     generating_msg = await update.message.reply_text(
-        "━━━━━━━━━━━━━━━━━━━━━━\n"
-        "🤖 *GENERATING\\.\\.\\.*\n"
-        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        "⏳ Creating content with AI\\.\\.\\.\n\n"
-        "This may take a few seconds\\.",
+        "🤖 *GENERATING*\n\n"
+        "⏳ Creating content with AI\\.\\.",
         parse_mode="MarkdownV2"
     )
     
@@ -240,14 +221,9 @@ async def process_ai_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     
     if not success:
         await generating_msg.edit_text(
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"🤖 *AI GENERATION FAILED*\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"🤖 *AI FAILED*\n\n"
             f"❌ {escape_markdown_v2(error)}\n\n"
-            f"💡 You can try:\n"
-            f"   • Rephrasing your prompt\n"
-            f"   • Writing manually\n"
-            f"   • Checking your API key",
+            f"Try a shorter or clearer prompt\\.",
             parse_mode="MarkdownV2",
             reply_markup=get_error_keyboard(show_retry=True)
         )
@@ -262,7 +238,7 @@ async def process_ai_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     
     if not post:
         await generating_msg.edit_text(
-            "❌ Failed to save post\\. Please try again\\.",
+            "❌ Failed to save the post\\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
@@ -289,39 +265,36 @@ async def show_post_preview(message, post_id: int) -> None:
     char_count = len(post.content)
     
     if is_thread:
-        # Show thread preview
         tweets = split_into_tweets(post.content)
-        thread_preview = "\n\n".join([
-            f"📌 *Tweet {i}/{len(tweets)}:*\n{escape_markdown_v2(tweet)}"
-            for i, tweet in enumerate(tweets, 1)
+        visible = tweets[:3]
+        remaining = len(tweets) - len(visible)
+        thread_preview = "\n".join([
+            f"{i}/{len(tweets)} {escape_markdown_v2(tweet)}"
+            for i, tweet in enumerate(visible, 1)
         ])
-        
+        if remaining > 0:
+            thread_preview += f"\n\.\.\. \\+{remaining} more"
+
         preview_message = (
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"🧵 *THREAD PREVIEW*\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"🧵 *THREAD PREVIEW*\n\n"
+            f"*Summary*\n"
+            f"• Tweets: `{len(tweets)}`\n"
+            f"• Chars: `{char_count}`\n"
+            f"• Created: {'`AI`' if post.created_by_ai else '`Manual`'}\n\n"
+            f"*Content*\n"
             f"{thread_preview}\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"📊 *Stats:*\n"
-            f"   • Total chars: `{char_count}`\n"
-            f"   • Tweets: `{len(tweets)}`\n"
-            f"   • Created: {'`AI`' if post.created_by_ai else '`Manually`'}\n\n"
-            f"Choose an action:"
+            f"Select an action:"
         )
     else:
-        # Show single post preview
         preview_message = (
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"👁️ *POST PREVIEW*\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"📝 *Content:*\n"
+            f"👁️ *POST PREVIEW*\n\n"
+            f"*Summary*\n"
+            f"• Chars: `{char_count}/{MAX_TWEET_LENGTH}` {'✅' if char_count <= MAX_TWEET_LENGTH else '⚠️'}\n"
+            f"• Type: `Single`\n"
+            f"• Created: {'`AI`' if post.created_by_ai else '`Manual`'}\n\n"
+            f"*Content*\n"
             f"{escape_markdown_v2(post.content)}\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"📊 *Stats:*\n"
-            f"   • Characters: `{char_count}/{MAX_TWEET_LENGTH}` {'✅' if char_count <= MAX_TWEET_LENGTH else '⚠️'}\n"
-            f"   • Type: `Single tweet`\n"
-            f"   • Created: {'`AI`' if post.created_by_ai else '`Manually`'}\n\n"
-            f"Choose an action:"
+            f"Select an action:"
         )
     
     await message.reply_text(
@@ -344,13 +317,11 @@ async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
         return
     
     # Update message to show publishing status
-    await query.edit_message_text(
-        "━━━━━━━━━━━━━━━━━━━━━━\n"
-        "🚀 *PUBLISHING\\.\\.\\.*\n"
-        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        "⏳ Posting to Twitter\\.\\.\\.",
-        parse_mode="MarkdownV2"
-    )
+        await query.edit_message_text(
+            "🚀 *PUBLISHING*\n\n"
+                "⏳ Posting to Twitter",
+            parse_mode="MarkdownV2"
+        )
     
     # Publish based on post type
     if post.is_thread():
@@ -367,19 +338,15 @@ async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
             
             first_tweet_url = f"https://twitter.com/i/web/status/{tweet_ids[0]}"
             
-            await query.edit_message_text(
-                f"━━━━━━━━━━━━━━━━━━━━━━\n"
-                f"✅ *THREAD PUBLISHED*\n"
-                f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                f"🧵 Thread posted successfully\\!\n\n"
-                f"📊 *Details:*\n"
-                f"   • Tweets: `{len(tweet_ids)}`\n"
-                f"   • Post ID: `#{post_id}`\n\n"
-                f"🔗 [View on Twitter]({escape_markdown_v2(first_tweet_url)})",
-                parse_mode="MarkdownV2",
-                reply_markup=get_back_keyboard(),
-                disable_web_page_preview=True
-            )
+                await query.edit_message_text(
+                    f"✅ *THREAD PUBLISHED*\n\n"
+                    f"• Tweets: `{len(tweet_ids)}`\n"
+                    f"• Post ID: `#{post_id}`\n\n"
+                    f"🔗 [View on Twitter]({escape_markdown_v2(first_tweet_url)})",
+                    parse_mode="MarkdownV2",
+                    reply_markup=get_back_keyboard(),
+                    disable_web_page_preview=True
+                )
         else:
             # Failed
             PostService.update_post_status(
@@ -388,16 +355,13 @@ async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
                 error_message=error
             )
             
-            await query.edit_message_text(
-                f"━━━━━━━━━━━━━━━━━━━━━━\n"
-                f"❌ *PUBLISH FAILED*\n"
-                f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                f"⚠️ {escape_markdown_v2(error or 'Unknown error')}\n\n"
-                f"💡 Your post is saved \\(ID: `#{post_id}`\\)\n"
-                f"   You can retry later\\.",
-                parse_mode="MarkdownV2",
-                reply_markup=get_error_keyboard(show_retry=True)
-            )
+                await query.edit_message_text(
+                    f"❌ *PUBLISH FAILED*\n\n"
+                    f"⚠️ {escape_markdown_v2(error or 'Unknown error')}\n\n"
+                    f"Saved as `#{post_id}`\\. You can retry\\.",
+                    parse_mode="MarkdownV2",
+                    reply_markup=get_error_keyboard(show_retry=True)
+                )
     else:
         # Single tweet
         success, tweet_id, error = twitter_service.post_tweet(post.content)
@@ -411,19 +375,15 @@ async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
             
             tweet_url = f"https://twitter.com/i/web/status/{tweet_id}"
             
-            await query.edit_message_text(
-                f"━━━━━━━━━━━━━━━━━━━━━━\n"
-                f"✅ *PUBLISHED*\n"
-                f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                f"🎉 Post published successfully\\!\n\n"
-                f"📊 *Details:*\n"
-                f"   • Post ID: `#{post_id}`\n"
-                f"   • Tweet ID: `{tweet_id}`\n\n"
-                f"🔗 [View on Twitter]({escape_markdown_v2(tweet_url)})",
-                parse_mode="MarkdownV2",
-                reply_markup=get_back_keyboard(),
-                disable_web_page_preview=True
-            )
+                await query.edit_message_text(
+                    f"✅ *PUBLISHED*\n\n"
+                    f"• Post ID: `#{post_id}`\n"
+                    f"• Tweet ID: `{tweet_id}`\n\n"
+                    f"🔗 [View on Twitter]({escape_markdown_v2(tweet_url)})",
+                    parse_mode="MarkdownV2",
+                    reply_markup=get_back_keyboard(),
+                    disable_web_page_preview=True
+                )
         else:
             PostService.update_post_status(
                 post_id,
@@ -431,16 +391,13 @@ async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
                 error_message=error
             )
             
-            await query.edit_message_text(
-                f"━━━━━━━━━━━━━━━━━━━━━━\n"
-                f"❌ *PUBLISH FAILED*\n"
-                f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                f"⚠️ {escape_markdown_v2(error or 'Unknown error')}\n\n"
-                f"💡 Your post is saved \\(ID: `#{post_id}`\\)\n"
-                f"   You can retry later\\.",
-                parse_mode="MarkdownV2",
-                reply_markup=get_error_keyboard(show_retry=True)
-            )
+                await query.edit_message_text(
+                    f"❌ *PUBLISH FAILED*\n\n"
+                    f"⚠️ {escape_markdown_v2(error or 'Unknown error')}\n\n"
+                    f"Saved as `#{post_id}`\\. You can retry\\.",
+                    parse_mode="MarkdownV2",
+                    reply_markup=get_error_keyboard(show_retry=True)
+                )
 
 
 async def handle_schedule_menu(query, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -448,12 +405,8 @@ async def handle_schedule_menu(query, context: ContextTypes.DEFAULT_TYPE) -> Non
     post_id = int(query.data.split("_")[1])
     
     schedule_message = (
-        "━━━━━━━━━━━━━━━━━━━━━━\n"
-        "📅 *SCHEDULE POST*\n"
-        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        "When do you want to publish?\n\n"
-        "Choose a quick option or\n"
-        "enter a custom date\\."
+        "📅 *SCHEDULE POST*\n\n"
+        "Choose a time or enter a custom date\\."
     )
     
     await query.edit_message_text(
@@ -469,13 +422,8 @@ async def show_scheduled_posts(query, context: ContextTypes.DEFAULT_TYPE) -> Non
     
     if not scheduled:
         await query.edit_message_text(
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "📅 *NO SCHEDULED POSTS*\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "⚠️ You haven't scheduled any\n"
-            "   posts yet\\!\n\n"
-            "💡 Create a new post and\n"
-            "   choose 'Schedule' to get started\\.",
+            "📅 *NO SCHEDULED POSTS*\n\n"
+            "Create a post and choose Schedule to get started\\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
@@ -497,19 +445,16 @@ async def show_scheduled_posts(query, context: ContextTypes.DEFAULT_TYPE) -> Non
     # Create message with list
     posts_list = "\n\n".join([
         f"📌 *Post \\#{pid}*\n"
-        f"   {escape_markdown_v2(preview)}\n"
-        f"   ⏰ {escape_markdown_v2(format_datetime(scheduled_for))}\n"
-        f"   ⏳ {escape_markdown_v2(format_relative_time(scheduled_for))}"
-        for pid, preview, scheduled_for in posts_data[:5]  # Show first 5
+        f"{escape_markdown_v2(preview)}\n"
+        f"⏰ {escape_markdown_v2(format_datetime(scheduled_for))} \\({escape_markdown_v2(TZ)}\\)\n"
+        f"⏳ {escape_markdown_v2(format_relative_time(scheduled_for))}"
+        for pid, preview, scheduled_for in posts_data[:5]
     ])
     
     message = (
-        f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"📅 *SCHEDULED POSTS* \\(`{count}`\\)\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"📅 *SCHEDULED POSTS* \\(`{count}`\\)\n\n"
         f"{posts_list}\n\n"
-        f"🌍 Timezone: `{escape_markdown_v2(TZ)}`\n\n"
-        f"💡 Click to view details"
+        f"Select a post to view details\\."
     )
     
     await query.edit_message_text(
@@ -542,16 +487,14 @@ async def handle_delete_post(query, context: ContextTypes.DEFAULT_TYPE) -> None:
         
         if success:
             await query.edit_message_text(
-                "━━━━━━━━━━━━━━━━━━━━━━\n"
-                "✅ *POST DELETED*\n"
-                "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                "🗑️ Post removed successfully\\.",
+                "✅ *POST DELETED*\n\n"
+                "Post removed\\.",
                 parse_mode="MarkdownV2",
                 reply_markup=get_back_keyboard()
             )
         else:
             await query.edit_message_text(
-                "❌ Failed to delete post\\.",
+                "❌ Failed to delete the post\\.",
                 parse_mode="MarkdownV2",
                 reply_markup=get_back_keyboard()
             )
@@ -560,12 +503,8 @@ async def handle_delete_post(query, context: ContextTypes.DEFAULT_TYPE) -> None:
         post_id = int(data.split("_")[1])
         
         await query.edit_message_text(
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "⚠️ *CONFIRM DELETE*\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "Are you sure you want to delete\n"
-            "this post?\n\n"
-            "⚠️ This action cannot be undone\\!",
+            "⚠️ *CONFIRM DELETE*\n\n"
+            "This action cannot be undone\\.",
             parse_mode="MarkdownV2",
             reply_markup=get_confirm_delete_keyboard(post_id)
         )
@@ -589,14 +528,11 @@ async def handle_edit_post(query, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.user_data['awaiting'] = 'edit_post'
     
     await query.edit_message_text(
-        "━━━━━━━━━━━━━━━━━━━━━━\n"
-        "✏️ *EDIT POST*\n"
-        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"📝 *Current content:*\n"
+        "✏️ *EDIT POST*\n\n"
+        f"*Current content*\n"
         f"{escape_markdown_v2(post.content)}\n\n"
-        "━━━━━━━━━━━━━━━━━━━━\n\n"
-        "Type your new content below\\.\n\n"
-        "💡 Type /cancel to abort\\.",
+        "Send the updated text\\.\n"
+        "Type /cancel to abort\\.",
         parse_mode="MarkdownV2"
     )
 
@@ -618,36 +554,35 @@ async def show_post_preview_edit(query, post_id: int) -> None:
     
     if is_thread:
         tweets = split_into_tweets(post.content)
-        thread_preview = "\n\n".join([
-            f"📌 *Tweet {i}/{len(tweets)}:*\n{escape_markdown_v2(tweet)}"
-            for i, tweet in enumerate(tweets, 1)
+        visible = tweets[:3]
+        remaining = len(tweets) - len(visible)
+        thread_preview = "\n".join([
+            f"{i}/{len(tweets)} {escape_markdown_v2(tweet)}"
+            for i, tweet in enumerate(visible, 1)
         ])
-        
+        if remaining > 0:
+            thread_preview += f"\n\.\.\. \\+{remaining} more"
+
         preview_message = (
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"🧵 *THREAD PREVIEW*\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"🧵 *THREAD PREVIEW*\n\n"
+            f"*Summary*\n"
+            f"• Tweets: `{len(tweets)}`\n"
+            f"• Chars: `{char_count}`\n"
+            f"• Created: {'`AI`' if post.created_by_ai else '`Manual`'}\n\n"
+            f"*Content*\n"
             f"{thread_preview}\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"📊 *Stats:*\n"
-            f"   • Total chars: `{char_count}`\n"
-            f"   • Tweets: `{len(tweets)}`\n"
-            f"   • Created: {'`AI`' if post.created_by_ai else '`Manually`'}\n\n"
-            f"Choose an action:"
+            f"Select an action:"
         )
     else:
         preview_message = (
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"👁️ *POST PREVIEW*\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"📝 *Content:*\n"
+            f"👁️ *POST PREVIEW*\n\n"
+            f"*Summary*\n"
+            f"• Chars: `{char_count}/{MAX_TWEET_LENGTH}` {'✅' if char_count <= MAX_TWEET_LENGTH else '⚠️'}\n"
+            f"• Type: `Single`\n"
+            f"• Created: {'`AI`' if post.created_by_ai else '`Manual`'}\n\n"
+            f"*Content*\n"
             f"{escape_markdown_v2(post.content)}\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"📊 *Stats:*\n"
-            f"   • Characters: `{char_count}/{MAX_TWEET_LENGTH}` {'✅' if char_count <= MAX_TWEET_LENGTH else '⚠️'}\n"
-            f"   • Type: `Single tweet`\n"
-            f"   • Created: {'`AI`' if post.created_by_ai else '`Manually`'}\n\n"
-            f"Choose an action:"
+            f"Select an action:"
         )
     
     await query.edit_message_text(
@@ -702,7 +637,7 @@ async def handle_quick_schedule(query, context: ContextTypes.DEFAULT_TYPE) -> No
     scheduler_service = get_scheduler_service(context)
     if not scheduler_service:
         await query.edit_message_text(
-            "❌ Scheduler service not available\. Please restart the bot\.",
+            "❌ Scheduler service not available\. Restart the bot\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
@@ -720,20 +655,15 @@ async def handle_quick_schedule(query, context: ContextTypes.DEFAULT_TYPE) -> No
         PostService.schedule_post(post_id, scheduled_time_utc, job_id)
         
         await query.edit_message_text(
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"✅ *POST SCHEDULED*\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"📅 Your post will be published\n"
-            f"   *{escape_markdown_v2(time_label)}*\n\n"
-            f"⏰ {escape_markdown_v2(format_datetime(scheduled_time_local))}\n"
-            f"🌍 Timezone: `{escape_markdown_v2(TZ)}`\n\n"
-            f"💡 View scheduled posts in menu\\.",
+            f"✅ *POST SCHEDULED*\n\n"
+            f"⏰ {escape_markdown_v2(format_datetime(scheduled_time_local))} \\({escape_markdown_v2(TZ)}\\)\n"
+            f"⏳ {escape_markdown_v2(time_label)}",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
     else:
         await query.edit_message_text(
-            "❌ Failed to schedule post\\. Please try again\\.",
+            "❌ Failed to schedule the post\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
@@ -747,14 +677,10 @@ async def handle_custom_schedule_prompt(query, context: ContextTypes.DEFAULT_TYP
     context.user_data['awaiting'] = 'custom_schedule'
     
     await query.edit_message_text(
-        f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"📆 *CUSTOM SCHEDULE*\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"Enter the date and time:\n\n"
-        f"📝 *Format:* `YYYY\\-MM\\-DD HH:MM`\n\n"
-        f"📌 *Example:*\n"
-        f"   `2026\\-02\\-05 14:30`\n\n"
-        f"🌍 Timezone: `{escape_markdown_v2(TZ)}`\n\n"
+        f"📆 *CUSTOM SCHEDULE*\n\n"
+        f"Format: `YYYY\\-MM\\-DD HH:MM`\n"
+        f"Example: `2026\\-02\\-05 14:30`\n"
+        f"Timezone: `{escape_markdown_v2(TZ)}`\n\n"
         f"Type /cancel to abort\\.",
         parse_mode="MarkdownV2"
     )
@@ -767,7 +693,7 @@ async def process_custom_schedule(update: Update, context: ContextTypes.DEFAULT_
     
     if not post_id:
         await update.message.reply_text(
-            "❌ No post to schedule\\. Please try again\\.",
+            "❌ No post to schedule\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
@@ -781,12 +707,8 @@ async def process_custom_schedule(update: Update, context: ContextTypes.DEFAULT_
         scheduled_time_utc = scheduled_time.astimezone(pytz.UTC)
     except ValueError:
         await update.message.reply_text(
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "❌ *INVALID FORMAT*\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "Please use format:\n"
-            "`YYYY\\-MM\\-DD HH:MM`\n\n"
-            "Example: `2026\\-02\\-05 14:30`",
+            "❌ *INVALID FORMAT*\n\n"
+            "Use: `YYYY\\-MM\\-DD HH:MM`\\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
@@ -796,7 +718,7 @@ async def process_custom_schedule(update: Update, context: ContextTypes.DEFAULT_
     now_local = datetime.now(USER_TIMEZONE)
     if scheduled_time <= now_local:
         await update.message.reply_text(
-            "❌ Scheduled time must be in the future\\!",
+            "❌ Scheduled time must be in the future\\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
@@ -815,7 +737,7 @@ async def process_custom_schedule(update: Update, context: ContextTypes.DEFAULT_
     scheduler_service = get_scheduler_service(context)
     if not scheduler_service:
         await update.message.reply_text(
-            "❌ Scheduler service not available\. Please restart the bot\.",
+            "❌ Scheduler service not available\. Restart the bot\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
@@ -834,19 +756,14 @@ async def process_custom_schedule(update: Update, context: ContextTypes.DEFAULT_
         
         # Show confirmation with time in user's timezone
         await update.message.reply_text(
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"✅ *POST SCHEDULED*\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"📅 Your post will be published:\n\n"
-            f"⏰ {escape_markdown_v2(format_datetime(scheduled_time))}\n"
-            f"🌍 Timezone: `{escape_markdown_v2(TZ)}`\n\n"
-            f"💡 View scheduled posts in menu\\.",
+            f"✅ *POST SCHEDULED*\n\n"
+            f"⏰ {escape_markdown_v2(format_datetime(scheduled_time))} \\({escape_markdown_v2(TZ)}\\)",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
     else:
         await update.message.reply_text(
-            "❌ Failed to schedule post\\. Please try again\\.",
+            "❌ Failed to schedule the post\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
@@ -872,17 +789,13 @@ async def handle_view_scheduled_post(query, context: ContextTypes.DEFAULT_TYPE) 
     scheduled_for_local = scheduled_for_utc.astimezone(USER_TIMEZONE)
     
     await query.edit_message_text(
-        f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"📅 *SCHEDULED POST*\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"📝 *Content:*\n"
+        f"📅 *SCHEDULED POST*\n\n"
+        f"*Content*\n"
         f"{escape_markdown_v2(truncate_text(post.content, 200))}\n\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"⏰ *Scheduled for:*\n"
-        f"   {escape_markdown_v2(format_datetime(scheduled_for_local))}\n"
-        f"   {escape_markdown_v2(format_relative_time(scheduled_for_local))}\n"
-        f"🌍 Timezone: `{escape_markdown_v2(TZ)}`\n\n"
-        f"Choose an action:",
+        f"*Schedule*\n"
+        f"⏰ {escape_markdown_v2(format_datetime(scheduled_for_local))} \\({escape_markdown_v2(TZ)}\\)\n"
+        f"⏳ {escape_markdown_v2(format_relative_time(scheduled_for_local))}\n\n"
+        f"Select an action:",
         parse_mode="MarkdownV2",
         reply_markup=get_scheduled_post_actions_keyboard(post_id)
     )
@@ -919,18 +832,15 @@ async def handle_scheduled_page(query, context: ContextTypes.DEFAULT_TYPE) -> No
     
     posts_list = "\n\n".join([
         f"📌 *Post \\#{pid}*\n"
-        f"   {escape_markdown_v2(preview)}\n"
-        f"   ⏰ {escape_markdown_v2(format_datetime(scheduled_for))}"
+        f"{escape_markdown_v2(preview)}\n"
+        f"⏰ {escape_markdown_v2(format_datetime(scheduled_for))} \\({escape_markdown_v2(TZ)}\\)"
         for pid, preview, scheduled_for in posts_data[start:end]
     ])
     
     message = (
-        f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"📅 *SCHEDULED POSTS* \\(`{count}`\\)\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"📅 *SCHEDULED POSTS* \\(`{count}`\\)\n\n"
         f"{posts_list}\n\n"
-        f"🌍 Timezone: `{escape_markdown_v2(TZ)}`\n\n"
-        f"💡 Click to view details"
+        f"Select a post to view details\\."
     )
     
     await query.edit_message_text(
@@ -948,14 +858,10 @@ async def handle_reschedule_prompt(query, context: ContextTypes.DEFAULT_TYPE) ->
     context.user_data['awaiting'] = 'reschedule'
     
     await query.edit_message_text(
-        f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"📆 *RESCHEDULE POST*\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"Enter the new date and time:\n\n"
-        f"📝 *Format:* `YYYY\\-MM\\-DD HH:MM`\n\n"
-        f"📌 *Example:*\n"
-        f"   `2026\\-02\\-05 14:30`\n\n"
-        f"🌍 Timezone: `{escape_markdown_v2(TZ)}`\n\n"
+        f"📆 *RESCHEDULE POST*\n\n"
+        f"Format: `YYYY\\-MM\\-DD HH:MM`\n"
+        f"Example: `2026\\-02\\-05 14:30`\n"
+        f"Timezone: `{escape_markdown_v2(TZ)}`\n\n"
         f"Type /cancel to abort\\.",
         parse_mode="MarkdownV2"
     )
@@ -968,7 +874,7 @@ async def process_reschedule(update: Update, context: ContextTypes.DEFAULT_TYPE,
     
     if not post_id:
         await update.message.reply_text(
-            "❌ No post to reschedule\\. Please try again\\.",
+            "❌ No post to reschedule\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
@@ -982,12 +888,8 @@ async def process_reschedule(update: Update, context: ContextTypes.DEFAULT_TYPE,
         new_time_utc = new_time_local.astimezone(pytz.UTC)
     except ValueError:
         await update.message.reply_text(
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "❌ *INVALID FORMAT*\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "Please use format:\n"
-            "`YYYY\\-MM\\-DD HH:MM`\n\n"
-            "Example: `2026\\-02\\-05 14:30`",
+            "❌ *INVALID FORMAT*\n\n"
+            "Use: `YYYY\\-MM\\-DD HH:MM`\\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
@@ -997,7 +899,7 @@ async def process_reschedule(update: Update, context: ContextTypes.DEFAULT_TYPE,
     now_local = datetime.now(USER_TIMEZONE)
     if new_time_local <= now_local:
         await update.message.reply_text(
-            "❌ Scheduled time must be in the future\\!",
+            "❌ Scheduled time must be in the future\\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
@@ -1018,7 +920,7 @@ async def process_reschedule(update: Update, context: ContextTypes.DEFAULT_TYPE,
     scheduler_service = get_scheduler_service(context)
     if not scheduler_service:
         await update.message.reply_text(
-            "❌ Scheduler service not available\. Please restart the bot\.",
+            "❌ Scheduler service not available\. Restart the bot\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
@@ -1033,19 +935,14 @@ async def process_reschedule(update: Update, context: ContextTypes.DEFAULT_TYPE,
         
         # Show confirmation with time in user's timezone
         await update.message.reply_text(
-            f"━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"✅ *POST RESCHEDULED*\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"📅 New scheduled time:\n\n"
-            f"⏰ {escape_markdown_v2(format_datetime(new_time_local))}\n"
-            f"🌍 Timezone: `{escape_markdown_v2(TZ)}`\n\n"
-            f"💡 View scheduled posts in menu\\.",
+            f"✅ *POST RESCHEDULED*\n\n"
+            f"⏰ {escape_markdown_v2(format_datetime(new_time_local))} \\({escape_markdown_v2(TZ)}\\)",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
     else:
         await update.message.reply_text(
-            "❌ Failed to reschedule post\\. Please try again\\.",
+            "❌ Failed to reschedule the post\.",
             parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )

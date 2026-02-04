@@ -51,29 +51,20 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     # Post creation callbacks
     elif data == "post_manual":
         await query.edit_message_text(
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "✏️ *WRITE POST*\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "📝 Type your post content:\n\n"
-            "💡 Tips:\n"
-            "   • Max 280 chars for single tweet\n"
-            "   • Longer \\= auto thread\n"
-            "   • Type /cancel to abort",
+            "✏️ *WRITE POST*\n\n"
+            "Send your post text\\.\n"
+            "Tip: long posts become threads\\.\n"
+            "Type /cancel to abort\\.",
             parse_mode="MarkdownV2"
         )
         context.user_data['awaiting'] = 'manual_post'
     
     elif data == "post_ai":
         await query.edit_message_text(
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "🤖 *AI GENERATION*\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "💡 Describe what you want to post:\n\n"
-            "Examples:\n"
-            "• 'Post about Python advantages'\n"
-            "• 'Thread on AI trends in 2026'\n"
-            "• 'Motivational Monday post'\n\n"
-            "Type /cancel to abort",
+            "🤖 *AI GENERATION*\n\n"
+            "Describe what you want to post\\.\n"
+            "Example: `Thread on AI trends in 2026`\n\n"
+            "Type /cancel to abort\\.",
             parse_mode="MarkdownV2"
         )
         context.user_data['awaiting'] = 'ai_prompt'
@@ -137,10 +128,8 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 async def show_main_menu(query) -> None:
     """Show the main menu."""
     menu_message = (
-        "━━━━━━━━━━━━━━━━━━━━━━\n"
-        "🎯 *POSTFLOW MENU*\n"
-        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        "Select an option below:"
+        "🎯 *MENU*\n\n"
+        "Select an option:"
     )
     
     await query.edit_message_text(
@@ -153,21 +142,16 @@ async def show_main_menu(query) -> None:
 async def show_help(query) -> None:
     """Show help information."""
     help_message = (
-        "━━━━━━━━━━━━━━━━━━━━━━\n"
-        "ℹ️ *HELP & COMMANDS*\n"
-        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        "*Basic Commands:*\n"
-        "• `/start` \\- Welcome message\n"
-        "• `/help` \\- Show this help\n"
-        "• `/menu` \\- Show main menu\n"
-        "• `/status` \\- Check bot status\n\n"
-        "*Features:*\n"
-        "✍️ Create posts manually\n"
-        "🤖 Generate posts with AI\n"
-        "📅 Schedule posts for later\n"
-        "🧵 Auto\\-create threads\n\n"
-        "💡 Posts over 280 chars\n"
-        "   are automatically split\\!"
+        "ℹ️ *HELP*\n\n"
+        "*Commands*\n"
+        "• `/start` \\- Welcome\n"
+        "• `/help` \\- Help\n"
+        "• `/menu` \\- Main menu\n"
+        "• `/status` \\- System status\n\n"
+        "*Highlights*\n"
+        "• Manual or AI posts\n"
+        "• Scheduling\n"
+        "• Threads for long posts"
     )
     
     await query.edit_message_text(
@@ -180,10 +164,8 @@ async def show_help(query) -> None:
 async def show_new_post_options(query) -> None:
     """Show new post creation options."""
     message = (
-        "━━━━━━━━━━━━━━━━━━━━━━\n"
-        "✍️ *CREATE NEW POST*\n"
-        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        "Choose creation method:"
+        "✍️ *NEW POST*\n\n"
+        "Choose a method:"
     )
     
     await query.edit_message_text(
@@ -204,19 +186,15 @@ async def show_statistics(query) -> None:
     success_rate = (stats['published'] / total_attempts * 100) if total_attempts > 0 else 0
     
     stats_message = (
-        f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"📊 *STATISTICS*\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"📝 *Posts Overview:*\n"
-        f"   • Total: `{stats['total']}`\n"
-        f"   • Published: `{stats['published']}`\n"
-        f"   • Scheduled: `{stats['scheduled']}`\n"
-        f"   • Draft: `{stats['draft']}`\n"
-        f"   • Failed: `{stats['failed']}`\n\n"
-        f"📈 *Performance:*\n"
-        f"   • Success Rate: `{success_rate:.1f}%`\n\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n"
-        f"💡 Keep posting consistently\\!"
+        f"📊 *STATISTICS*\n\n"
+        f"*Overview*\n"
+        f"• Total: `{stats['total']}`\n"
+        f"• Published: `{stats['published']}`\n"
+        f"• Scheduled: `{stats['scheduled']}`\n"
+        f"• Draft: `{stats['draft']}`\n"
+        f"• Failed: `{stats['failed']}`\n\n"
+        f"*Performance*\n"
+        f"• Success rate: `{success_rate:.1f}%`"
     )
     
     await query.edit_message_text(
@@ -234,17 +212,10 @@ async def show_settings(query) -> None:
     openai_status = "✅ Enabled" if OPENAI_ENABLED else "⚪ Disabled"
     
     settings_message = (
-        f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"⚙️ *SETTINGS*\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"🐦 Twitter API: {escape_markdown_v2(twitter_status)}\n"
-        f"🤖 OpenAI API: {escape_markdown_v2(openai_status)}\n\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"💡 Settings are configured via\n"
-        f"   the `.env` file\\.\n\n"
-        f"🔧 To change settings:\n"
-        f"   1\\. Edit `.env` file\n"
-        f"   2\\. Restart the bot container"
+        f"⚙️ *SETTINGS*\n\n"
+        f"• Twitter API: {escape_markdown_v2(twitter_status)}\n"
+        f"• OpenAI API: {escape_markdown_v2(openai_status)}\n\n"
+        f"Edit `.env` and restart the bot to apply changes\\."
     )
     
     await query.edit_message_text(
@@ -289,19 +260,17 @@ async def show_status(query) -> None:
     stats = PostService.get_post_statistics()
     
     status_message = (
-        f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"📊 *SYSTEM STATUS*\n"
-        f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"🤖 *Bot:* `ONLINE`\n"
-        f"🐦 *Twitter:* {twitter_status}\n"
-        f"🤖 *OpenAI:* {openai_status}\n"
-        f"💾 *Database:* `Healthy`\n\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"📊 *Statistics:*\n"
-        f"   • Total posts: `{stats['total']}`\n"
-        f"   • Published: `{stats['published']}`\n"
-        f"   • Scheduled: `{stats['scheduled']}`\n"
-        f"   • Failed: `{stats['failed']}`\n\n"
+        f"📊 *SYSTEM STATUS*\n\n"
+        f"*Services*\n"
+        f"• Bot: `ONLINE`\n"
+        f"• Twitter: {twitter_status}\n"
+        f"• OpenAI: {openai_status}\n"
+        f"• Database: `Healthy`\n\n"
+        f"*Stats*\n"
+        f"• Total: `{stats['total']}`\n"
+        f"• Published: `{stats['published']}`\n"
+        f"• Scheduled: `{stats['scheduled']}`\n"
+        f"• Failed: `{stats['failed']}`\n\n"
         f"🕐 Last check: `Now`"
     )
     
