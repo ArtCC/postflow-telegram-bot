@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from bot.config import logger, MAX_TWEET_LENGTH, USER_TIMEZONE, TZ
+from bot.config import logger, MAX_TWEET_LENGTH, USER_TIMEZONE, TZ, TELEGRAM_USER_ID
 from bot.utils import (
     is_authorized,
     escape_markdown_v2,
@@ -35,6 +35,42 @@ import pytz
 twitter_service = TwitterService()
 openai_service = OpenAIService()
 scheduler_service = SchedulerService()
+
+
+async def notify_scheduled_post_result(bot, post_id: int, success: bool, tweet_id: str = None, error: str = None, is_thread: bool = False) -> None:
+    """Send notification to user about scheduled post result."""
+    try:
+        if success:
+            tweet_url = f"https://twitter.com/i/web/status/{tweet_id}" if tweet_id else ""
+            post_type = "Thread" if is_thread else "Post"
+            message = (
+                f"━━━━━━━━━━━━━━━━━━━━━━\n"
+                f"🎉 *SCHEDULED {post_type.upper()} PUBLISHED*\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                f"✅ Your scheduled post \\#`{post_id}` has been\n"
+                f"   published successfully\\!\n\n"
+                f"🔗 [View on Twitter]({escape_markdown_v2(tweet_url)})"
+            )
+        else:
+            message = (
+                f"━━━━━━━━━━━━━━━━━━━━━━\n"
+                f"❌ *SCHEDULED POST FAILED*\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                f"⚠️ Your scheduled post \\#`{post_id}` could\n"
+                f"   not be published\\.\n\n"
+                f"📝 Error: {escape_markdown_v2(error or 'Unknown error')}\n\n"
+                f"💡 Check /menu to retry or reschedule\\."
+            )
+        
+        await bot.send_message(
+            chat_id=TELEGRAM_USER_ID,
+            text=message,
+            parse_mode="MarkdownV2",
+            disable_web_page_preview=True
+        )
+        logger.info(f"Notification sent for post {post_id} (success={success})")
+    except Exception as e:
+        logger.error(f"Failed to send notification for post {post_id}: {e}")
 
 
 async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -623,7 +659,7 @@ async def handle_quick_schedule(query, context: ContextTypes.DEFAULT_TYPE) -> No
         return
     
     # Create a callback for when the schedule fires
-    async def publish_scheduled_post():
+    async def publish_scheduled_post(bot=None):
         """Callback to publish the post when scheduled time arrives."""
         p = PostService.get_post(post_id)
         if p and p.status == PostStatus.SCHEDULED:
@@ -632,19 +668,24 @@ async def handle_quick_schedule(query, context: ContextTypes.DEFAULT_TYPE) -> No
                 success, tweet_ids, error = twitter_service.post_thread(tweets)
                 if success:
                     PostService.update_post_status(post_id, PostStatus.PUBLISHED, twitter_id=tweet_ids[0] if tweet_ids else None)
+                    await notify_scheduled_post_result(bot, post_id, True, tweet_id=tweet_ids[0] if tweet_ids else None, is_thread=True)
                 else:
                     PostService.update_post_status(post_id, PostStatus.FAILED, error_message=error)
+                    await notify_scheduled_post_result(bot, post_id, False, error=error, is_thread=True)
             else:
                 success, tweet_id, error = twitter_service.post_tweet(p.content)
                 if success:
                     PostService.update_post_status(post_id, PostStatus.PUBLISHED, twitter_id=tweet_id)
+                    await notify_scheduled_post_result(bot, post_id, True, tweet_id=tweet_id)
                 else:
                     PostService.update_post_status(post_id, PostStatus.FAILED, error_message=error)
+                    await notify_scheduled_post_result(bot, post_id, False, error=error)
     
     job_id = scheduler_service.schedule_post(
         post_id=post_id,
         scheduled_time=scheduled_time_utc,
-        callback=publish_scheduled_post
+        callback=publish_scheduled_post,
+        bot=context.bot
     )
     
     if job_id:
@@ -743,7 +784,7 @@ async def process_custom_schedule(update: Update, context: ContextTypes.DEFAULT_
         )
         return
     
-    async def publish_scheduled_post():
+    async def publish_scheduled_post(bot=None):
         p = PostService.get_post(post_id)
         if p and p.status == PostStatus.SCHEDULED:
             if p.is_thread():
@@ -751,19 +792,24 @@ async def process_custom_schedule(update: Update, context: ContextTypes.DEFAULT_
                 success, tweet_ids, error = twitter_service.post_thread(tweets)
                 if success:
                     PostService.update_post_status(post_id, PostStatus.PUBLISHED, twitter_id=tweet_ids[0] if tweet_ids else None)
+                    await notify_scheduled_post_result(bot, post_id, True, tweet_id=tweet_ids[0] if tweet_ids else None, is_thread=True)
                 else:
                     PostService.update_post_status(post_id, PostStatus.FAILED, error_message=error)
+                    await notify_scheduled_post_result(bot, post_id, False, error=error, is_thread=True)
             else:
                 success, tweet_id, error = twitter_service.post_tweet(p.content)
                 if success:
                     PostService.update_post_status(post_id, PostStatus.PUBLISHED, twitter_id=tweet_id)
+                    await notify_scheduled_post_result(bot, post_id, True, tweet_id=tweet_id)
                 else:
                     PostService.update_post_status(post_id, PostStatus.FAILED, error_message=error)
+                    await notify_scheduled_post_result(bot, post_id, False, error=error)
     
     job_id = scheduler_service.schedule_post(
         post_id=post_id,
         scheduled_time=scheduled_time_utc,
-        callback=publish_scheduled_post
+        callback=publish_scheduled_post,
+        bot=context.bot
     )
     
     if job_id:

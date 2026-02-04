@@ -17,6 +17,8 @@ A powerful Telegram bot for managing and scheduling social media posts with AI s
 - ✍️ **Manual Post Creation** - Write your posts directly
 - 🤖 **AI-Powered Content** - Generate posts with OpenAI GPT
 - 📅 **Smart Scheduling** - Schedule posts for optimal timing
+- 🌍 **Timezone Support** - Configure your local timezone for scheduling
+- 🔔 **Notifications** - Get notified when scheduled posts are published
 - 🧵 **Auto Thread Creation** - Automatically splits long posts into threads (respects 280 char limit)
 - 🐦 **Twitter/X Integration** - Direct publishing to Twitter
 - 🔒 **Secure & Private** - Self-hosted, only you have access
@@ -214,6 +216,28 @@ Posts longer than 280 characters are automatically converted to threads:
    - 📆 Tomorrow 9am
    - 📆 Custom date (format: `2026-01-25 18:00`)
 4. Post will be published automatically at scheduled time
+5. You'll receive a notification when the post is published
+
+> **Note:** All times are displayed in your configured timezone (TZ environment variable).
+
+### Post Notifications
+
+When a scheduled post is published (or fails), you'll receive a notification:
+
+**Success notification:**
+```
+🎉 SCHEDULED POST PUBLISHED
+✅ Your scheduled post #123 has been published successfully!
+🔗 View on Twitter
+```
+
+**Failure notification:**
+```
+❌ SCHEDULED POST FAILED
+⚠️ Your scheduled post #123 could not be published.
+📝 Error: [error details]
+💡 Check /menu to retry or reschedule.
+```
 
 ### Managing Scheduled Posts
 
@@ -499,6 +523,8 @@ sudo chmod -R 755 ./data
 - [x] Statistics & monitoring
 - [x] Docker deployment
 - [x] SQLite persistent storage
+- [x] Timezone support (TZ configuration)
+- [x] Notifications for scheduled posts
 
 ### Phase 2: Future Features
 
