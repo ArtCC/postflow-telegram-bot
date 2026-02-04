@@ -90,6 +90,43 @@ DATABASE_PATH=/data/postflow.db
 
 ### 5. Deploy with Docker Compose
 
+The `docker-compose.yml` configuration:
+
+```yaml
+version: '3.8'
+
+services:
+  postflow-bot:
+    image: ghcr.io/artcc/postflow-telegram-bot:latest
+    container_name: postflow-bot
+    environment:
+      # Telegram Bot Configuration
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_USER_ID=${TELEGRAM_USER_ID}
+      
+      # Twitter/X API Credentials
+      - TWITTER_API_KEY=${TWITTER_API_KEY}
+      - TWITTER_API_SECRET=${TWITTER_API_SECRET}
+      - TWITTER_ACCESS_TOKEN=${TWITTER_ACCESS_TOKEN}
+      - TWITTER_ACCESS_TOKEN_SECRET=${TWITTER_ACCESS_TOKEN_SECRET}
+      
+      # OpenAI API (optional)
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      
+      # Database Configuration
+      - DATABASE_PATH=${DATABASE_PATH:-/data/postflow.db}
+    volumes:
+      - ./data:/data  # Database persistence
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+```
+
+Start the bot:
+
 ```bash
 # Start the bot in detached mode
 docker-compose up -d
@@ -456,25 +493,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
-
-## 📝 Development
-
-### Running Locally (without Docker)
-
-```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Set environment variables
-export $(cat .env | xargs)
-
-# Run the bot
-python -m bot.main
-```
 
 ### Code Style
 
