@@ -25,6 +25,7 @@ A powerful Telegram bot for managing and scheduling social media posts with AI s
 - 🐳 **Docker Ready** - Easy deployment with docker-compose
 - 📊 **Statistics** - Track your posting performance
 - 📝 **Drafts** - Save posts and finish later
+- 📆 **Weekly Planning** - Plan up to 7 days with multiple slots per day
 - 💾 **Persistent Storage** - SQLite database for reliability
 - 🎨 **Beautiful UI** - Interactive menus and inline buttons
 
@@ -199,6 +200,14 @@ docker logs -f postflow-bot
 3. Review generated content
 4. Publish or schedule
 
+#### Weekly Plan
+1. Click "✍️ New" → "📆 Plan Week"
+2. Select days (rolling 7-day window)
+3. Choose posts per day (max 3)
+4. Enter time slots for each day
+5. Create each post manually or with AI
+6. Review summary and confirm scheduling
+
 ### Thread Creation
 
 Posts longer than 280 characters are automatically converted to threads:
@@ -261,6 +270,7 @@ When a scheduled post is published (or fails), you'll receive a notification:
 - `/help` - Show help information
 - `/menu` - Open interactive main menu
 - `/new` - New post
+- `/plan` - Plan week
 - `/drafts` - List drafts
 - `/scheduled` - List scheduled posts
 - `/stats` - Show statistics

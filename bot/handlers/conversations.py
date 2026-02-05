@@ -13,6 +13,7 @@ from telegram.ext import (
 )
 
 from bot.utils import is_authorized
+from bot.services.post_service import PostService
 
 # Conversation states
 WAITING_POST_CONTENT = 1
@@ -27,6 +28,11 @@ async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if not is_authorized(user_id):
         return ConversationHandler.END
     
+    weekly_plan = context.user_data.get("weekly_plan")
+    if weekly_plan:
+        for item in weekly_plan.get("created_posts", []):
+            PostService.delete_post(item["post_id"])
+
     context.user_data.clear()
     
     await update.message.reply_text(

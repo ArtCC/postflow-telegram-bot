@@ -37,6 +37,10 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     
     elif data == "new_post":
         await show_new_post_options(query)
+
+    elif data == "plan_week":
+        from bot.handlers.posts import start_weekly_plan
+        await start_weekly_plan(query, context)
     
     elif data == "scheduled":
         from bot.handlers.posts import show_scheduled_posts
@@ -51,6 +55,38 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     
     elif data == "settings":
         await show_settings(query)
+
+    elif data.startswith("plan_day_"):
+        from bot.handlers.posts import toggle_weekly_day
+        await toggle_weekly_day(query, context)
+
+    elif data == "plan_days_next":
+        from bot.handlers.posts import confirm_weekly_days
+        await confirm_weekly_days(query, context)
+
+    elif data == "plan_days_back":
+        from bot.handlers.posts import show_weekly_days
+        await show_weekly_days(query, context)
+
+    elif data.startswith("plan_ppd_"):
+        from bot.handlers.posts import select_posts_per_day
+        await select_posts_per_day(query, context)
+
+    elif data == "plan_mode_manual":
+        from bot.handlers.posts import prompt_weekly_manual
+        await prompt_weekly_manual(query, context)
+
+    elif data == "plan_mode_ai":
+        from bot.handlers.posts import prompt_weekly_ai
+        await prompt_weekly_ai(query, context)
+
+    elif data == "plan_confirm":
+        from bot.handlers.posts import confirm_weekly_plan
+        await confirm_weekly_plan(query, context)
+
+    elif data in {"plan_cancel", "plan_cancel_all"}:
+        from bot.handlers.posts import cancel_weekly_plan
+        await cancel_weekly_plan(query, context)
     
     # Post creation callbacks
     elif data == "post_manual":
@@ -153,9 +189,11 @@ async def show_help(query) -> None:
         "ℹ️ *HELP*\n\n"
         "*Commands*\n"
         "• `/start` \\- Welcome\n"
-        "• `/help` \\- Help\n"
         "• `/menu` \\- Main menu\n"
+        "• `/new` \\- New post\n"
         "• `/drafts` \\- Drafts\n"
+        "• `/scheduled` \\- Scheduled posts\n"
+        "• `/stats` \\- Statistics\n"
         "• `/status` \\- System status\n"
         "• `/settings` \\- Settings\n"
         "• `/chatid` \\- Your user ID\n"

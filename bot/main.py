@@ -24,6 +24,7 @@ from bot.handlers import (
     help_command,
     menu_command,
     new_command,
+    plan_command,
     chatid_command,
     author_command,
     settings_command,
@@ -49,6 +50,7 @@ async def setup_bot_commands(application: Application) -> None:
         BotCommand("start", "Welcome message and authorization check"),
         BotCommand("menu", "Show main menu"),
         BotCommand("new", "New post"),
+        BotCommand("plan", "Plan week"),
         BotCommand("drafts", "Drafts"),
         BotCommand("scheduled", "Scheduled posts"),
         BotCommand("stats", "Statistics"),
@@ -166,6 +168,7 @@ def main() -> None:
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("menu", menu_command))
     application.add_handler(CommandHandler("new", new_command))
+    application.add_handler(CommandHandler("plan", plan_command))
     application.add_handler(CommandHandler("drafts", drafts_command))
     application.add_handler(CommandHandler("scheduled", scheduled_command))
     application.add_handler(CommandHandler("stats", stats_command))

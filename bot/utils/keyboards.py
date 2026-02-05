@@ -34,6 +34,7 @@ def get_back_keyboard() -> InlineKeyboardMarkup:
 def get_new_post_keyboard() -> InlineKeyboardMarkup:
     """Create keyboard for new post options."""
     keyboard = [
+        [InlineKeyboardButton("📆 Plan Week", callback_data="plan_week")],
         [InlineKeyboardButton("✏️ Write Manually", callback_data="post_manual")],
     ]
     
@@ -43,6 +44,72 @@ def get_new_post_keyboard() -> InlineKeyboardMarkup:
         keyboard.insert(0, [InlineKeyboardButton("🤖 AI", callback_data="post_ai")])
     
     keyboard.append([InlineKeyboardButton("🔙 Back", callback_data="menu")])
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_weekday_selection_keyboard(selected_days: List[int]) -> InlineKeyboardMarkup:
+    """Create weekday selection keyboard with toggles."""
+    labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    keyboard = []
+
+    row = []
+    for idx, label in enumerate(labels):
+        marker = " ✅" if idx in selected_days else ""
+        row.append(InlineKeyboardButton(f"{label}{marker}", callback_data=f"plan_day_{idx}"))
+        if len(row) == 3:
+            keyboard.append(row)
+            row = []
+
+    if row:
+        keyboard.append(row)
+
+    keyboard.append([
+        InlineKeyboardButton("Next ▶️", callback_data="plan_days_next"),
+        InlineKeyboardButton("Cancel", callback_data="plan_cancel")
+    ])
+
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_posts_per_day_keyboard() -> InlineKeyboardMarkup:
+    """Create keyboard to select posts per day."""
+    keyboard = [
+        [
+            InlineKeyboardButton("1", callback_data="plan_ppd_1"),
+            InlineKeyboardButton("2", callback_data="plan_ppd_2"),
+            InlineKeyboardButton("3", callback_data="plan_ppd_3"),
+        ],
+        [
+            InlineKeyboardButton("◀️ Back", callback_data="plan_days_back"),
+            InlineKeyboardButton("Cancel", callback_data="plan_cancel"),
+        ]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_plan_post_mode_keyboard() -> InlineKeyboardMarkup:
+    """Create keyboard to choose manual or AI for a planned post."""
+    keyboard = []
+
+    from bot.config import OPENAI_ENABLED
+    if OPENAI_ENABLED:
+        keyboard.append([
+            InlineKeyboardButton("🤖 AI", callback_data="plan_mode_ai"),
+            InlineKeyboardButton("✏️ Manual", callback_data="plan_mode_manual"),
+        ])
+    else:
+        keyboard.append([InlineKeyboardButton("✏️ Manual", callback_data="plan_mode_manual")])
+
+    keyboard.append([InlineKeyboardButton("Cancel", callback_data="plan_cancel")])
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_plan_confirm_keyboard() -> InlineKeyboardMarkup:
+    """Create keyboard for weekly plan confirmation."""
+    keyboard = [
+        [InlineKeyboardButton("✅ Schedule All", callback_data="plan_confirm")],
+        [InlineKeyboardButton("❌ Cancel", callback_data="plan_cancel_all")],
+    ]
     return InlineKeyboardMarkup(keyboard)
 
 

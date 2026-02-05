@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.4] - 2026-02-05
+
+### Added
+- **Weekly planning wizard**: Plan a rolling 7-day window with multiple slots per day
+- **Plan command**: `/plan` entry in the command list
+
+### Changed
+- **Help output**: Added `/plan` and aligned weekly planning copy
+
+### Fixed
+- Weekly planning flow end-step error when finishing time input
+- MarkdownV2 escaping for the `/plan` help entry
+
 ## [0.0.3] - 2026-02-04
 
 ### Added
@@ -13,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **New commands**: `/author`, `/settings`, `/drafts`, `/new`, `/scheduled`, `/stats`
 - **Scheduled posts list reuse**: Shared builder for command and callback views
 - **Scheduler rehydration**: Restore scheduled jobs on startup
+- **Weekly planning wizard**: Plan a 7-day window with multiple slots per day
 
 ### Changed
 - **Main menu layout**: Focused on primary actions (New, Drafts, Scheduled, Stats, Status)
@@ -60,6 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[0.0.4]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/artcc/postflow-telegram-bot/releases/tag/v0.0.1

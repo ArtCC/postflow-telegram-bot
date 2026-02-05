@@ -67,6 +67,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "• `/start` \\- Welcome\n"
         "• `/menu` \\- Main menu\n"
         "• `/new` \\- New post\n"
+        "• `/plan` \\- Plan week\n"
         "• `/drafts` \\- Drafts\n"
         "• `/scheduled` \\- Scheduled posts\n"
         "• `/stats` \\- Statistics\n"
@@ -134,6 +135,22 @@ async def new_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         parse_mode="MarkdownV2",
         reply_markup=get_new_post_keyboard()
     )
+
+
+async def plan_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /plan command."""
+    user_id = update.effective_user.id
+
+    if not is_authorized(user_id):
+        await update.message.reply_text(
+            "⛔ You are not authorized to use this bot\.",
+            parse_mode="MarkdownV2"
+        )
+        return
+
+    from bot.handlers.posts import start_weekly_plan
+
+    await start_weekly_plan(update.message, context)
 
 
 async def chatid_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

@@ -3,7 +3,7 @@ Post Handlers
 Handlers for creating, publishing, and managing posts.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from typing import Optional
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -24,6 +24,10 @@ from bot.utils import (
     get_error_keyboard,
     get_back_keyboard,
     get_drafts_keyboard,
+    get_weekday_selection_keyboard,
+    get_posts_per_day_keyboard,
+    get_plan_post_mode_keyboard,
+    get_plan_confirm_keyboard,
 )
 from bot.services.post_service import PostService
 from bot.services.twitter_service import TwitterService
@@ -118,7 +122,13 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     text = update.message.text
     awaiting = context.user_data.get('awaiting')
     
-    if awaiting == 'manual_post':
+    if awaiting == 'weekly_times':
+        await process_weekly_times(update, context, text)
+    elif awaiting == 'weekly_manual_content':
+        await process_weekly_manual_content(update, context, text)
+    elif awaiting == 'weekly_ai_prompt':
+        await process_weekly_ai_prompt(update, context, text)
+    elif awaiting == 'manual_post':
         await process_manual_post(update, context, text)
     elif awaiting == 'ai_prompt':
         await process_ai_prompt(update, context, text)
@@ -132,6 +142,574 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         # No specific action expected, show helpful message
         await update.message.reply_text(
             "💡 Open the menu to continue",
+            reply_markup=get_back_keyboard()
+        )
+
+
+def _init_weekly_plan(context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Initialize weekly planning state."""
+    context.user_data["weekly_plan"] = {
+        "days": [],
+        "posts_per_day": None,
+        "times_by_day": {},
+        "day_dates": {},
+        "queue": [],
+        "created_posts": [],
+        "current_index": 0,
+    }
+
+
+def _get_weekday_labels() -> list:
+    return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+
+def _build_day_dates(selected_days: list, start_date: date) -> dict:
+    """Map selected weekday indexes to actual dates within the 7-day window."""
+    day_dates = {}
+    for offset in range(7):
+        day = start_date + timedelta(days=offset)
+        weekday = day.weekday()
+        if weekday in selected_days and weekday not in day_dates:
+            day_dates[weekday] = day
+    return day_dates
+
+
+def _parse_times_input(text: str) -> Optional[list]:
+    parts = [p.strip() for p in text.split(",") if p.strip()]
+    if not parts:
+        return None
+
+    times = []
+    for part in parts:
+        try:
+            time_obj = datetime.strptime(part, "%H:%M").time()
+        except ValueError:
+            return None
+        times.append(time_obj)
+
+    if len(set(times)) != len(times):
+        return None
+
+    return sorted(times)
+
+
+async def start_weekly_plan(message_or_query, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Start weekly planning wizard."""
+    _init_weekly_plan(context)
+    await show_weekly_days(message_or_query, context)
+
+
+async def show_weekly_days(message_or_query, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Show weekday selection step."""
+    weekly_plan = context.user_data.get("weekly_plan")
+    if not weekly_plan:
+        _init_weekly_plan(context)
+        weekly_plan = context.user_data["weekly_plan"]
+
+    message = (
+        "📆 *PLAN WEEK*\n\n"
+        "Select the days you want to publish:\n"
+        "Mon to Sun"
+    )
+
+    if hasattr(message_or_query, "reply_text"):
+        await message_or_query.reply_text(
+            message,
+            parse_mode="MarkdownV2",
+            reply_markup=get_weekday_selection_keyboard(weekly_plan["days"])
+        )
+    else:
+        await message_or_query.edit_message_text(
+            message,
+            parse_mode="MarkdownV2",
+            reply_markup=get_weekday_selection_keyboard(weekly_plan["days"])
+        )
+
+
+async def toggle_weekly_day(query, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Toggle selected weekdays."""
+    weekly_plan = context.user_data.get("weekly_plan")
+    if not weekly_plan:
+        _init_weekly_plan(context)
+        weekly_plan = context.user_data["weekly_plan"]
+
+    day_idx = int(query.data.split("_")[-1])
+    selected = weekly_plan["days"]
+    if day_idx in selected:
+        selected.remove(day_idx)
+    else:
+        selected.append(day_idx)
+
+    weekly_plan["days"] = sorted(selected)
+
+    await show_weekly_days(query, context)
+
+
+async def confirm_weekly_days(query, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Confirm weekday selection and ask posts per day."""
+    weekly_plan = context.user_data.get("weekly_plan")
+    if not weekly_plan or not weekly_plan["days"]:
+        await query.answer("Select at least one day", show_alert=True)
+        return
+
+    message = (
+        "📝 *POSTS PER DAY*\n\n"
+        "How many posts per selected day?"
+    )
+
+    await query.edit_message_text(
+        message,
+        parse_mode="MarkdownV2",
+        reply_markup=get_posts_per_day_keyboard()
+    )
+
+
+async def select_posts_per_day(query, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Set posts per day and start time input."""
+    weekly_plan = context.user_data.get("weekly_plan")
+    if not weekly_plan:
+        await query.answer("Start again with /menu", show_alert=True)
+        return
+
+    posts_per_day = int(query.data.split("_")[-1])
+    weekly_plan["posts_per_day"] = posts_per_day
+
+    now_local = datetime.now(USER_TIMEZONE)
+    weekly_plan["window_start"] = now_local.date().isoformat()
+    weekly_plan["day_dates"] = _build_day_dates(weekly_plan["days"], now_local.date())
+
+    weekly_plan["day_sequence"] = [
+        day.weekday() for day in sorted(weekly_plan["day_dates"].values())
+    ]
+    weekly_plan["day_index"] = 0
+
+    await _prompt_times_for_current_day(query, context)
+
+
+async def _prompt_times_for_current_day(message_or_query, context: ContextTypes.DEFAULT_TYPE) -> None:
+    weekly_plan = context.user_data.get("weekly_plan")
+    day_sequence = weekly_plan.get("day_sequence", [])
+    idx = weekly_plan.get("day_index", 0)
+
+    if idx >= len(day_sequence):
+        await _build_weekly_queue_and_start(message_or_query, context)
+        return
+
+    day_idx = day_sequence[idx]
+    day_label = _get_weekday_labels()[day_idx]
+    posts_per_day = weekly_plan["posts_per_day"]
+
+    message = (
+        f"⏰ *TIMES FOR {day_label.upper()}*\n\n"
+        f"Enter {posts_per_day} time slots as `HH:MM`, separated by commas\."
+    )
+
+    context.user_data["awaiting"] = "weekly_times"
+    weekly_plan["current_day_idx"] = day_idx
+
+    if hasattr(message_or_query, "reply_text"):
+        await message_or_query.reply_text(
+            message,
+            parse_mode="MarkdownV2"
+        )
+    else:
+        await message_or_query.edit_message_text(
+            message,
+            parse_mode="MarkdownV2"
+        )
+
+
+async def process_weekly_times(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str) -> None:
+    """Process time list input for a selected day."""
+    weekly_plan = context.user_data.get("weekly_plan")
+    if not weekly_plan:
+        await update.message.reply_text(
+            "❌ Planning session expired\. Use /menu to start again\.",
+            parse_mode="MarkdownV2",
+            reply_markup=get_back_keyboard()
+        )
+        return
+
+    times = _parse_times_input(text)
+    posts_per_day = weekly_plan.get("posts_per_day")
+    day_idx = weekly_plan.get("current_day_idx")
+
+    if not times or len(times) != posts_per_day:
+        await update.message.reply_text(
+            "❌ Invalid time list\. Use `HH:MM, HH:MM` with the correct count\.",
+            parse_mode="MarkdownV2"
+        )
+        return
+
+    day_dates = weekly_plan.get("day_dates", {})
+    day_date = day_dates.get(day_idx)
+    if not day_date:
+        await update.message.reply_text(
+            "❌ Invalid day selection\. Use /menu to start again\.",
+            parse_mode="MarkdownV2",
+            reply_markup=get_back_keyboard()
+        )
+        return
+
+    now_local = datetime.now(USER_TIMEZONE)
+    if day_date == now_local.date():
+        for time_obj in times:
+            slot_dt = datetime.combine(day_date, time_obj)
+            slot_dt = USER_TIMEZONE.localize(slot_dt)
+            if slot_dt <= now_local:
+                await update.message.reply_text(
+                    "❌ One or more times are in the past\. Enter future times\.",
+                    parse_mode="MarkdownV2"
+                )
+                return
+
+    weekly_plan["times_by_day"][day_idx] = [t.strftime("%H:%M") for t in times]
+    weekly_plan["day_index"] += 1
+
+    await _prompt_times_for_current_day(update.message, context)
+
+
+async def _build_weekly_queue_and_start(message_or_query, context: ContextTypes.DEFAULT_TYPE) -> None:
+    weekly_plan = context.user_data.get("weekly_plan")
+    day_dates = weekly_plan.get("day_dates", {})
+    times_by_day = weekly_plan.get("times_by_day", {})
+
+    now_local = datetime.now(USER_TIMEZONE)
+    queue = []
+    for day_idx, day_date in sorted(day_dates.items(), key=lambda x: x[1]):
+        time_list = times_by_day.get(day_idx, [])
+        for time_str in time_list:
+            time_obj = datetime.strptime(time_str, "%H:%M").time()
+            dt_local = USER_TIMEZONE.localize(datetime.combine(day_date, time_obj))
+            if dt_local <= now_local:
+                continue
+            queue.append({
+                "day_idx": day_idx,
+                "time_str": time_str,
+                "datetime_local": dt_local,
+                "datetime_utc": dt_local.astimezone(pytz.UTC),
+            })
+
+    queue.sort(key=lambda x: x["datetime_local"])
+    weekly_plan["queue"] = queue
+    weekly_plan["current_index"] = 0
+
+    if not queue:
+        if hasattr(message_or_query, "reply_text"):
+            await message_or_query.reply_text(
+                "❌ No valid times to schedule\. Start again with /menu\.",
+                parse_mode="MarkdownV2",
+                reply_markup=get_back_keyboard()
+            )
+        else:
+            await message_or_query.edit_message_text(
+                "❌ No valid times to schedule\. Start again with /menu\.",
+                parse_mode="MarkdownV2",
+                reply_markup=get_back_keyboard()
+            )
+        context.user_data.pop("weekly_plan", None)
+        return
+
+    await _show_weekly_post_mode(message_or_query, context)
+
+
+async def _show_weekly_post_mode(message_or_query, context: ContextTypes.DEFAULT_TYPE) -> None:
+    weekly_plan = context.user_data.get("weekly_plan")
+    queue = weekly_plan.get("queue", [])
+    idx = weekly_plan.get("current_index", 0)
+
+    if idx >= len(queue):
+        await _show_weekly_summary(message_or_query, context)
+        return
+
+    item = queue[idx]
+    day_label = _get_weekday_labels()[item["day_idx"]]
+    time_str = item["time_str"]
+    total = len(queue)
+
+    message = (
+        f"📆 *PLAN WEEK*\n\n"
+        f"Post {idx + 1}/{total} - {day_label} {time_str}\n\n"
+        "Choose how to create this post:"
+    )
+
+    if hasattr(message_or_query, "reply_text"):
+        await message_or_query.reply_text(
+            message,
+            parse_mode="MarkdownV2",
+            reply_markup=get_plan_post_mode_keyboard()
+        )
+    else:
+        await message_or_query.edit_message_text(
+            message,
+            parse_mode="MarkdownV2",
+            reply_markup=get_plan_post_mode_keyboard()
+        )
+
+
+async def prompt_weekly_manual(query, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Prompt manual content for current planned post."""
+    weekly_plan = context.user_data.get("weekly_plan")
+    if not weekly_plan:
+        await query.edit_message_text(
+            "❌ Planning session expired\. Use /menu to start again\.",
+            parse_mode="MarkdownV2",
+            reply_markup=get_back_keyboard()
+        )
+        return
+
+    queue = weekly_plan.get("queue", [])
+    idx = weekly_plan.get("current_index", 0)
+    item = queue[idx]
+    day_label = _get_weekday_labels()[item["day_idx"]]
+
+    context.user_data["awaiting"] = "weekly_manual_content"
+
+    await query.edit_message_text(
+        f"✏️ *WRITE POST*\n\n"
+        f"{day_label} {item['time_str']}\n\n"
+        "Send the post text\. Type /cancel to abort\.",
+        parse_mode="MarkdownV2"
+    )
+
+
+async def prompt_weekly_ai(query, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Prompt AI input for current planned post."""
+    weekly_plan = context.user_data.get("weekly_plan")
+    if not weekly_plan:
+        await query.edit_message_text(
+            "❌ Planning session expired\. Use /menu to start again\.",
+            parse_mode="MarkdownV2",
+            reply_markup=get_back_keyboard()
+        )
+        return
+
+    queue = weekly_plan.get("queue", [])
+    idx = weekly_plan.get("current_index", 0)
+    item = queue[idx]
+    day_label = _get_weekday_labels()[item["day_idx"]]
+
+    context.user_data["awaiting"] = "weekly_ai_prompt"
+
+    await query.edit_message_text(
+        f"🤖 *AI PROMPT*\n\n"
+        f"{day_label} {item['time_str']}\n\n"
+        "Describe the post you want\. Type /cancel to abort\.",
+        parse_mode="MarkdownV2"
+    )
+
+
+async def process_weekly_manual_content(update: Update, context: ContextTypes.DEFAULT_TYPE, content: str) -> None:
+    """Save manual post content for the weekly plan."""
+    context.user_data["awaiting"] = None
+    weekly_plan = context.user_data.get("weekly_plan")
+    if not weekly_plan:
+        await update.message.reply_text(
+            "❌ Planning session expired\. Use /menu to start again\.",
+            parse_mode="MarkdownV2",
+            reply_markup=get_back_keyboard()
+        )
+        return
+
+    if not content or len(content.strip()) == 0:
+        await update.message.reply_text(
+            "⚠️ *EMPTY CONTENT*\n\n"
+            "Write something to create the post\.",
+            parse_mode="MarkdownV2"
+        )
+        return
+
+    post = PostService.create_post(content=content, created_by_ai=False)
+    if not post:
+        await update.message.reply_text(
+            "❌ Failed to create the post\.",
+            parse_mode="MarkdownV2"
+        )
+        return
+
+    await _store_weekly_post_and_continue(update.message, context, post.id)
+
+
+async def process_weekly_ai_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE, prompt: str) -> None:
+    """Generate AI content for the weekly plan."""
+    context.user_data["awaiting"] = None
+    weekly_plan = context.user_data.get("weekly_plan")
+    if not weekly_plan:
+        await update.message.reply_text(
+            "❌ Planning session expired\. Use /menu to start again\.",
+            parse_mode="MarkdownV2",
+            reply_markup=get_back_keyboard()
+        )
+        return
+
+    generating_msg = await update.message.reply_text(
+        "🤖 *GENERATING*\n\n"
+        "⏳ Creating content with AI\.",
+        parse_mode="MarkdownV2"
+    )
+
+    success, content, error = openai_service.generate_post(prompt)
+    if not success:
+        await generating_msg.edit_text(
+            f"🤖 *AI FAILED*\n\n"
+            f"❌ {escape_markdown_v2(error)}\n\n"
+            "Write the post manually\.",
+            parse_mode="MarkdownV2"
+        )
+        context.user_data["awaiting"] = "weekly_manual_content"
+        return
+
+    post = PostService.create_post(content=content, created_by_ai=True, ai_prompt=prompt)
+    if not post:
+        await generating_msg.edit_text(
+            "❌ Failed to save the post\.",
+            parse_mode="MarkdownV2"
+        )
+        return
+
+    await generating_msg.delete()
+    await _store_weekly_post_and_continue(update.message, context, post.id)
+
+
+async def _store_weekly_post_and_continue(message, context: ContextTypes.DEFAULT_TYPE, post_id: int) -> None:
+    weekly_plan = context.user_data.get("weekly_plan")
+    queue = weekly_plan.get("queue", [])
+    idx = weekly_plan.get("current_index", 0)
+    item = queue[idx]
+
+    weekly_plan["created_posts"].append({
+        "post_id": post_id,
+        "scheduled_time_utc": item["datetime_utc"],
+        "scheduled_time_local": item["datetime_local"],
+    })
+
+    weekly_plan["current_index"] += 1
+
+    await _show_weekly_post_mode(message, context)
+
+
+async def _show_weekly_summary(message_or_query, context: ContextTypes.DEFAULT_TYPE) -> None:
+    weekly_plan = context.user_data.get("weekly_plan")
+    created = weekly_plan.get("created_posts", [])
+
+    if not created:
+        await cancel_weekly_plan(message_or_query, context)
+        return
+
+    summary_by_day = {}
+    for item in created:
+        dt_local = item["scheduled_time_local"]
+        day_key = dt_local.strftime("%a %d %b")
+        summary_by_day.setdefault(day_key, []).append(dt_local.strftime("%H:%M"))
+
+    lines = []
+    for day, times in summary_by_day.items():
+        line = f"*{day}*: {', '.join(times)}"
+        lines.append(line)
+
+    message = (
+        "✅ *REVIEW PLAN*\n\n"
+        f"Total posts: `{len(created)}`\n\n"
+        + "\n".join(lines)
+    )
+
+    if hasattr(message_or_query, "reply_text"):
+        await message_or_query.reply_text(
+            message,
+            parse_mode="MarkdownV2",
+            reply_markup=get_plan_confirm_keyboard()
+        )
+    else:
+        await message_or_query.edit_message_text(
+            message,
+            parse_mode="MarkdownV2",
+            reply_markup=get_plan_confirm_keyboard()
+        )
+
+
+async def confirm_weekly_plan(query, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Schedule all posts in the weekly plan."""
+    weekly_plan = context.user_data.get("weekly_plan")
+    if not weekly_plan:
+        await query.edit_message_text(
+            "❌ Planning session expired\. Use /menu to start again\.",
+            parse_mode="MarkdownV2",
+            reply_markup=get_back_keyboard()
+        )
+        return
+
+    scheduler_service = get_scheduler_service(context)
+    if not scheduler_service:
+        await query.edit_message_text(
+            "❌ Scheduler service not available\. Restart the bot\.",
+            parse_mode="MarkdownV2",
+            reply_markup=get_back_keyboard()
+        )
+        return
+
+    scheduled = 0
+    failed = 0
+    for item in weekly_plan.get("created_posts", []):
+        post_id = item["post_id"]
+        scheduled_time_utc = item["scheduled_time_utc"]
+        job_id = scheduler_service.schedule_post(
+            post_id,
+            scheduled_time_utc,
+            publish_scheduled_post,
+            post_id,
+            bot=context.bot
+        )
+        if job_id:
+            PostService.schedule_post(post_id, scheduled_time_utc, job_id)
+            scheduled += 1
+        else:
+            failed += 1
+
+    context.user_data.pop("weekly_plan", None)
+    context.user_data["awaiting"] = None
+
+    if failed == 0:
+        message = f"✅ *SCHEDULED*\n\nAll posts scheduled: `{scheduled}`"
+    else:
+        message = (
+            f"⚠️ *PARTIAL SCHEDULE*\n\n"
+            f"Scheduled: `{scheduled}`\n"
+            f"Failed: `{failed}`\n\n"
+            "Failed posts remain as drafts\."
+        )
+
+    await query.edit_message_text(
+        message,
+        parse_mode="MarkdownV2",
+        reply_markup=get_back_keyboard()
+    )
+
+
+async def cancel_weekly_plan(message_or_query, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Cancel weekly plan and delete created drafts."""
+    weekly_plan = context.user_data.get("weekly_plan")
+    if weekly_plan:
+        for item in weekly_plan.get("created_posts", []):
+            PostService.delete_post(item["post_id"])
+
+    context.user_data.pop("weekly_plan", None)
+    context.user_data["awaiting"] = None
+
+    message = (
+        "🚫 *Cancelled*\n\n"
+        "Planning discarded\."
+    )
+
+    if hasattr(message_or_query, "reply_text"):
+        await message_or_query.reply_text(
+            message,
+            parse_mode="MarkdownV2",
+            reply_markup=get_back_keyboard()
+        )
+    else:
+        await message_or_query.edit_message_text(
+            message,
+            parse_mode="MarkdownV2",
             reply_markup=get_back_keyboard()
         )
 
