@@ -338,7 +338,7 @@ def get_topic_delete_confirm_keyboard(topic_id: int) -> InlineKeyboardMarkup:
     keyboard = [
         [
             InlineKeyboardButton("✅ Delete", callback_data=f"topics_delete_execute_{topic_id}"),
-            InlineKeyboardButton("❌ Cancel", callback_data="topics_delete"),
+            InlineKeyboardButton("❌ Cancel", callback_data="topics_menu"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)

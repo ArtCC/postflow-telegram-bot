@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Main menu**: Added "🎯 Topics" button for quick access
 - **AI post creation**: Shows topic preset buttons when available, with "✏️ Custom Prompt" option
+- **AI topic output**: Topic presets now generate a single post capped at 280 characters
 - **Help command**: Updated to include `/topics` and topic presets feature
 - **README**: Complete documentation for topic presets usage and management
 

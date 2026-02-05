@@ -225,7 +225,7 @@ Topic presets allow you to quickly generate AI posts on your favorite subjects.
 - **Delete Topic**: Remove individual topics
 - **Delete All**: Clear all topics (with confirmation)
 
-> **Note:** Topics require OpenAI to be configured. Each topic generates unique content every time.
+> **Note:** Topics require OpenAI to be configured. Each topic generates unique content every time and is limited to a single post (max 280 characters).
 
 #### Weekly Plan
 1. Click "✍️ New" → "📆 Plan Week"

@@ -498,7 +498,12 @@ async def show_topics_delete(query, user_id: int) -> None:
     topics = TopicService.get_user_topics(user_id)
     
     if not topics:
-        await query.answer("No topics to delete", show_alert=True)
+        await query.edit_message_text(
+            "🗑️ *DELETE TOPIC*\n\n"
+            "You don't have any topics to delete\\.",
+            parse_mode="MarkdownV2",
+            reply_markup=get_topics_menu_keyboard(user_id)
+        )
         return
     
     await query.edit_message_text(
@@ -533,7 +538,16 @@ async def execute_delete_topic(query, user_id: int, topic_id: int) -> None:
     
     if success:
         await query.answer("✅ Topic deleted", show_alert=False)
-        await show_topics_delete(query, user_id)
+        remaining = TopicService.get_topic_count(user_id)
+        if remaining > 0:
+            await show_topics_delete(query, user_id)
+        else:
+            await query.edit_message_text(
+                "✅ *TOPIC DELETED*\n\n"
+                "No more topics left\\.",
+                parse_mode="MarkdownV2",
+                reply_markup=get_topics_menu_keyboard(user_id)
+            )
     else:
         await query.answer(f"❌ {error_msg}", show_alert=True)
 

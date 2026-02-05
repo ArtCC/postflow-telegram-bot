@@ -105,7 +105,11 @@ class OpenAIService:
             return False, None, "OpenAI API is not configured or disabled"
         
         # Build a professional prompt for the topic
-        prompt = f"""Generate a professional and engaging post for Twitter/X about: {topic_name}
+        target_length = max_length or 280
+
+        prompt = f"""Generate a professional and engaging single post for Twitter/X about: {topic_name}
+
+    The post must be {target_length} characters or fewer and should not be a thread.
 
 The post should:
 - Be informative and provide value
@@ -115,8 +119,8 @@ The post should:
 - Be engaging to capture attention
 
 Create quality content that the audience will find valuable."""
-        
-        return self.generate_post(prompt, max_length, style="professional")
+
+        return self.generate_post(prompt, target_length, style="professional")
     
     def improve_post(self, content: str, instruction: str = "improve") -> Tuple[bool, Optional[str], Optional[str]]:
         """

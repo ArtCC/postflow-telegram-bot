@@ -1042,8 +1042,6 @@ async def show_post_preview(message, post_id: int) -> None:
     
     media_label = "Image" if post.media_path else "None"
 
-    media_label = "Image" if post.media_path else "None"
-
     if is_thread:
         tweets = split_into_tweets(post.content)
         visible = tweets[:3]
@@ -1431,6 +1429,7 @@ async def show_post_preview_edit(query, post_id: int) -> None:
     
     is_thread = post.is_thread()
     char_count = len(post.content)
+    media_label = "Image" if post.media_path else "None"
     
     if is_thread:
         tweets = split_into_tweets(post.content)
