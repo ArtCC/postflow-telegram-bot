@@ -423,13 +423,13 @@ async def _show_weekly_post_mode(message_or_query, context: ContextTypes.DEFAULT
         return
 
     item = queue[idx]
-    day_label = _get_weekday_labels()[item["day_idx"]]
-    time_str = item["time_str"]
+    day_label = escape_markdown_v2(_get_weekday_labels()[item["day_idx"]])
+    time_str = escape_markdown_v2(item["time_str"])
     total = len(queue)
 
     message = (
         f"📆 *PLAN WEEK*\n\n"
-        f"Post {idx + 1}/{total} - {day_label} {time_str}\n\n"
+        f"Post {idx + 1}/{total} \\- {day_label} {time_str}\n\n"
         "Choose how to create this post:"
     )
 
@@ -599,12 +599,13 @@ async def _show_weekly_summary(message_or_query, context: ContextTypes.DEFAULT_T
     summary_by_day = {}
     for item in created:
         dt_local = item["scheduled_time_local"]
-        day_key = dt_local.strftime("%a %d %b")
+        day_key = escape_markdown_v2(dt_local.strftime("%a %d %b"))
         summary_by_day.setdefault(day_key, []).append(dt_local.strftime("%H:%M"))
 
     lines = []
     for day, times in summary_by_day.items():
-        line = f"*{day}*: {', '.join(times)}"
+        time_list = escape_markdown_v2(", ".join(times))
+        line = f"*{day}*: {time_list}"
         lines.append(line)
 
     message = (
