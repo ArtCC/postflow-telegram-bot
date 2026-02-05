@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postflow-bot:
     image: ghcr.io/artcc/postflow-telegram-bot:latest

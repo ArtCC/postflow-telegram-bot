@@ -58,16 +58,14 @@ class OpenAIService:
             system_message = self._build_system_message(max_length, style)
             
             # Call OpenAI API
-            response = self.client.chat.completions.create(
+            response = self.client.responses.create(
                 model="gpt-5-mini",
-                messages=[
-                    {"role": "system", "content": system_message},
-                    {"role": "user", "content": prompt}
-                ],
-                max_completion_tokens=500,
+                instructions=system_message,
+                input=prompt,
+                max_output_tokens=500,
             )
             
-            generated_content = response.choices[0].message.content.strip()
+            generated_content = response.output_text.strip()
             
             # Remove quotes if AI wrapped the content
             if generated_content.startswith('"') and generated_content.endswith('"'):
@@ -151,16 +149,14 @@ Create quality content that the audience will find valuable."""
             
             user_message = f"Improve this post ({instruction}):\n\n{content}"
             
-            response = self.client.chat.completions.create(
+            response = self.client.responses.create(
                 model="gpt-5-mini",
-                messages=[
-                    {"role": "system", "content": system_message},
-                    {"role": "user", "content": user_message}
-                ],
-                max_completion_tokens=500,
+                instructions=system_message,
+                input=user_message,
+                max_output_tokens=500,
             )
             
-            improved_content = response.choices[0].message.content.strip()
+            improved_content = response.output_text.strip()
             
             # Remove quotes if AI wrapped the content
             if improved_content.startswith('"') and improved_content.endswith('"'):
@@ -248,10 +244,10 @@ Create quality content that the audience will find valuable."""
         
         try:
             # Try a minimal API call
-            response = self.client.chat.completions.create(
+            response = self.client.responses.create(
                 model="gpt-5-mini",
-                messages=[{"role": "user", "content": "Hello"}],
-                max_completion_tokens=5,
+                input="Hello",
+                max_output_tokens=5,
             )
             return True, "OpenAI API connected successfully"
             

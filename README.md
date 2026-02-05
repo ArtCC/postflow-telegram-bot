@@ -105,8 +105,6 @@ DATABASE_PATH=/data/postflow.db
 The `docker-compose.yml` configuration:
 
 ```yaml
-version: '3.8'
-
 services:
   postflow-bot:
     image: ghcr.io/artcc/postflow-telegram-bot:latest
