@@ -59,7 +59,7 @@ class OpenAIService:
             
             # Call OpenAI API
             response = self.client.chat.completions.create(
-                model="gpt-4-turbo-preview",  # or "gpt-3.5-turbo" for cost savings
+                model="gpt-5-mini",
                 messages=[
                     {"role": "system", "content": system_message},
                     {"role": "user", "content": prompt}
@@ -145,7 +145,7 @@ Create quality content that the audience will find valuable."""
             user_message = f"Improve this post ({instruction}):\n\n{content}"
             
             response = self.client.chat.completions.create(
-                model="gpt-4-turbo-preview",
+                model="gpt-5-mini",
                 messages=[
                     {"role": "system", "content": system_message},
                     {"role": "user", "content": user_message}
@@ -243,7 +243,7 @@ Create quality content that the audience will find valuable."""
         try:
             # Try a minimal API call
             response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-5-mini",
                 messages=[{"role": "user", "content": "Hello"}],
                 max_tokens=5,
             )
