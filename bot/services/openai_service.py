@@ -72,6 +72,14 @@ class OpenAIService:
             # Remove quotes if AI wrapped the content
             if generated_content.startswith('"') and generated_content.endswith('"'):
                 generated_content = generated_content[1:-1]
+
+            if not generated_content:
+                logger.error("OpenAI returned empty content")
+                try:
+                    logger.error(f"OpenAI response: {response}")
+                except Exception:
+                    logger.error("OpenAI response: <unprintable>")
+                return False, None, "OpenAI returned empty content. Please try again."
             
             logger.info(f"Generated content successfully ({len(generated_content)} chars)")
             return True, generated_content, None
