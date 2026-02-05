@@ -64,7 +64,6 @@ class OpenAIService:
                     {"role": "system", "content": system_message},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.7,
                 max_completion_tokens=500,
             )
             
@@ -150,7 +149,6 @@ Create quality content that the audience will find valuable."""
                     {"role": "system", "content": system_message},
                     {"role": "user", "content": user_message}
                 ],
-                temperature=0.7,
                 max_completion_tokens=500,
             )
             
@@ -245,7 +243,6 @@ Create quality content that the audience will find valuable."""
             response = self.client.chat.completions.create(
                 model="gpt-5-mini",
                 messages=[{"role": "user", "content": "Hello"}],
-                temperature=0.0,
                 max_completion_tokens=5,
             )
             return True, "OpenAI API connected successfully"
