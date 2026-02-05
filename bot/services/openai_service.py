@@ -65,7 +65,7 @@ class OpenAIService:
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.7,
-                max_tokens=500,
+                max_completion_tokens=500,
             )
             
             generated_content = response.choices[0].message.content.strip()
@@ -151,7 +151,7 @@ Create quality content that the audience will find valuable."""
                     {"role": "user", "content": user_message}
                 ],
                 temperature=0.7,
-                max_tokens=500,
+                max_completion_tokens=500,
             )
             
             improved_content = response.choices[0].message.content.strip()
@@ -245,7 +245,7 @@ Create quality content that the audience will find valuable."""
             response = self.client.chat.completions.create(
                 model="gpt-5-mini",
                 messages=[{"role": "user", "content": "Hello"}],
-                max_tokens=5,
+                max_completion_tokens=5,
             )
             return True, "OpenAI API connected successfully"
             
