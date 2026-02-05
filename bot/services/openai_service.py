@@ -62,7 +62,8 @@ class OpenAIService:
                 model="gpt-5-mini",
                 instructions=system_message,
                 input=prompt,
-                max_output_tokens=500,
+                reasoning={"effort": "low"},
+                max_output_tokens=200,
             )
             
             generated_content = response.output_text.strip()
@@ -153,7 +154,8 @@ Create quality content that the audience will find valuable."""
                 model="gpt-5-mini",
                 instructions=system_message,
                 input=user_message,
-                max_output_tokens=500,
+                reasoning={"effort": "low"},
+                max_output_tokens=300,
             )
             
             improved_content = response.output_text.strip()
@@ -247,6 +249,7 @@ Create quality content that the audience will find valuable."""
             response = self.client.responses.create(
                 model="gpt-5-mini",
                 input="Hello",
+                reasoning={"effort": "low"},
                 max_output_tokens=5,
             )
             return True, "OpenAI API connected successfully"
