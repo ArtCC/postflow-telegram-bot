@@ -26,6 +26,12 @@ from bot.utils.keyboards import (
     get_scheduled_post_actions_keyboard,
     get_confirm_delete_keyboard,
     get_error_keyboard,
+    get_topics_menu_keyboard,
+    get_topics_list_keyboard,
+    get_topics_delete_keyboard,
+    get_topic_delete_confirm_keyboard,
+    get_topics_delete_all_confirm_keyboard,
+    get_ai_with_topics_keyboard,
 )
 
 __all__ = [
@@ -49,4 +55,10 @@ __all__ = [
     'get_scheduled_post_actions_keyboard',
     'get_confirm_delete_keyboard',
     'get_error_keyboard',
+    'get_topics_menu_keyboard',
+    'get_topics_list_keyboard',
+    'get_topics_delete_keyboard',
+    'get_topic_delete_confirm_keyboard',
+    'get_topics_delete_all_confirm_keyboard',
+    'get_ai_with_topics_keyboard',
 ]

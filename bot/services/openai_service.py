@@ -86,6 +86,38 @@ class OpenAIService:
             logger.error(f"Failed to generate content: {error_msg}")
             return False, None, error_msg
     
+    def generate_post_with_topic(
+        self,
+        topic_name: str,
+        max_length: Optional[int] = None
+    ) -> Tuple[bool, Optional[str], Optional[str]]:
+        """
+        Generate social media post content using a topic preset.
+        
+        Args:
+            topic_name: Name of the topic preset
+            max_length: Maximum length for the generated content
+            
+        Returns:
+            Tuple of (success, generated_content, error_message)
+        """
+        if not self.is_enabled():
+            return False, None, "OpenAI API is not configured or disabled"
+        
+        # Build a professional prompt for the topic
+        prompt = f"""Generate a professional and engaging post for Twitter/X about: {topic_name}
+
+The post should:
+- Be informative and provide value
+- Have a professional yet approachable tone
+- Include an interesting fact or insight
+- May start with an appropriate emoji
+- Be engaging to capture attention
+
+Create quality content that the audience will find valuable."""
+        
+        return self.generate_post(prompt, max_length, style="professional")
+    
     def improve_post(self, content: str, instruction: str = "improve") -> Tuple[bool, Optional[str], Optional[str]]:
         """
         Improve existing post content.

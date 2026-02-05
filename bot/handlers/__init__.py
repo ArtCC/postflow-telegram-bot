@@ -16,11 +16,13 @@ from bot.handlers.commands import (
     scheduled_command,
     stats_command,
     status_command,
+    topics_command,
 )
 from bot.handlers.callbacks import handle_callback
 from bot.handlers.conversations import (
     post_conversation_handler,
     schedule_conversation_handler,
+    topic_conversation_handler,
 )
 
 __all__ = [
@@ -36,7 +38,9 @@ __all__ = [
     'scheduled_command',
     'stats_command',
     'status_command',
+    'topics_command',
     'handle_callback',
     'post_conversation_handler',
     'schedule_conversation_handler',
+    'topic_conversation_handler',
 ]

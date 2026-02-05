@@ -7,10 +7,11 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.config import logger, TELEGRAM_USER_ID, TWITTER_ENABLED, OPENAI_ENABLED
-from bot.utils import is_authorized, escape_markdown_v2, get_main_menu_keyboard, get_back_keyboard, get_new_post_keyboard
+from bot.utils import is_authorized, escape_markdown_v2, get_main_menu_keyboard, get_back_keyboard, get_new_post_keyboard, get_topics_menu_keyboard
 from bot.services.post_service import PostService
 from bot.services.twitter_service import TwitterService
 from bot.services.openai_service import OpenAIService
+from bot.services.topic_service import TopicService
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -68,6 +69,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "• `/menu` \\- Main menu\n"
         "• `/new` \\- New post\n"
         "• `/plan` \\- Plan week\n"
+        "• `/topics` \\- Manage topics\n"
         "• `/drafts` \\- Drafts\n"
         "• `/scheduled` \\- Scheduled posts\n"
         "• `/stats` \\- Statistics\n"
@@ -79,6 +81,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "• `/cancel` \\- Cancel\n\n"
         "*Highlights*\n"
         "• Manual or AI posts\n"
+        "• Topic presets for AI\n"
         "• Scheduling\n"
         "• Threads for long posts\n"
         "• Stats overview"
@@ -359,3 +362,44 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         parse_mode="MarkdownV2",
         reply_markup=get_back_keyboard()
     )
+
+
+async def topics_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /topics command."""
+    user_id = update.effective_user.id
+    
+    if not is_authorized(user_id):
+        await update.message.reply_text(
+            "⛔ You are not authorized to use this bot\\.",
+            parse_mode="MarkdownV2"
+        )
+        return
+    
+    # Check if OpenAI is enabled
+    if not OPENAI_ENABLED:
+        await update.message.reply_text(
+            "⚠️ *Topics require OpenAI*\n\n"
+            "Topics are used for AI post generation\\.\n"
+            "Configure `OPENAI_API_KEY` to use this feature\\.",
+            parse_mode="MarkdownV2",
+            reply_markup=get_back_keyboard()
+        )
+        return
+    
+    # Get topics count
+    topic_count = TopicService.get_topic_count(user_id)
+    from bot.services.topic_service import MAX_TOPICS_PER_USER
+    
+    topics_message = (
+        f"🎯 *TOPIC PRESETS*\n\n"
+        f"Manage your topic presets for AI post generation\\.\n\n"
+        f"📊 *Usage:* `{topic_count}/{MAX_TOPICS_PER_USER}` topics\n\n"
+        f"Choose an option below\\."
+    )
+    
+    await update.message.reply_text(
+        topics_message,
+        parse_mode="MarkdownV2",
+        reply_markup=get_topics_menu_keyboard(user_id)
+    )
+

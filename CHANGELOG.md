@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.6] - 2026-02-05
+
+### Added
+- **Topic presets**: Save up to 10 favorite topics for quick AI post generation
+- **Topics management**: Add, list, view, delete individual topics, or delete all
+- **Smart AI flow**: Topic buttons appear automatically when creating AI posts
+- **New command**: `/topics` to manage topic presets
+- **Topic validation**: 3-30 character names, no duplicates, max 10 per user
+- **Database model**: New `Topic` table for persistent topic storage
+- **AI topic generation**: Dedicated method for generating posts from topic presets
+
+### Changed
+- **Main menu**: Added "🎯 Topics" button for quick access
+- **AI post creation**: Shows topic preset buttons when available, with "✏️ Custom Prompt" option
+- **Help command**: Updated to include `/topics` and topic presets feature
+- **README**: Complete documentation for topic presets usage and management
+
 ## [0.0.5] - 2026-02-05
 
 ### Added
@@ -83,6 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[0.0.6]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.2...v0.0.3

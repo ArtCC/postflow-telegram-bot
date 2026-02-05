@@ -92,3 +92,16 @@ class ScheduledPost(Base):
     def is_pending(self):
         """Check if the scheduled post is still pending"""
         return self.status == "pending" and self.scheduled_for > datetime.utcnow()
+
+
+class Topic(Base):
+    """Topic model - represents user-defined topic presets for AI post generation"""
+    __tablename__ = "topics"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, nullable=False)
+    name = Column(String(30), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<Topic(id={self.id}, user_id={self.user_id}, name='{self.name}')>"

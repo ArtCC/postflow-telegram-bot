@@ -7,8 +7,21 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.config import logger, TWITTER_ENABLED, OPENAI_ENABLED
-from bot.utils import is_authorized, escape_markdown_v2, get_main_menu_keyboard, get_back_keyboard, get_new_post_keyboard
+from bot.utils import (
+    is_authorized, 
+    escape_markdown_v2, 
+    get_main_menu_keyboard, 
+    get_back_keyboard, 
+    get_new_post_keyboard,
+    get_topics_menu_keyboard,
+    get_topics_list_keyboard,
+    get_topics_delete_keyboard,
+    get_topic_delete_confirm_keyboard,
+    get_topics_delete_all_confirm_keyboard,
+    get_ai_with_topics_keyboard,
+)
 from bot.handlers.commands import help_command
+from bot.services.topic_service import TopicService
 
 
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -55,6 +68,55 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     
     elif data == "settings":
         await show_settings(query)
+
+    # Topics management callbacks
+    elif data == "topics_menu":
+        await show_topics_menu(query, user_id)
+    
+    elif data == "topics_add_disabled":
+        await query.answer("⚠️ Maximum topics reached! Delete one to add more.", show_alert=True)
+    
+    elif data == "topics_list":
+        await show_topics_list(query, user_id)
+    
+    elif data == "topics_list_empty":
+        await query.answer("📋 No topics yet. Add one to get started!", show_alert=True)
+    
+    elif data.startswith("topics_view_"):
+        topic_id = int(data.split("_")[-1])
+        await view_topic(query, topic_id)
+    
+    elif data == "topics_delete":
+        await show_topics_delete(query, user_id)
+    
+    elif data.startswith("topics_delete_confirm_"):
+        topic_id = int(data.split("_")[-1])
+        await confirm_delete_topic(query, topic_id)
+    
+    elif data.startswith("topics_delete_execute_"):
+        topic_id = int(data.split("_")[-1])
+        await execute_delete_topic(query, user_id, topic_id)
+    
+    elif data == "topics_delete_all":
+        await confirm_delete_all_topics(query)
+    
+    elif data == "topics_delete_all_execute":
+        await execute_delete_all_topics(query, user_id)
+    
+    elif data.startswith("ai_topic_"):
+        topic_id = int(data.split("_")[-1])
+        from bot.handlers.posts import handle_ai_with_topic
+        await handle_ai_with_topic(query, context, topic_id)
+    
+    elif data == "ai_custom":
+        await query.edit_message_text(
+            "🤖 *AI GENERATION*\n\n"
+            "Describe what you want to post\\.\n"
+            "Example: `Thread on AI trends in 2026`\n\n"
+            "Type /cancel to abort\\.",
+            parse_mode="MarkdownV2"
+        )
+        context.user_data['awaiting'] = 'ai_prompt'
 
     elif data.startswith("plan_day_"):
         from bot.handlers.posts import toggle_weekly_day
@@ -104,14 +166,27 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         await prompt_image_post(query, context)
     
     elif data == "post_ai":
-        await query.edit_message_text(
-            "🤖 *AI GENERATION*\n\n"
-            "Describe what you want to post\\.\n"
-            "Example: `Thread on AI trends in 2026`\n\n"
-            "Type /cancel to abort\\.",
-            parse_mode="MarkdownV2"
-        )
-        context.user_data['awaiting'] = 'ai_prompt'
+        # Check if user has topics
+        topic_count = TopicService.get_topic_count(user_id)
+        
+        if topic_count > 0:
+            # Show topics selection
+            await query.edit_message_text(
+                "🤖 *AI GENERATION*\n\n"
+                "Select a topic preset or write a custom prompt:",
+                parse_mode="MarkdownV2",
+                reply_markup=get_ai_with_topics_keyboard(user_id)
+            )
+        else:
+            # Original behavior - no topics
+            await query.edit_message_text(
+                "🤖 *AI GENERATION*\n\n"
+                "Describe what you want to post\\.\n"
+                "Example: `Thread on AI trends in 2026`\n\n"
+                "Type /cancel to abort\\.",
+                parse_mode="MarkdownV2"
+            )
+            context.user_data['awaiting'] = 'ai_prompt'
     
     # Handle other callback patterns
     elif data.startswith("publish_"):
@@ -195,6 +270,8 @@ async def show_help(query) -> None:
         "• `/start` \\- Welcome\n"
         "• `/menu` \\- Main menu\n"
         "• `/new` \\- New post\n"
+        "• `/plan` \\- Plan week\n"
+        "• `/topics` \\- Manage topics\n"
         "• `/drafts` \\- Drafts\n"
         "• `/scheduled` \\- Scheduled posts\n"
         "• `/stats` \\- Statistics\n"
@@ -206,6 +283,7 @@ async def show_help(query) -> None:
         "• `/cancel` \\- Cancel\n\n"
         "*Highlights*\n"
         "• Manual or AI posts\n"
+        "• Topic presets for AI\n"
         "• Scheduling\n"
         "• Threads for long posts\n"
         "• Stats overview"
@@ -336,3 +414,148 @@ async def show_status(query) -> None:
         parse_mode="MarkdownV2",
         reply_markup=get_back_keyboard()
     )
+
+
+# Topics management functions
+
+async def show_topics_menu(query, user_id: int) -> None:
+    """Show topics management menu."""
+    topic_count = TopicService.get_topic_count(user_id)
+    from bot.services.topic_service import MAX_TOPICS_PER_USER
+    
+    topics_message = (
+        f"🎯 *TOPIC PRESETS*\n\n"
+        f"Manage your topic presets for AI post generation\\.\n\n"
+        f"📊 *Usage:* `{topic_count}/{MAX_TOPICS_PER_USER}` topics\n\n"
+        f"Choose an option below\\."
+    )
+    
+    await query.edit_message_text(
+        topics_message,
+        parse_mode="MarkdownV2",
+        reply_markup=get_topics_menu_keyboard(user_id)
+    )
+
+
+async def show_topics_list(query, user_id: int) -> None:
+    """Show list of user's topics."""
+    topics = TopicService.get_user_topics(user_id)
+    
+    if not topics:
+        await query.edit_message_text(
+            "📋 *TOPICS LIST*\n\n"
+            "You don't have any topics yet\\.\n"
+            "Add one to get started\\!",
+            parse_mode="MarkdownV2",
+            reply_markup=get_topics_menu_keyboard(user_id)
+        )
+        return
+    
+    from bot.services.topic_service import MAX_TOPICS_PER_USER
+    
+    topics_text = "\n".join([f"• `{escape_markdown_v2(topic.name)}`" for topic in topics])
+    
+    topics_message = (
+        f"📋 *TOPICS LIST*\n\n"
+        f"Your topics \\({len(topics)}/{MAX_TOPICS_PER_USER}\\):\n\n"
+        f"{topics_text}\n\n"
+        f"Click on a topic to view details\\."
+    )
+    
+    await query.edit_message_text(
+        topics_message,
+        parse_mode="MarkdownV2",
+        reply_markup=get_topics_list_keyboard(user_id)
+    )
+
+
+async def view_topic(query, topic_id: int) -> None:
+    """View a specific topic."""
+    topic = TopicService.get_topic_for_user(topic_id, query.from_user.id)
+    
+    if not topic:
+        await query.answer("❌ Topic not found", show_alert=True)
+        return
+    
+    from bot.utils import format_datetime
+    
+    topic_message = (
+        f"🎯 *TOPIC DETAILS*\n\n"
+        f"*Name:* `{escape_markdown_v2(topic.name)}`\n"
+        f"*Created:* {escape_markdown_v2(format_datetime(topic.created_at))}\n\n"
+        f"Use this topic when creating AI posts\\."
+    )
+    
+    await query.edit_message_text(
+        topic_message,
+        parse_mode="MarkdownV2",
+        reply_markup=get_topics_list_keyboard(query.from_user.id)
+    )
+
+
+async def show_topics_delete(query, user_id: int) -> None:
+    """Show topics for deletion."""
+    topics = TopicService.get_user_topics(user_id)
+    
+    if not topics:
+        await query.answer("No topics to delete", show_alert=True)
+        return
+    
+    await query.edit_message_text(
+        "🗑️ *DELETE TOPIC*\n\n"
+        "Select a topic to delete:",
+        parse_mode="MarkdownV2",
+        reply_markup=get_topics_delete_keyboard(user_id)
+    )
+
+
+async def confirm_delete_topic(query, topic_id: int) -> None:
+    """Confirm deletion of a specific topic."""
+    topic = TopicService.get_topic(topic_id)
+    
+    if not topic:
+        await query.answer("❌ Topic not found", show_alert=True)
+        return
+    
+    await query.edit_message_text(
+        f"🗑️ *DELETE TOPIC*\n\n"
+        f"Are you sure you want to delete:\n"
+        f"`{escape_markdown_v2(topic.name)}`\n\n"
+        f"This action cannot be undone\\.",
+        parse_mode="MarkdownV2",
+        reply_markup=get_topic_delete_confirm_keyboard(topic_id)
+    )
+
+
+async def execute_delete_topic(query, user_id: int, topic_id: int) -> None:
+    """Execute deletion of a topic."""
+    success, error_msg = TopicService.delete_topic(topic_id, user_id)
+    
+    if success:
+        await query.answer("✅ Topic deleted", show_alert=False)
+        await show_topics_delete(query, user_id)
+    else:
+        await query.answer(f"❌ {error_msg}", show_alert=True)
+
+
+async def confirm_delete_all_topics(query) -> None:
+    """Confirm deletion of all topics."""
+    await query.edit_message_text(
+        "🗑️ *DELETE ALL TOPICS*\n\n"
+        "⚠️ Are you sure you want to delete ALL topics?\n\n"
+        "This action cannot be undone\\.",
+        parse_mode="MarkdownV2",
+        reply_markup=get_topics_delete_all_confirm_keyboard()
+    )
+
+
+async def execute_delete_all_topics(query, user_id: int) -> None:
+    """Execute deletion of all topics."""
+    success, deleted_count, error_msg = TopicService.delete_all_topics(user_id)
+    
+    if success:
+        await query.answer(f"✅ Deleted {deleted_count} topic(s)", show_alert=True)
+        await show_topics_menu(query, user_id)
+    else:
+        await query.answer(f"❌ {error_msg}", show_alert=True)
+

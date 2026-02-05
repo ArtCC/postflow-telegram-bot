@@ -19,6 +19,7 @@ def get_main_menu_keyboard() -> InlineKeyboardMarkup:
             InlineKeyboardButton("📊 Stats", callback_data="statistics"),
         ],
         [
+            InlineKeyboardButton("🎯 Topics", callback_data="topics_menu"),
             InlineKeyboardButton("🔄 Status", callback_data="status"),
         ],
     ]
@@ -270,3 +271,111 @@ def get_error_keyboard(show_retry: bool = False, show_settings: bool = False) ->
     keyboard.append([InlineKeyboardButton("🔙 Menu", callback_data="menu")])
     
     return InlineKeyboardMarkup(keyboard)
+
+
+def get_topics_menu_keyboard(user_id: int) -> InlineKeyboardMarkup:
+    """Create keyboard for topics management menu."""
+    from bot.services.topic_service import TopicService, MAX_TOPICS_PER_USER
+    
+    has_max = TopicService.has_reached_max_topics(user_id)
+    topic_count = TopicService.get_topic_count(user_id)
+    
+    keyboard = []
+    
+    # Add topic button (disabled if max reached)
+    if has_max:
+        keyboard.append([InlineKeyboardButton(f"➕ Add Topic (Max {MAX_TOPICS_PER_USER})", callback_data="topics_add_disabled")])
+    else:
+        keyboard.append([InlineKeyboardButton("➕ Add Topic", callback_data="topics_add")])
+    
+    # List topics button
+    if topic_count > 0:
+        keyboard.append([InlineKeyboardButton(f"📋 List Topics ({topic_count})", callback_data="topics_list")])
+        keyboard.append([InlineKeyboardButton("🗑️ Delete Topic", callback_data="topics_delete")])
+        keyboard.append([InlineKeyboardButton("🗑️ Delete All", callback_data="topics_delete_all")])
+    else:
+        keyboard.append([InlineKeyboardButton("📋 List Topics (0)", callback_data="topics_list_empty")])
+    
+    keyboard.append([InlineKeyboardButton("🔙 Menu", callback_data="menu")])
+    
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_topics_list_keyboard(user_id: int) -> InlineKeyboardMarkup:
+    """Create keyboard showing list of topics."""
+    from bot.services.topic_service import TopicService
+    
+    topics = TopicService.get_user_topics(user_id)
+    keyboard = []
+    
+    # Display topics as buttons (read-only)
+    for topic in topics:
+        keyboard.append([InlineKeyboardButton(f"🎯 {topic.name}", callback_data=f"topics_view_{topic.id}")])
+    
+    keyboard.append([InlineKeyboardButton("🔙 Back", callback_data="topics_menu")])
+    
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_topics_delete_keyboard(user_id: int) -> InlineKeyboardMarkup:
+    """Create keyboard for deleting topics."""
+    from bot.services.topic_service import TopicService
+    
+    topics = TopicService.get_user_topics(user_id)
+    keyboard = []
+    
+    # Display topics as delete buttons
+    for topic in topics:
+        keyboard.append([InlineKeyboardButton(f"🗑️ {topic.name}", callback_data=f"topics_delete_confirm_{topic.id}")])
+    
+    keyboard.append([InlineKeyboardButton("🔙 Back", callback_data="topics_menu")])
+    
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_topic_delete_confirm_keyboard(topic_id: int) -> InlineKeyboardMarkup:
+    """Create keyboard for topic deletion confirmation."""
+    keyboard = [
+        [
+            InlineKeyboardButton("✅ Delete", callback_data=f"topics_delete_execute_{topic_id}"),
+            InlineKeyboardButton("❌ Cancel", callback_data="topics_delete"),
+        ],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_topics_delete_all_confirm_keyboard() -> InlineKeyboardMarkup:
+    """Create keyboard for delete all topics confirmation."""
+    keyboard = [
+        [
+            InlineKeyboardButton("✅ Delete All", callback_data="topics_delete_all_execute"),
+            InlineKeyboardButton("❌ Cancel", callback_data="topics_menu"),
+        ],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_ai_with_topics_keyboard(user_id: int) -> InlineKeyboardMarkup:
+    """Create keyboard with topic presets for AI post generation."""
+    from bot.services.topic_service import TopicService
+    
+    topics = TopicService.get_user_topics(user_id)
+    keyboard = []
+    
+    # Display topics in rows of 2
+    row = []
+    for topic in topics:
+        row.append(InlineKeyboardButton(f"🎯 {topic.name}", callback_data=f"ai_topic_{topic.id}"))
+        if len(row) == 2:
+            keyboard.append(row)
+            row = []
+    
+    if row:  # Add remaining topics
+        keyboard.append(row)
+    
+    # Always add custom option
+    keyboard.append([InlineKeyboardButton("✏️ Custom Prompt", callback_data="ai_custom")])
+    keyboard.append([InlineKeyboardButton("🔙 Back", callback_data="new_post")])
+    
+    return InlineKeyboardMarkup(keyboard)
+

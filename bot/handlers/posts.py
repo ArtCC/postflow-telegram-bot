@@ -33,6 +33,7 @@ from bot.services.post_service import PostService
 from bot.services.twitter_service import TwitterService
 from bot.services.openai_service import OpenAIService
 from bot.services.scheduler_service import SchedulerService
+from bot.services.topic_service import TopicService
 from bot.database import PostStatus
 import pytz
 import os
@@ -930,6 +931,54 @@ async def process_edit_post(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     
     # Show updated preview
     await show_post_preview(update.message, post_id)
+
+
+async def handle_ai_with_topic(query, context: ContextTypes.DEFAULT_TYPE, topic_id: int) -> None:
+    """Handle AI post generation with a topic preset."""
+    topic = TopicService.get_topic_for_user(topic_id, query.from_user.id)
+    
+    if not topic:
+        await query.answer("❌ Topic not found", show_alert=True)
+        return
+    
+    # Send "generating" message
+    await query.edit_message_text(
+        f"🤖 *GENERATING*\n\n"
+        f"📝 Topic: `{escape_markdown_v2(topic.name)}`\n"
+        f"⏳ Creating content with AI\\.\\.",
+        parse_mode="MarkdownV2"
+    )
+    
+    # Generate content with topic
+    success, content, error = openai_service.generate_post_with_topic(topic.name)
+    
+    if not success:
+        await query.edit_message_text(
+            f"🤖 *AI FAILED*\n\n"
+            f"❌ {escape_markdown_v2(error)}\n\n"
+            f"Try again or choose a different topic\\.",
+            parse_mode="MarkdownV2",
+            reply_markup=get_error_keyboard(show_retry=True)
+        )
+        return
+    
+    # Create post in database
+    post = PostService.create_post(
+        content=content,
+        created_by_ai=True,
+        ai_prompt=f"Topic: {topic.name}"
+    )
+    
+    if not post:
+        await query.edit_message_text(
+            "❌ Failed to save the post\\.",
+            parse_mode="MarkdownV2",
+            reply_markup=get_back_keyboard()
+        )
+        return
+    
+    # Show preview
+    await show_post_preview_edit(query, post.id)
 
 
 async def process_ai_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE, prompt: str) -> None:

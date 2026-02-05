@@ -21,6 +21,7 @@ A powerful Telegram bot for managing and scheduling social media posts with AI s
 - 🔔 **Notifications** - Get notified when scheduled posts are published
 - 🧵 **Auto Thread Creation** - Automatically splits long posts into threads (respects 280 char limit)
 - 🐦 **Twitter/X Integration** - Direct publishing to Twitter
+- 🎯 **Topic Presets** - Save favorite topics for quick AI post generation
 - 🔒 **Secure & Private** - Self-hosted, only you have access
 - 🐳 **Docker Ready** - Easy deployment with docker-compose
 - 📊 **Statistics** - Track your posting performance
@@ -197,9 +198,34 @@ docker logs -f postflow-bot
 
 #### AI-Generated Post
 1. Click "✍️ New" → "🤖 AI"
-2. Describe what you want: *"Post about Python advantages"*
-3. Review generated content
-4. Publish or schedule
+2. If you have topic presets, select one or choose "✏️ Custom Prompt"
+3. For custom: Describe what you want: *"Post about Python advantages"*
+4. Review generated content
+5. Publish or schedule
+
+### Managing Topic Presets
+
+Topic presets allow you to quickly generate AI posts on your favorite subjects.
+
+#### Adding Topics
+1. Click "🎯 Topics" in main menu or use `/topics`
+2. Click "➕ Add Topic"
+3. Enter a topic name (3-30 characters)
+   - Examples: "Python Programming", "AI & ML", "Tech News"
+4. Topic is saved for quick access (max 10 topics)
+
+#### Using Topics
+1. Click "✍️ New" → "🤖 AI"
+2. Select a topic preset button
+3. AI generates a professional post about that topic
+4. Review, edit if needed, then publish or schedule
+
+#### Managing Topics
+- **List Topics**: View all your saved topics
+- **Delete Topic**: Remove individual topics
+- **Delete All**: Clear all topics (with confirmation)
+
+> **Note:** Topics require OpenAI to be configured. Each topic generates unique content every time.
 
 #### Weekly Plan
 1. Click "✍️ New" → "📆 Plan Week"
@@ -277,6 +303,7 @@ When a scheduled post is published (or fails), you'll receive a notification:
 - `/menu` - Open interactive main menu
 - `/new` - New post
 - `/plan` - Plan week
+- `/topics` - Manage topic presets
 - `/drafts` - List drafts
 - `/scheduled` - List scheduled posts
 - `/stats` - Show statistics
@@ -349,7 +376,8 @@ postflow-telegram-bot/
 │   │   ├── twitter_service.py # Twitter API integration
 │   │   ├── openai_service.py  # OpenAI API integration
 │   │   ├── scheduler_service.py # APScheduler management
-│   │   └── post_service.py    # Post business logic
+│   │   ├── post_service.py    # Post business logic
+│   │   └── topic_service.py   # Topic presets management
 │   └── utils/
 │       ├── __init__.py
 │       ├── auth.py            # Authorization helpers
@@ -473,7 +501,11 @@ Scheduled posts are stored in the SQLite database. When the bot restarts, APSche
 
 ### Can I use this bot without OpenAI?
 
-Yes. OpenAI is optional. If you don't configure `OPENAI_API_KEY`, the bot will work perfectly fine for manual post creation and scheduling. You just won't have AI generation features.
+Yes. OpenAI is optional. If you don't configure `OPENAI_API_KEY`, the bot will work perfectly fine for manual post creation and scheduling. You just won't have AI generation features or topic presets.
+
+### How do topic presets work?
+
+Topic presets are saved keywords that trigger AI to generate posts on specific subjects. You can save up to 10 topics (e.g., "Python", "AI News", "Tech Tips"). When creating an AI post, select a topic button and the AI generates unique content about that subject each time. Topics require OpenAI to be configured.
 
 ### What Twitter API plan do I need?
 
@@ -560,7 +592,7 @@ sudo chmod -R 755 ./data
 - [x] Draft system
 - [x] Weekly planning wizard (rolling 7-day window)
 - [x] Support for images in posts
-- [ ] Topic presets for AI random post generation
+- [x] Topic presets for AI random post generation
 - [ ] Publication calendar with weekly view
 - [ ] Post templates
 - [ ] Multi-language bot UI
