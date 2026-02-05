@@ -552,10 +552,11 @@ sudo chmod -R 755 ./data
 ### Phase 2: Future Features
 
 - [x] Draft system
-- [ ] Post templates
+- [x] Weekly planning wizard (rolling 7-day window)
 - [ ] Publication calendar with weekly view
-- [ ] Recurring posts
+- [ ] Topic presets for AI random post generation
 - [ ] Support for images and videos in posts
+- [ ] Post templates
 - [ ] Multi-platform support (Instagram, LinkedIn, Facebook, etc.)
 
 ## 🤝 Contributing
