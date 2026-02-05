@@ -56,7 +56,13 @@ class TwitterService:
                 logger.error(f"Failed to initialize Twitter API: {e}")
                 logger.error(f"Full error details: {repr(e)}")
                 self.enabled = False
-                raise TwitterServiceError(f"Twitter authentication failed: {str(e)}")
+                self.client = None
+                logger.warning("Twitter API disabled due to initialization error")
+            except Exception as e:
+                logger.error(f"Unexpected error initializing Twitter API: {e}")
+                self.enabled = False
+                self.client = None
+                logger.warning("Twitter API disabled due to initialization error")
     
     def is_enabled(self) -> bool:
         """Check if Twitter service is enabled and authenticated"""
