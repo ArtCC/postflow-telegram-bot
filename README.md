@@ -560,9 +560,10 @@ sudo chmod -R 755 ./data
 - [x] Draft system
 - [x] Weekly planning wizard (rolling 7-day window)
 - [x] Support for images in posts
-- [ ] Publication calendar with weekly view
 - [ ] Topic presets for AI random post generation
+- [ ] Publication calendar with weekly view
 - [ ] Post templates
+- [ ] Multi-language bot UI
 - [ ] Multi-platform support (Instagram, LinkedIn, Facebook, etc.)
 
 ## 🤝 Contributing
