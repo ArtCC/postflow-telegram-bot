@@ -45,12 +45,8 @@ class TwitterService:
                     access_token_secret=TWITTER_ACCESS_TOKEN_SECRET
                 )
                 
-                # Test authentication
-                me = self.client.get_me()
-                if me.data:
-                    logger.info(f"Twitter API initialized successfully. Logged in as @{me.data.username}")
-                else:
-                    logger.warning("Twitter API initialized but could not verify user")
+                # Defer auth test to explicit status checks to avoid rate limits on startup
+                logger.info("Twitter API client initialized (auth check deferred)")
                 
             except tweepy.TweepyException as e:
                 logger.error(f"Failed to initialize Twitter API: {e}")
