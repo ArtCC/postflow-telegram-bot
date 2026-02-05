@@ -35,6 +35,7 @@ def get_new_post_keyboard() -> InlineKeyboardMarkup:
     """Create keyboard for new post options."""
     keyboard = [
         [InlineKeyboardButton("📆 Plan Week", callback_data="plan_week")],
+        [InlineKeyboardButton("🖼️ Image", callback_data="post_image")],
         [InlineKeyboardButton("✏️ Write Manually", callback_data="post_manual")],
     ]
     

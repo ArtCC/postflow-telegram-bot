@@ -98,6 +98,10 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             parse_mode="MarkdownV2"
         )
         context.user_data['awaiting'] = 'manual_post'
+
+    elif data == "post_image":
+        from bot.handlers.posts import prompt_image_post
+        await prompt_image_post(query, context)
     
     elif data == "post_ai":
         await query.edit_message_text(

@@ -34,7 +34,7 @@ from bot.handlers import (
     status_command,
     handle_callback,
 )
-from bot.handlers.posts import handle_text_message, publish_scheduled_post
+from bot.handlers.posts import handle_text_message, handle_photo_message, publish_scheduled_post
 from bot.handlers.conversations import cancel_command
 from bot.services.scheduler_service import SchedulerService
 from bot.services.post_service import PostService
@@ -182,6 +182,13 @@ def main() -> None:
     application.add_handler(CallbackQueryHandler(handle_callback))
     
     # Register message handlers
+    application.add_handler(
+        MessageHandler(
+            filters.PHOTO,
+            handle_photo_message
+        )
+    )
+
     application.add_handler(
         MessageHandler(
             filters.TEXT & ~filters.COMMAND,

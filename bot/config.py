@@ -42,6 +42,9 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 # Database
 DATABASE_PATH = os.getenv("DATABASE_PATH", "/data/postflow.db")
 
+# Media storage (images)
+MEDIA_PATH = os.getenv("MEDIA_PATH", "/data/media")
+
 # Twitter settings
 MAX_TWEET_LENGTH = 280
 MAX_THREAD_TWEETS = 25  # Twitter's thread limit
@@ -76,10 +79,12 @@ OPENAI_ENABLED = bool(OPENAI_API_KEY)
 if not OPENAI_ENABLED:
     logger.info("OpenAI API key not configured. AI features will be disabled.")
 
-# Ensure data directory exists
+# Ensure data directories exist
 Path(DATABASE_PATH).parent.mkdir(parents=True, exist_ok=True)
+Path(MEDIA_PATH).mkdir(parents=True, exist_ok=True)
 
 logger.info(f"Bot configured for user ID: {TELEGRAM_USER_ID}")
 logger.info(f"Twitter API: {'Enabled' if TWITTER_ENABLED else 'Disabled'}")
 logger.info(f"OpenAI API: {'Enabled' if OPENAI_ENABLED else 'Disabled'}")
 logger.info(f"Database: {DATABASE_PATH}")
+logger.info(f"Media path: {MEDIA_PATH}")

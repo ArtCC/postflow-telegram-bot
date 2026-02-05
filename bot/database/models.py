@@ -33,6 +33,7 @@ class Post(Base):
     status = Column(SQLEnum(PostStatus), default=PostStatus.DRAFT)
     twitter_id = Column(String(50), nullable=True)  # Tweet ID after publishing
     error_message = Column(Text, nullable=True)  # Store error details if failed
+    media_path = Column(Text, nullable=True)  # Local path to attached image
 
     # Relationships
     threads = relationship("Thread", back_populates="post", cascade="all, delete-orphan")

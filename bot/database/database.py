@@ -3,7 +3,7 @@ Database Management
 SQLAlchemy engine and session management.
 """
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session as SQLAlchemySession
 from contextlib import contextmanager
 
@@ -29,10 +29,20 @@ def init_db():
     """Initialize database - create all tables"""
     try:
         Base.metadata.create_all(bind=engine)
+        _ensure_post_media_column()
         logger.info("Database initialized successfully")
     except Exception as e:
         logger.error(f"Error initializing database: {e}")
         raise
+
+
+def _ensure_post_media_column() -> None:
+    """Add media_path column to posts table if missing (SQLite)."""
+    with engine.connect() as connection:
+        result = connection.execute(text("PRAGMA table_info(posts)"))
+        columns = [row[1] for row in result.fetchall()]
+        if "media_path" not in columns:
+            connection.execute(text("ALTER TABLE posts ADD COLUMN media_path TEXT"))
 
 
 @contextmanager

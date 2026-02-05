@@ -44,6 +44,15 @@ class TwitterService:
                     access_token=TWITTER_ACCESS_TOKEN,
                     access_token_secret=TWITTER_ACCESS_TOKEN_SECRET
                 )
+
+                # Initialize Twitter API v1.1 for media upload
+                auth = tweepy.OAuth1UserHandler(
+                    TWITTER_API_KEY,
+                    TWITTER_API_SECRET,
+                    TWITTER_ACCESS_TOKEN,
+                    TWITTER_ACCESS_TOKEN_SECRET
+                )
+                self.api = tweepy.API(auth)
                 
                 # Defer auth test to explicit status checks to avoid rate limits on startup
                 logger.info("Twitter API client initialized (auth check deferred)")
@@ -86,6 +95,32 @@ class TwitterService:
         except tweepy.TweepyException as e:
             error_msg = self._parse_twitter_error(e)
             logger.error(f"Failed to post tweet: {error_msg}")
+            return False, None, error_msg
+
+    def post_tweet_with_media(self, text: str, media_path: str) -> Tuple[bool, Optional[str], Optional[str]]:
+        """
+        Post a tweet with a single image.
+
+        Args:
+            text: Tweet content (max 280 chars)
+            media_path: Local path to image file
+
+        Returns:
+            Tuple of (success, tweet_id, error_message)
+        """
+        if not self.is_enabled() or self.api is None:
+            return False, None, "Twitter API is not configured or disabled"
+
+        try:
+            media = self.api.media_upload(media_path)
+            response = self.client.create_tweet(text=text, media_ids=[media.media_id])
+            tweet_id = response.data['id']
+            logger.info(f"Tweet with media posted successfully: {tweet_id}")
+            return True, str(tweet_id), None
+
+        except tweepy.TweepyException as e:
+            error_msg = self._parse_twitter_error(e)
+            logger.error(f"Failed to post tweet with media: {error_msg}")
             return False, None, error_msg
     
     def post_thread(self, tweets: List[str]) -> Tuple[bool, List[str], Optional[str]]:

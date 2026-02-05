@@ -8,7 +8,7 @@ from typing import Optional
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from bot.config import logger, MAX_TWEET_LENGTH, USER_TIMEZONE, TZ, TELEGRAM_USER_ID
+from bot.config import logger, MAX_TWEET_LENGTH, USER_TIMEZONE, TZ, TELEGRAM_USER_ID, MEDIA_PATH
 from bot.utils import (
     is_authorized,
     escape_markdown_v2,
@@ -35,6 +35,8 @@ from bot.services.openai_service import OpenAIService
 from bot.services.scheduler_service import SchedulerService
 from bot.database import PostStatus
 import pytz
+import os
+from pathlib import Path
 
 
 # Initialize services (singleton pattern)
@@ -52,6 +54,27 @@ async def publish_scheduled_post(post_id: int, bot=None) -> None:
     post = PostService.get_post(post_id)
     if not post or post.status != PostStatus.SCHEDULED:
         logger.info(f"Skipping scheduled publish for post {post_id}: not scheduled")
+        return
+
+    if post.media_path:
+        if post.is_thread():
+            PostService.update_post_status(post_id, PostStatus.FAILED, error_message="Media posts cannot be threads")
+            await notify_scheduled_post_result(bot, post_id, False, error="Media posts cannot be threads")
+            return
+
+        success, tweet_id, error = twitter_service.post_tweet_with_media(post.content, post.media_path)
+        if success:
+            PostService.update_post_status(post_id, PostStatus.PUBLISHED, twitter_id=tweet_id)
+            await notify_scheduled_post_result(bot, post_id, True, tweet_id=tweet_id)
+        else:
+            PostService.update_post_status(post_id, PostStatus.FAILED, error_message=error)
+            await notify_scheduled_post_result(bot, post_id, False, error=error)
+
+        if os.path.exists(post.media_path):
+            try:
+                os.remove(post.media_path)
+            except OSError as e:
+                logger.warning(f"Failed to remove media file {post.media_path}: {e}")
         return
 
     if post.is_thread():
@@ -122,7 +145,9 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     text = update.message.text
     awaiting = context.user_data.get('awaiting')
     
-    if awaiting == 'weekly_times':
+    if awaiting == 'image_caption':
+        await process_image_caption(update, context, text)
+    elif awaiting == 'weekly_times':
         await process_weekly_times(update, context, text)
     elif awaiting == 'weekly_manual_content':
         await process_weekly_manual_content(update, context, text)
@@ -144,6 +169,128 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
             "💡 Open the menu to continue",
             reply_markup=get_back_keyboard()
         )
+
+
+async def handle_photo_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle photo messages for image posts."""
+    user_id = update.effective_user.id
+    if not is_authorized(user_id):
+        return
+
+    awaiting = context.user_data.get('awaiting')
+    if awaiting != 'image_post':
+        await update.message.reply_text(
+            "💡 Use /new to create a post with image\.",
+            reply_markup=get_back_keyboard()
+        )
+        return
+
+    if not update.message.photo:
+        await update.message.reply_text(
+            "❌ No image received\. Try again\.",
+            parse_mode="MarkdownV2"
+        )
+        return
+
+    photo = update.message.photo[-1]
+    caption = update.message.caption or ""
+
+    if caption and len(caption) > MAX_TWEET_LENGTH:
+        context.user_data['pending_image_file_id'] = photo.file_id
+        context.user_data['pending_image_unique_id'] = photo.file_unique_id
+        context.user_data['awaiting'] = 'image_caption'
+        await update.message.reply_text(
+            "❌ Caption too long\. Send a shorter caption\.",
+            parse_mode="MarkdownV2"
+        )
+        return
+
+    await _create_image_post(update, context, photo.file_id, photo.file_unique_id, caption)
+
+
+async def process_image_caption(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str) -> None:
+    """Handle caption input after an image was received."""
+    file_id = context.user_data.get('pending_image_file_id')
+    unique_id = context.user_data.get('pending_image_unique_id')
+
+    if not file_id or not unique_id:
+        await update.message.reply_text(
+            "❌ Image data missing\. Start again with /new\.",
+            parse_mode="MarkdownV2"
+        )
+        context.user_data['awaiting'] = None
+        return
+
+    if len(text) > MAX_TWEET_LENGTH:
+        await update.message.reply_text(
+            "❌ Caption too long\. Keep it under 280 chars\.",
+            parse_mode="MarkdownV2"
+        )
+        return
+
+    await _create_image_post(update, context, file_id, unique_id, text)
+
+
+async def prompt_image_post(query, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Prompt user to send an image with optional caption."""
+    context.user_data['awaiting'] = 'image_post'
+    await query.edit_message_text(
+        "🖼️ *IMAGE POST*\n\n"
+        "Send an image with an optional caption\.\n"
+        "Caption must be 280 chars or less\.\n"
+        "Type /cancel to abort\.",
+        parse_mode="MarkdownV2"
+    )
+
+
+async def _create_image_post(update: Update, context: ContextTypes.DEFAULT_TYPE, file_id: str, unique_id: str, caption: str) -> None:
+    """Download image and create a post with media."""
+    context.user_data['awaiting'] = None
+    context.user_data.pop('pending_image_file_id', None)
+    context.user_data.pop('pending_image_unique_id', None)
+
+    try:
+        telegram_file = await context.bot.get_file(file_id)
+    except Exception as e:
+        await update.message.reply_text(
+            "❌ Failed to fetch image from Telegram\.",
+            parse_mode="MarkdownV2"
+        )
+        logger.error(f"Failed to fetch Telegram file: {e}")
+        return
+
+    extension = ".jpg"
+    if telegram_file.file_path and "." in telegram_file.file_path:
+        extension = os.path.splitext(telegram_file.file_path)[1] or ".jpg"
+
+    filename = f"{unique_id}{extension}"
+    media_path = str(Path(MEDIA_PATH) / filename)
+
+    try:
+        await telegram_file.download_to_drive(custom_path=media_path)
+    except Exception as e:
+        await update.message.reply_text(
+            "❌ Failed to download image\.",
+            parse_mode="MarkdownV2"
+        )
+        logger.error(f"Failed to download Telegram file: {e}")
+        return
+
+    post = PostService.create_post(
+        content=caption or "",
+        created_by_ai=False,
+        media_path=media_path
+    )
+
+    if not post:
+        await update.message.reply_text(
+            "❌ Failed to create the post\.",
+            parse_mode="MarkdownV2",
+            reply_markup=get_back_keyboard()
+        )
+        return
+
+    await show_post_preview(update.message, post.id)
 
 
 def _init_weekly_plan(context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -844,6 +991,10 @@ async def show_post_preview(message, post_id: int) -> None:
     is_thread = post.is_thread()
     char_count = len(post.content)
     
+    media_label = "Image" if post.media_path else "None"
+
+    media_label = "Image" if post.media_path else "None"
+
     if is_thread:
         tweets = split_into_tweets(post.content)
         visible = tweets[:3]
@@ -860,7 +1011,8 @@ async def show_post_preview(message, post_id: int) -> None:
             f"*Summary*\n"
             f"• Tweets: `{len(tweets)}`\n"
             f"• Chars: `{char_count}`\n"
-            f"• Created: {'`AI`' if post.created_by_ai else '`Manual`'}\n\n"
+            f"• Created: {'`AI`' if post.created_by_ai else '`Manual`'}\n"
+            f"• Media: `{media_label}`\n\n"
             f"*Content*\n"
             f"{thread_preview}\n\n"
             f"Select an action:"
@@ -871,7 +1023,8 @@ async def show_post_preview(message, post_id: int) -> None:
             f"*Summary*\n"
             f"• Chars: `{char_count}/{MAX_TWEET_LENGTH}` {'✅' if char_count <= MAX_TWEET_LENGTH else '⚠️'}\n"
             f"• Type: `Single`\n"
-            f"• Created: {'`AI`' if post.created_by_ai else '`Manual`'}\n\n"
+            f"• Created: {'`AI`' if post.created_by_ai else '`Manual`'}\n"
+            f"• Media: `{media_label}`\n\n"
             f"*Content*\n"
             f"{escape_markdown_v2(post.content)}\n\n"
             f"Select an action:"
@@ -904,6 +1057,51 @@ async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
         )
     
     # Publish based on post type
+    if post.media_path:
+        if post.is_thread():
+            await query.edit_message_text(
+                "❌ *PUBLISH FAILED*\n\n"
+                "Media posts cannot be threads\.",
+                parse_mode="MarkdownV2",
+                reply_markup=get_back_keyboard()
+            )
+            return
+
+        success, tweet_id, error = twitter_service.post_tweet_with_media(post.content, post.media_path)
+        if success and tweet_id:
+            PostService.update_post_status(
+                post_id,
+                PostStatus.PUBLISHED,
+                twitter_id=tweet_id
+            )
+
+            tweet_url = f"https://twitter.com/i/web/status/{tweet_id}"
+
+            await query.edit_message_text(
+                f"✅ *PUBLISHED*\n\n"
+                f"• Post ID: `#{post_id}`\n"
+                f"• Tweet ID: `{tweet_id}`\n\n"
+                f"🔗 [View on Twitter]({escape_markdown_v2(tweet_url)})",
+                parse_mode="MarkdownV2",
+                reply_markup=get_back_keyboard(),
+                disable_web_page_preview=True
+            )
+        else:
+            PostService.update_post_status(
+                post_id,
+                PostStatus.FAILED,
+                error_message=error
+            )
+
+            await query.edit_message_text(
+                f"❌ *PUBLISH FAILED*\n\n"
+                f"⚠️ {escape_markdown_v2(error or 'Unknown error')}\n\n"
+                f"Saved as `#{post_id}`\. You can retry\.",
+                parse_mode="MarkdownV2",
+                reply_markup=get_error_keyboard(show_retry=True)
+            )
+        return
+
     if post.is_thread():
         tweets = split_into_tweets(post.content)
         success, tweet_ids, error = twitter_service.post_thread(tweets)
@@ -1201,7 +1399,8 @@ async def show_post_preview_edit(query, post_id: int) -> None:
             f"*Summary*\n"
             f"• Tweets: `{len(tweets)}`\n"
             f"• Chars: `{char_count}`\n"
-            f"• Created: {'`AI`' if post.created_by_ai else '`Manual`'}\n\n"
+            f"• Created: {'`AI`' if post.created_by_ai else '`Manual`'}\n"
+            f"• Media: `{media_label}`\n\n"
             f"*Content*\n"
             f"{thread_preview}\n\n"
             f"Select an action:"
@@ -1212,7 +1411,8 @@ async def show_post_preview_edit(query, post_id: int) -> None:
             f"*Summary*\n"
             f"• Chars: `{char_count}/{MAX_TWEET_LENGTH}` {'✅' if char_count <= MAX_TWEET_LENGTH else '⚠️'}\n"
             f"• Type: `Single`\n"
-            f"• Created: {'`AI`' if post.created_by_ai else '`Manual`'}\n\n"
+            f"• Created: {'`AI`' if post.created_by_ai else '`Manual`'}\n"
+            f"• Media: `{media_label}`\n\n"
             f"*Content*\n"
             f"{escape_markdown_v2(post.content)}\n\n"
             f"Select an action:"

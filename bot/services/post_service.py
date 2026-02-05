@@ -5,6 +5,7 @@ Business logic for managing posts.
 
 from datetime import datetime
 from typing import List, Optional, Tuple
+import os
 from sqlalchemy.orm import Session
 
 from bot.database import Post, Thread, ScheduledPost, PostStatus
@@ -20,7 +21,8 @@ class PostService:
     def create_post(
         content: str,
         created_by_ai: bool = False,
-        ai_prompt: Optional[str] = None
+        ai_prompt: Optional[str] = None,
+        media_path: Optional[str] = None
     ) -> Optional[Post]:
         """
         Create a new post.
@@ -39,15 +41,19 @@ class PostService:
                     content=content,
                     created_by_ai=created_by_ai,
                     ai_prompt=ai_prompt,
+                    media_path=media_path,
                     status=PostStatus.DRAFT,
                 )
                 session.add(post)
                 session.commit()
                 session.refresh(post)
                 
-                # Create thread entries if content is long
+                # Create thread entries if content is long and no media
                 tweets = split_into_tweets(content)
-                if len(tweets) > 1:
+                if media_path:
+                    if len(tweets) > 1:
+                        logger.warning("Media posts cannot be split into threads")
+                elif len(tweets) > 1:
                     for index, tweet_content in enumerate(tweets, 1):
                         thread = Thread(
                             post_id=post.id,
@@ -199,9 +205,16 @@ class PostService:
                 if not post:
                     return False
                 
+                media_path = post.media_path
                 session.delete(post)
                 session.commit()
                 logger.info(f"Deleted post {post_id}")
+
+                if media_path and os.path.exists(media_path):
+                    try:
+                        os.remove(media_path)
+                    except OSError as e:
+                        logger.warning(f"Failed to remove media file {media_path}: {e}")
                 return True
                 
         except Exception as e:
