@@ -60,10 +60,10 @@ async def publish_scheduled_post(post_id: int, bot=None) -> None:
         return
 
     if post.media_path:
-            if post.is_thread():
-                media_thread_error = t("errors.media_posts_cannot_be_threads")
-                PostService.update_post_status(post_id, PostStatus.FAILED, error_message=media_thread_error)
-                await notify_scheduled_post_result(bot, post_id, False, error=media_thread_error)
+        if post.is_thread():
+            media_thread_error = t("errors.media_posts_cannot_be_threads")
+            PostService.update_post_status(post_id, PostStatus.FAILED, error_message=media_thread_error)
+            await notify_scheduled_post_result(bot, post_id, False, error=media_thread_error)
             return
 
         success, tweet_id, error = twitter_service.post_tweet_with_media(post.content, post.media_path)
