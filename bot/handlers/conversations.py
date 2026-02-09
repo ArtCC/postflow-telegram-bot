@@ -93,7 +93,7 @@ async def add_topic_receive_name(update: Update, context: ContextTypes.DEFAULT_T
     topic_name = update.message.text.strip()
     
     # Create the topic
-    success, topic, error_msg = TopicService.create_topic(user_id, topic_name)
+    success, topic, error_msg = TopicService.create_topic(user_id, topic_name, locale=locale)
     locale = get_user_locale(update.effective_user)
     
     if success:

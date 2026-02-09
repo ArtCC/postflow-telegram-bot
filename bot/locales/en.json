@@ -10,6 +10,9 @@
     "auth_status_authorized": "✅ `AUTHORIZED`",
     "auth_status_unauthorized": "⚠️ `NOT AUTHORIZED`"
   },
+  "common": {
+    "user_fallback": "User"
+  },
   "new_post": {
     "title": "✍️ *NEW POST*",
     "choose_method": "Choose a method:"
@@ -53,8 +56,6 @@
   "status": {
     "twitter_connected": "🟢 Connected",
     "openai_available": "🟢 Available",
-    "connected_detail": "🟢 {message}",
-    "error_detail": "🔴 {message}",
     "twitter_not_configured": "⚪ Not configured",
     "openai_disabled": "⚪ Disabled",
     "bot_online": "ONLINE",
@@ -165,6 +166,22 @@
   "help": {
     "message": "ℹ️ *HELP*\n\n*Commands*\n• `/start` \\- Welcome\n• `/menu` \\- Main menu\n• `/new` \\- New post\n• `/plan` \\- Plan week\n• `/topics` \\- Manage topics\n• `/drafts` \\- Drafts\n• `/scheduled` \\- Scheduled posts\n• `/stats` \\- Statistics\n• `/status` \\- System status\n• `/settings` \\- Settings\n• `/chatid` \\- Your user ID\n• `/help` \\- Help\n• `/author` \\- About the author\n• `/cancel` \\- Cancel\n\n*Highlights*\n• Manual or AI posts\n• Topic presets for AI\n• Scheduling\n• Threads for long posts\n• Stats overview"
   },
+  "commands": {
+    "start": "Welcome message and authorization check",
+    "menu": "Show main menu",
+    "new": "New post",
+    "plan": "Plan week",
+    "topics": "Manage topic presets",
+    "drafts": "Drafts",
+    "scheduled": "Scheduled posts",
+    "stats": "Statistics",
+    "status": "Check bot and API status",
+    "settings": "Settings",
+    "chatid": "Show your Telegram User ID",
+    "help": "Show help and available commands",
+    "author": "About the author",
+    "cancel": "Cancel current operation"
+  },
   "buttons": {
     "new": "✍️ New",
     "drafts": "📝 Drafts",
@@ -206,6 +223,21 @@
     "delete_topic": "🗑️ Delete Topic",
     "custom_prompt": "✏️ Custom Prompt"
   },
+  "datetime": {
+    "formats": {
+      "with_time": "%b %d, %Y at %H:%M",
+      "date_only": "%b %d, %Y"
+    },
+    "relative": {
+      "past": "in the past",
+      "in_minute": "in 1 min",
+      "in_minutes": "in {minutes} min",
+      "in_hour": "in 1 hour",
+      "in_hours": "in {hours} hours",
+      "tomorrow": "tomorrow",
+      "in_days": "in {days} days"
+    }
+  },
   "weekdays": {
     "mon": "Mon",
     "tue": "Tue",
@@ -219,8 +251,41 @@
     "not_authorized": "⛔ You are not authorized to use this bot.",
     "not_authorized_md": "⛔ You are not authorized to use this bot\\.",
     "not_authorized_alert": "⛔ Not authorized",
-    "action_failed_plain": "❌ {error}",
     "feature_coming_soon": "Feature coming soon!",
-    "unknown_error": "Unknown error"
+    "unknown_error": "Unknown error",
+    "media_posts_cannot_be_threads": "Media posts cannot be threads",
+    "openai_disabled": "OpenAI API is not configured or disabled",
+    "openai_empty_content": "OpenAI returned empty content. Please try again.",
+    "openai_rate_limit": "OpenAI rate limit exceeded. Please wait a moment.",
+    "openai_auth": "OpenAI API key is invalid. Check your configuration.",
+    "openai_content_filter": "Content violates OpenAI's usage policies. Try rephrasing your prompt.",
+    "openai_quota": "OpenAI API quota exceeded. Check your billing.",
+    "openai_connection": "Connection error with OpenAI. Check your internet connection.",
+    "openai_generic": "OpenAI error: {error}",
+    "openai_unexpected": "Unexpected error: {error}",
+    "openai_key_not_configured": "OpenAI API key not configured",
+    "openai_connected": "OpenAI API connected successfully",
+    "openai_connection_detail": "Connection error: {error}",
+    "twitter_disabled": "Twitter API is not configured or disabled",
+    "twitter_no_tweets": "No tweets provided",
+    "twitter_rate_limit": "Rate limit exceeded. Please wait before posting again.",
+    "twitter_auth_failed": "Authentication failed. Check your API credentials.",
+    "twitter_duplicate": "This tweet appears to be a duplicate.",
+    "twitter_too_long": "Tweet exceeds 280 character limit.",
+    "twitter_connection": "Connection error. Check your internet connection.",
+    "twitter_unavailable": "Twitter service temporarily unavailable.",
+    "twitter_generic": "Twitter error: {error}",
+    "twitter_not_configured": "Twitter API credentials not configured",
+    "twitter_connected": "Connected as @{username}",
+    "twitter_connection_detail": "Connection error: {error}",
+    "topic_name_too_short": "Topic name must be at least {min} characters",
+    "topic_name_too_long": "Topic name must be at most {max} characters",
+    "topic_max_reached": "Maximum of {max} topics reached. Delete one to add more.",
+    "topic_already_exists": "Topic '{name}' already exists",
+    "topic_not_found": "Topic not found or unauthorized",
+    "topic_create_failed": "Error creating topic: {error}",
+    "topic_delete_failed": "Error deleting topic: {error}",
+    "topic_delete_all_failed": "Error deleting topics: {error}",
+    "unexpected": "━━━━━━━━━━━━━━━━━━━━━━\n❌ *ERROR*\n━━━━━━━━━━━━━━━━━━━━━━\n\nAn unexpected error occurred\\.\n\nPlease try again or use /menu\\."
   }
 }

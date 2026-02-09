@@ -18,6 +18,7 @@ from telegram.ext import (
 )
 
 from bot.config import logger, TELEGRAM_BOT_TOKEN
+from bot.utils.i18n import DEFAULT_LOCALE, t
 from bot.database import init_db
 from bot.handlers import (
     start_command,
@@ -47,21 +48,22 @@ app_instance = None
 
 async def setup_bot_commands(application: Application) -> None:
     """Set up bot commands in Telegram UI."""
+    locale = DEFAULT_LOCALE
     commands = [
-        BotCommand("start", "Welcome message and authorization check"),
-        BotCommand("menu", "Show main menu"),
-        BotCommand("new", "New post"),
-        BotCommand("plan", "Plan week"),
-        BotCommand("topics", "Manage topic presets"),
-        BotCommand("drafts", "Drafts"),
-        BotCommand("scheduled", "Scheduled posts"),
-        BotCommand("stats", "Statistics"),
-        BotCommand("status", "Check bot and API status"),
-        BotCommand("settings", "Settings"),
-        BotCommand("chatid", "Show your Telegram User ID"),
-        BotCommand("help", "Show help and available commands"),
-        BotCommand("author", "About the author"),
-        BotCommand("cancel", "Cancel current operation"),
+        BotCommand("start", t("commands.start", locale)),
+        BotCommand("menu", t("commands.menu", locale)),
+        BotCommand("new", t("commands.new", locale)),
+        BotCommand("plan", t("commands.plan", locale)),
+        BotCommand("topics", t("commands.topics", locale)),
+        BotCommand("drafts", t("commands.drafts", locale)),
+        BotCommand("scheduled", t("commands.scheduled", locale)),
+        BotCommand("stats", t("commands.stats", locale)),
+        BotCommand("status", t("commands.status", locale)),
+        BotCommand("settings", t("commands.settings", locale)),
+        BotCommand("chatid", t("commands.chatid", locale)),
+        BotCommand("help", t("commands.help", locale)),
+        BotCommand("author", t("commands.author", locale)),
+        BotCommand("cancel", t("commands.cancel", locale)),
     ]
     
     await application.bot.set_my_commands(commands)
@@ -76,11 +78,7 @@ async def error_handler(update: object, context) -> None:
     if isinstance(update, Update) and update.effective_message:
         try:
             await update.effective_message.reply_text(
-                "━━━━━━━━━━━━━━━━━━━━━━\n"
-                "❌ *ERROR*\n"
-                "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-                "An unexpected error occurred\\.\n\n"
-                "Please try again or use /menu\\.",
+                t("errors.unexpected", DEFAULT_LOCALE),
                 parse_mode="MarkdownV2"
             )
         except Exception as e:

@@ -6,6 +6,7 @@ Integration with OpenAI API for AI-generated content.
 from openai import OpenAI, OpenAIError
 from typing import Optional, Tuple
 from bot.config import logger, OPENAI_API_KEY, OPENAI_ENABLED
+from bot.utils.i18n import DEFAULT_LOCALE, t
 
 
 class OpenAIServiceError(Exception):
@@ -37,7 +38,8 @@ class OpenAIService:
         self,
         prompt: str,
         max_length: Optional[int] = None,
-        style: str = "professional"
+        style: str = "professional",
+        locale: Optional[str] = None
     ) -> Tuple[bool, Optional[str], Optional[str]]:
         """
         Generate social media post content using AI.
@@ -50,8 +52,9 @@ class OpenAIService:
         Returns:
             Tuple of (success, generated_content, error_message)
         """
+        locale = locale or DEFAULT_LOCALE
         if not self.is_enabled():
-            return False, None, "OpenAI API is not configured or disabled"
+            return False, None, t("errors.openai_disabled", locale)
         
         try:
             # Build system message based on parameters
@@ -80,24 +83,25 @@ class OpenAIService:
                     logger.error(f"OpenAI response: {response}")
                 except Exception:
                     logger.error("OpenAI response: <unprintable>")
-                return False, None, "OpenAI returned empty content. Please try again."
+                return False, None, t("errors.openai_empty_content", locale)
             
             logger.info(f"Generated content successfully ({len(generated_content)} chars)")
             return True, generated_content, None
             
         except OpenAIError as e:
-            error_msg = self._parse_openai_error(e)
+            error_msg = self._parse_openai_error(e, locale)
             logger.error(f"Failed to generate content: {error_msg}")
             return False, None, error_msg
         except Exception as e:
-            error_msg = f"Unexpected error: {str(e)}"
+            error_msg = t("errors.openai_unexpected", locale, error=str(e))
             logger.error(f"Failed to generate content: {error_msg}")
             return False, None, error_msg
     
     def generate_post_with_topic(
         self,
         topic_name: str,
-        max_length: Optional[int] = None
+        max_length: Optional[int] = None,
+        locale: Optional[str] = None
     ) -> Tuple[bool, Optional[str], Optional[str]]:
         """
         Generate social media post content using a topic preset.
@@ -109,8 +113,9 @@ class OpenAIService:
         Returns:
             Tuple of (success, generated_content, error_message)
         """
+        locale = locale or DEFAULT_LOCALE
         if not self.is_enabled():
-            return False, None, "OpenAI API is not configured or disabled"
+            return False, None, t("errors.openai_disabled", locale)
         
         # Build a professional prompt for the topic
         target_length = max_length or 280
@@ -119,18 +124,18 @@ class OpenAIService:
 
     The post must be {target_length} characters or fewer and should not be a thread.
 
-The post should:
-- Be informative and provide value
-- Have a professional yet approachable tone
-- Include an interesting fact or insight
-- May start with an appropriate emoji
-- Be engaging to capture attention
+    The post should:
+    - Be informative and provide value
+    - Have a professional yet approachable tone
+    - Include an interesting fact or insight
+    - May start with an appropriate emoji
+    - Be engaging to capture attention
 
-Create quality content that the audience will find valuable."""
+    Create quality content that the audience will find valuable."""
 
-        return self.generate_post(prompt, target_length, style="professional")
+        return self.generate_post(prompt, target_length, style="professional", locale=locale)
     
-    def improve_post(self, content: str, instruction: str = "improve") -> Tuple[bool, Optional[str], Optional[str]]:
+    def improve_post(self, content: str, instruction: str = "improve", locale: Optional[str] = None) -> Tuple[bool, Optional[str], Optional[str]]:
         """
         Improve existing post content.
         
@@ -141,15 +146,15 @@ Create quality content that the audience will find valuable."""
         Returns:
             Tuple of (success, improved_content, error_message)
         """
+        locale = locale or DEFAULT_LOCALE
         if not self.is_enabled():
-            return False, None, "OpenAI API is not configured or disabled"
+            return False, None, t("errors.openai_disabled", locale)
         
         try:
             system_message = (
                 "You are a social media expert. Improve the given post while maintaining its core message. "
                 "Make it more engaging, clear, and effective. Don't add hashtags unless they were in the original."
             )
-            
             user_message = f"Improve this post ({instruction}):\n\n{content}"
             
             response = self.client.chat.completions.create(
@@ -172,11 +177,11 @@ Create quality content that the audience will find valuable."""
             return True, improved_content, None
             
         except OpenAIError as e:
-            error_msg = self._parse_openai_error(e)
+            error_msg = self._parse_openai_error(e, locale)
             logger.error(f"Failed to improve post: {error_msg}")
             return False, None, error_msg
         except Exception as e:
-            error_msg = f"Unexpected error: {str(e)}"
+            error_msg = t("errors.openai_unexpected", locale, error=str(e))
             logger.error(f"Failed to improve post: {error_msg}")
             return False, None, error_msg
     
@@ -203,7 +208,7 @@ Create quality content that the audience will find valuable."""
         
         return base_message
     
-    def _parse_openai_error(self, error: OpenAIError) -> str:
+    def _parse_openai_error(self, error: OpenAIError, locale: Optional[str] = None) -> str:
         """
         Parse OpenAI error into user-friendly message.
         
@@ -213,40 +218,42 @@ Create quality content that the audience will find valuable."""
         Returns:
             User-friendly error message
         """
+        locale = locale or DEFAULT_LOCALE
         error_str = str(error)
         
         # Rate limit
         if "rate_limit" in error_str.lower() or "429" in error_str:
-            return "OpenAI rate limit exceeded. Please wait a moment."
+            return t("errors.openai_rate_limit", locale)
         
         # Authentication
         if "authentication" in error_str.lower() or "401" in error_str:
-            return "OpenAI API key is invalid. Check your configuration."
+            return t("errors.openai_auth", locale)
         
         # Content filter
         if "content_filter" in error_str.lower() or "content policy" in error_str.lower():
-            return "Content violates OpenAI's usage policies. Try rephrasing your prompt."
+            return t("errors.openai_content_filter", locale)
         
         # Insufficient quota
         if "insufficient_quota" in error_str.lower() or "quota" in error_str.lower():
-            return "OpenAI API quota exceeded. Check your billing."
+            return t("errors.openai_quota", locale)
         
         # Connection errors
         if "connection" in error_str.lower() or "timeout" in error_str.lower():
-            return "Connection error with OpenAI. Check your internet connection."
+            return t("errors.openai_connection", locale)
         
         # Generic error
-        return f"OpenAI error: {error_str[:200]}"
+        return t("errors.openai_generic", locale, error=error_str[:200])
 
-    def test_connection(self) -> Tuple[bool, str]:
+    def test_connection(self, locale: Optional[str] = None) -> Tuple[bool, str]:
         """
         Test OpenAI API connection.
         
         Returns:
             Tuple of (success, message)
         """
+        locale = locale or DEFAULT_LOCALE
         if not self.enabled:
-            return False, "OpenAI API key not configured"
+            return False, t("errors.openai_key_not_configured", locale)
         
         try:
             # Try a minimal API call
@@ -255,10 +262,10 @@ Create quality content that the audience will find valuable."""
                 messages=[{"role": "user", "content": "Hello"}],
                 max_tokens=5,
             )
-            return True, "OpenAI API connected successfully"
+            return True, t("errors.openai_connected", locale)
             
         except OpenAIError as e:
-            error_msg = self._parse_openai_error(e)
+            error_msg = self._parse_openai_error(e, locale)
             return False, error_msg
         except Exception as e:
-            return False, f"Connection error: {str(e)}"
+            return False, t("errors.openai_connection_detail", locale, error=str(e))

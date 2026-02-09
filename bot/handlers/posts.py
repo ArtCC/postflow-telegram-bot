@@ -60,9 +60,10 @@ async def publish_scheduled_post(post_id: int, bot=None) -> None:
         return
 
     if post.media_path:
-        if post.is_thread():
-            PostService.update_post_status(post_id, PostStatus.FAILED, error_message="Media posts cannot be threads")
-            await notify_scheduled_post_result(bot, post_id, False, error="Media posts cannot be threads")
+            if post.is_thread():
+                media_thread_error = t("errors.media_posts_cannot_be_threads")
+                PostService.update_post_status(post_id, PostStatus.FAILED, error_message=media_thread_error)
+                await notify_scheduled_post_result(bot, post_id, False, error=media_thread_error)
             return
 
         success, tweet_id, error = twitter_service.post_tweet_with_media(post.content, post.media_path)
@@ -728,7 +729,7 @@ async def process_weekly_ai_prompt(update: Update, context: ContextTypes.DEFAULT
         parse_mode="MarkdownV2"
     )
 
-    success, content, error = openai_service.generate_post(prompt)
+    success, content, error = openai_service.generate_post(prompt, locale=locale)
     if not success:
         await generating_msg.edit_text(
             t("ai.failed_weekly", locale, error=escape_markdown_v2(error)),
@@ -984,7 +985,7 @@ async def handle_ai_with_topic(query, context: ContextTypes.DEFAULT_TYPE, topic_
     )
     
     # Generate content with topic
-    success, content, error = openai_service.generate_post_with_topic(topic.name)
+    success, content, error = openai_service.generate_post_with_topic(topic.name, locale=locale)
     
     if not success:
         await query.edit_message_text(
@@ -1025,7 +1026,7 @@ async def process_ai_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     )
     
     # Generate content
-    success, content, error = openai_service.generate_post(prompt)
+    success, content, error = openai_service.generate_post(prompt, locale=locale)
     
     if not success:
         await generating_msg.edit_text(
@@ -1326,9 +1327,9 @@ def build_scheduled_posts_list(page: int = 0, per_page: int = 5, locale: Optiona
             locale,
             id=pid,
             preview=escape_markdown_v2(preview),
-            datetime=escape_markdown_v2(format_datetime(scheduled_for)),
+            datetime=escape_markdown_v2(format_datetime(scheduled_for, locale=locale)),
             tz=escape_markdown_v2(TZ),
-            relative=escape_markdown_v2(format_relative_time(scheduled_for)),
+            relative=escape_markdown_v2(format_relative_time(scheduled_for, locale)),
         )
         for pid, preview, scheduled_for in posts_data[start:end]
     ])
@@ -1371,7 +1372,7 @@ def build_drafts_list(page: int = 0, per_page: int = 5, locale: Optional[str] = 
             locale,
             id=pid,
             preview=escape_markdown_v2(preview),
-            datetime=escape_markdown_v2(format_datetime(created_at)),
+            datetime=escape_markdown_v2(format_datetime(created_at, locale=locale)),
             tz=escape_markdown_v2(TZ),
         )
         for pid, preview, created_at in drafts_data[start:end]
@@ -1597,7 +1598,7 @@ async def handle_quick_schedule(query, context: ContextTypes.DEFAULT_TYPE) -> No
             t(
                 "posts.schedule_success",
                 locale,
-                datetime=escape_markdown_v2(format_datetime(scheduled_time_local)),
+                datetime=escape_markdown_v2(format_datetime(scheduled_time_local, locale=locale)),
                 tz=escape_markdown_v2(TZ),
                 relative=escape_markdown_v2(time_label),
             ),
@@ -1699,7 +1700,7 @@ async def process_custom_schedule(update: Update, context: ContextTypes.DEFAULT_
             t(
                 "posts.schedule_success_simple",
                 locale,
-                datetime=escape_markdown_v2(format_datetime(scheduled_time)),
+                datetime=escape_markdown_v2(format_datetime(scheduled_time, locale=locale)),
                 tz=escape_markdown_v2(TZ),
             ),
             parse_mode="MarkdownV2",
@@ -1738,9 +1739,9 @@ async def handle_view_scheduled_post(query, context: ContextTypes.DEFAULT_TYPE) 
             "posts.scheduled_view",
             locale,
             content=escape_markdown_v2(truncate_text(post.content, 200)),
-            datetime=escape_markdown_v2(format_datetime(scheduled_for_local)),
+            datetime=escape_markdown_v2(format_datetime(scheduled_for_local, locale=locale)),
             tz=escape_markdown_v2(TZ),
-            relative=escape_markdown_v2(format_relative_time(scheduled_for_local)),
+            relative=escape_markdown_v2(format_relative_time(scheduled_for_local, locale)),
         ),
         parse_mode="MarkdownV2",
         reply_markup=get_scheduled_post_actions_keyboard(post_id, locale)
@@ -1857,7 +1858,7 @@ async def process_reschedule(update: Update, context: ContextTypes.DEFAULT_TYPE,
             t(
                 "posts.reschedule_success",
                 locale,
-                datetime=escape_markdown_v2(format_datetime(new_time_local)),
+                datetime=escape_markdown_v2(format_datetime(new_time_local, locale=locale)),
                 tz=escape_markdown_v2(TZ),
             ),
             parse_mode="MarkdownV2",

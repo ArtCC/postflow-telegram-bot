@@ -13,6 +13,7 @@ from bot.config import (
     TWITTER_ACCESS_TOKEN_SECRET,
     TWITTER_ENABLED,
 )
+from bot.utils.i18n import DEFAULT_LOCALE, t
 
 
 class TwitterServiceError(Exception):
@@ -73,7 +74,7 @@ class TwitterService:
         """Check if Twitter service is enabled and authenticated"""
         return self.enabled and self.client is not None
     
-    def post_tweet(self, text: str) -> Tuple[bool, Optional[str], Optional[str]]:
+    def post_tweet(self, text: str, locale: Optional[str] = None) -> Tuple[bool, Optional[str], Optional[str]]:
         """
         Post a single tweet.
         
@@ -83,8 +84,9 @@ class TwitterService:
         Returns:
             Tuple of (success, tweet_id, error_message)
         """
+        locale = locale or DEFAULT_LOCALE
         if not self.is_enabled():
-            return False, None, "Twitter API is not configured or disabled"
+            return False, None, t("errors.twitter_disabled", locale)
         
         try:
             response = self.client.create_tweet(text=text)
@@ -93,11 +95,11 @@ class TwitterService:
             return True, str(tweet_id), None
             
         except tweepy.TweepyException as e:
-            error_msg = self._parse_twitter_error(e)
+            error_msg = self._parse_twitter_error(e, locale)
             logger.error(f"Failed to post tweet: {error_msg}")
             return False, None, error_msg
 
-    def post_tweet_with_media(self, text: str, media_path: str) -> Tuple[bool, Optional[str], Optional[str]]:
+    def post_tweet_with_media(self, text: str, media_path: str, locale: Optional[str] = None) -> Tuple[bool, Optional[str], Optional[str]]:
         """
         Post a tweet with a single image.
 
@@ -108,8 +110,9 @@ class TwitterService:
         Returns:
             Tuple of (success, tweet_id, error_message)
         """
+        locale = locale or DEFAULT_LOCALE
         if not self.is_enabled() or self.api is None:
-            return False, None, "Twitter API is not configured or disabled"
+            return False, None, t("errors.twitter_disabled", locale)
 
         try:
             media = self.api.media_upload(media_path)
@@ -119,11 +122,11 @@ class TwitterService:
             return True, str(tweet_id), None
 
         except tweepy.TweepyException as e:
-            error_msg = self._parse_twitter_error(e)
+            error_msg = self._parse_twitter_error(e, locale)
             logger.error(f"Failed to post tweet with media: {error_msg}")
             return False, None, error_msg
     
-    def post_thread(self, tweets: List[str]) -> Tuple[bool, List[str], Optional[str]]:
+    def post_thread(self, tweets: List[str], locale: Optional[str] = None) -> Tuple[bool, List[str], Optional[str]]:
         """
         Post a thread of tweets.
         
@@ -133,11 +136,12 @@ class TwitterService:
         Returns:
             Tuple of (success, list of tweet_ids, error_message)
         """
+        locale = locale or DEFAULT_LOCALE
         if not self.is_enabled():
-            return False, [], "Twitter API is not configured or disabled"
+            return False, [], t("errors.twitter_disabled", locale)
         
         if not tweets:
-            return False, [], "No tweets provided"
+            return False, [], t("errors.twitter_no_tweets", locale)
         
         tweet_ids = []
         previous_tweet_id = None
@@ -163,12 +167,12 @@ class TwitterService:
             return True, tweet_ids, None
             
         except tweepy.TweepyException as e:
-            error_msg = self._parse_twitter_error(e)
+            error_msg = self._parse_twitter_error(e, locale)
             logger.error(f"Failed to post thread: {error_msg}")
             # Return partial success if some tweets were posted
             return False, tweet_ids, error_msg
     
-    def delete_tweet(self, tweet_id: str) -> Tuple[bool, Optional[str]]:
+    def delete_tweet(self, tweet_id: str, locale: Optional[str] = None) -> Tuple[bool, Optional[str]]:
         """
         Delete a tweet.
         
@@ -178,8 +182,9 @@ class TwitterService:
         Returns:
             Tuple of (success, error_message)
         """
+        locale = locale or DEFAULT_LOCALE
         if not self.is_enabled():
-            return False, "Twitter API is not configured or disabled"
+            return False, t("errors.twitter_disabled", locale)
         
         try:
             self.client.delete_tweet(tweet_id)
@@ -187,7 +192,7 @@ class TwitterService:
             return True, None
             
         except tweepy.TweepyException as e:
-            error_msg = self._parse_twitter_error(e)
+            error_msg = self._parse_twitter_error(e, locale)
             logger.error(f"Failed to delete tweet {tweet_id}: {error_msg}")
             return False, error_msg
     
@@ -212,7 +217,7 @@ class TwitterService:
             logger.error(f"Failed to get tweet {tweet_id}: {e}")
             return None
     
-    def _parse_twitter_error(self, error: tweepy.TweepyException) -> str:
+    def _parse_twitter_error(self, error: tweepy.TweepyException, locale: Optional[str] = None) -> str:
         """
         Parse Twitter API error into user-friendly message.
         
@@ -222,50 +227,54 @@ class TwitterService:
         Returns:
             User-friendly error message
         """
+        locale = locale or DEFAULT_LOCALE
         error_str = str(error)
         
         # Rate limit
         if "429" in error_str or "rate limit" in error_str.lower():
-            return "Rate limit exceeded. Please wait before posting again."
+            return t("errors.twitter_rate_limit", locale)
         
         # Authentication errors
         if "401" in error_str or "403" in error_str:
-            return "Authentication failed. Check your API credentials."
+            return t("errors.twitter_auth_failed", locale)
         
         # Duplicate tweet
         if "duplicate" in error_str.lower():
-            return "This tweet appears to be a duplicate."
+            return t("errors.twitter_duplicate", locale)
         
         # Tweet too long
         if "too long" in error_str.lower() or "length" in error_str.lower():
-            return "Tweet exceeds 280 character limit."
+            return t("errors.twitter_too_long", locale)
         
         # Connection errors
         if "connection" in error_str.lower() or "timeout" in error_str.lower():
-            return "Connection error. Check your internet connection."
+            return t("errors.twitter_connection", locale)
         
         # Service unavailable
         if "503" in error_str:
-            return "Twitter service temporarily unavailable."
+            return t("errors.twitter_unavailable", locale)
         
         # Generic error
-        return f"Twitter error: {error_str[:200]}"
+        return t("errors.twitter_generic", locale, error=error_str[:200])
     
-    def test_connection(self) -> Tuple[bool, str]:
+    def test_connection(self, locale: Optional[str] = None) -> Tuple[bool, str]:
         """
         Test Twitter API connection.
         
         Returns:
             Tuple of (success, message)
         """
+        locale = locale or DEFAULT_LOCALE
         if not self.enabled:
-            return False, "Twitter API credentials not configured"
+            return False, t("errors.twitter_not_configured", locale)
         
         try:
             user = self.client.get_me()
             username = user.data.username
-            return True, f"Connected as @{username}"
+            return True, t("errors.twitter_connected", locale, username=username)
             
         except tweepy.TweepyException as e:
-            error_msg = self._parse_twitter_error(e)
+            error_msg = self._parse_twitter_error(e, locale)
             return False, error_msg
+        except Exception as e:
+            return False, t("errors.twitter_connection_detail", locale, error=str(e))

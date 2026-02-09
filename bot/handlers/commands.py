@@ -17,8 +17,8 @@ from bot.services.topic_service import TopicService
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle /start command."""
     user_id = update.effective_user.id
-    user_name = update.effective_user.first_name or "User"
     locale = get_user_locale(update.effective_user)
+    user_name = update.effective_user.first_name or t("common.user_fallback", locale)
     
     logger.info(f"Start command received from user ID: {user_id}")
     
@@ -131,8 +131,8 @@ async def plan_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 async def chatid_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle /chatid command."""
     user_id = update.effective_user.id
-    user_name = update.effective_user.first_name or "User"
     locale = get_user_locale(update.effective_user)
+    user_name = update.effective_user.first_name or t("common.user_fallback", locale)
     
     chat_id_message = t(
         "chatid.message",
@@ -301,32 +301,20 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     openai_status = t("status.openai_available", locale)
     
     if twitter_service:
-        success, message = twitter_service.test_connection()
+        success, message = twitter_service.test_connection(locale=locale)
         if success:
-            twitter_status = t(
-                "status.connected_detail",
-                locale,
-                message=escape_markdown_v2(message),
-            )
+            twitter_status = f"🟢 {escape_markdown_v2(message)}"
         else:
-            twitter_status = t(
-                "status.error_detail",
-                locale,
-                message=escape_markdown_v2(message),
-            )
+            twitter_status = f"🔴 {escape_markdown_v2(message)}"
     else:
         twitter_status = t("status.twitter_not_configured", locale)
     
     if openai_service:
-        success, message = openai_service.test_connection()
+        success, message = openai_service.test_connection(locale=locale)
         if success:
             openai_status = t("status.openai_available", locale)
         else:
-            openai_status = t(
-                "status.error_detail",
-                locale,
-                message=escape_markdown_v2(message[:50]),
-            )
+            openai_status = f"🔴 {escape_markdown_v2(message[:50])}"
     else:
         openai_status = t("status.openai_disabled", locale)
     

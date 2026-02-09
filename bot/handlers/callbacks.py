@@ -343,32 +343,20 @@ async def show_status(query) -> None:
     openai_status = t("status.openai_available", locale)
     
     if twitter_service:
-        success, message = twitter_service.test_connection()
+        success, message = twitter_service.test_connection(locale=locale)
         if success:
-            twitter_status = t(
-                "status.connected_detail",
-                locale,
-                message=escape_markdown_v2(message),
-            )
+            twitter_status = f"🟢 {escape_markdown_v2(message)}"
         else:
-            twitter_status = t(
-                "status.error_detail",
-                locale,
-                message=escape_markdown_v2(message),
-            )
+            twitter_status = f"🔴 {escape_markdown_v2(message)}"
     else:
         twitter_status = t("status.twitter_not_configured", locale)
     
     if openai_service:
-        success, message = openai_service.test_connection()
+        success, message = openai_service.test_connection(locale=locale)
         if success:
             openai_status = t("status.openai_available", locale)
         else:
-            openai_status = t(
-                "status.error_detail",
-                locale,
-                message=escape_markdown_v2(message[:50]),
-            )
+            openai_status = f"🔴 {escape_markdown_v2(message[:50])}"
     else:
         openai_status = t("status.openai_disabled", locale)
     
@@ -433,7 +421,10 @@ async def show_topics_list(query, user_id: int) -> None:
     
     from bot.services.topic_service import MAX_TOPICS_PER_USER
     
-    topics_text = "\n".join([f"• `{escape_markdown_v2(topic.name)}`" for topic in topics])
+    topics_text = "\n".join([
+        f"• `{escape_markdown_v2(topic.name)}`"
+        for topic in topics
+    ])
     topics_message = t(
         "topics.list_title",
         locale,
@@ -464,7 +455,7 @@ async def view_topic(query, topic_id: int) -> None:
         "topics.details",
         locale,
         name=escape_markdown_v2(topic.name),
-        created=escape_markdown_v2(format_datetime(topic.created_at)),
+        created=escape_markdown_v2(format_datetime(topic.created_at, locale=locale)),
     )
     
     await query.edit_message_text(
@@ -513,7 +504,7 @@ async def confirm_delete_topic(query, topic_id: int) -> None:
 async def execute_delete_topic(query, user_id: int, topic_id: int) -> None:
     """Execute deletion of a topic."""
     locale = get_user_locale(query.from_user)
-    success, error_msg = TopicService.delete_topic(topic_id, user_id)
+    success, error_msg = TopicService.delete_topic(topic_id, user_id, locale=locale)
     
     if success:
         await query.answer(t("topics.deleted_alert", locale), show_alert=False)
@@ -527,10 +518,7 @@ async def execute_delete_topic(query, user_id: int, topic_id: int) -> None:
                 reply_markup=get_topics_menu_keyboard(user_id, locale)
             )
     else:
-        await query.answer(
-            t("errors.action_failed_plain", locale, error=error_msg),
-            show_alert=True,
-        )
+        await query.answer(f"❌ {error_msg}", show_alert=True)
 
 
 async def confirm_delete_all_topics(query) -> None:
@@ -546,14 +534,11 @@ async def confirm_delete_all_topics(query) -> None:
 async def execute_delete_all_topics(query, user_id: int) -> None:
     """Execute deletion of all topics."""
     locale = get_user_locale(query.from_user)
-    success, deleted_count, error_msg = TopicService.delete_all_topics(user_id)
+    success, deleted_count, error_msg = TopicService.delete_all_topics(user_id, locale=locale)
     
     if success:
         await query.answer(t("topics.deleted_all_alert", locale, count=deleted_count), show_alert=True)
         await show_topics_menu(query, user_id)
     else:
-        await query.answer(
-            t("errors.action_failed_plain", locale, error=error_msg),
-            show_alert=True,
-        )
+        await query.answer(f"❌ {error_msg}", show_alert=True)
 

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from bot.config import logger
+from bot.utils.i18n import DEFAULT_LOCALE, t
 from bot.database.database import SessionLocal
 from bot.database.models import Topic
 
@@ -24,7 +25,7 @@ class TopicService:
     """Service for managing topic presets"""
 
     @staticmethod
-    def create_topic(user_id: int, name: str) -> Tuple[bool, Optional[Topic], Optional[str]]:
+    def create_topic(user_id: int, name: str, locale: Optional[str] = None) -> Tuple[bool, Optional[Topic], Optional[str]]:
         """
         Create a new topic preset for a user.
         
@@ -38,12 +39,13 @@ class TopicService:
         db: Session = SessionLocal()
         try:
             # Validate topic name length
+            locale = locale or DEFAULT_LOCALE
             name = name.strip()
             if len(name) < MIN_TOPIC_NAME_LENGTH:
-                return False, None, f"Topic name must be at least {MIN_TOPIC_NAME_LENGTH} characters"
+                return False, None, t("errors.topic_name_too_short", locale, min=MIN_TOPIC_NAME_LENGTH)
             
             if len(name) > MAX_TOPIC_NAME_LENGTH:
-                return False, None, f"Topic name must be at most {MAX_TOPIC_NAME_LENGTH} characters"
+                return False, None, t("errors.topic_name_too_long", locale, max=MAX_TOPIC_NAME_LENGTH)
             
             # Check if user has reached max topics
             topic_count = db.query(func.count(Topic.id)).filter(
@@ -51,7 +53,7 @@ class TopicService:
             ).scalar()
             
             if topic_count >= MAX_TOPICS_PER_USER:
-                return False, None, f"Maximum of {MAX_TOPICS_PER_USER} topics reached. Delete one to add more."
+                return False, None, t("errors.topic_max_reached", locale, max=MAX_TOPICS_PER_USER)
             
             # Check for duplicates (case-insensitive)
             existing = db.query(Topic).filter(
@@ -60,7 +62,7 @@ class TopicService:
             ).first()
             
             if existing:
-                return False, None, f"Topic '{name}' already exists"
+                return False, None, t("errors.topic_already_exists", locale, name=name)
             
             # Create topic
             topic = Topic(user_id=user_id, name=name)
@@ -74,7 +76,7 @@ class TopicService:
         except Exception as e:
             db.rollback()
             logger.error(f"Error creating topic: {e}")
-            return False, None, f"Error creating topic: {str(e)}"
+            return False, None, t("errors.topic_create_failed", locale, error=str(e))
         finally:
             db.close()
 
@@ -149,7 +151,7 @@ class TopicService:
             db.close()
 
     @staticmethod
-    def delete_topic(topic_id: int, user_id: int) -> Tuple[bool, Optional[str]]:
+    def delete_topic(topic_id: int, user_id: int, locale: Optional[str] = None) -> Tuple[bool, Optional[str]]:
         """
         Delete a topic.
         
@@ -167,8 +169,9 @@ class TopicService:
                 Topic.user_id == user_id
             ).first()
             
+            locale = locale or DEFAULT_LOCALE
             if not topic:
-                return False, "Topic not found or unauthorized"
+                return False, t("errors.topic_not_found", locale)
             
             topic_name = topic.name
             db.delete(topic)
@@ -180,12 +183,12 @@ class TopicService:
         except Exception as e:
             db.rollback()
             logger.error(f"Error deleting topic: {e}")
-            return False, f"Error deleting topic: {str(e)}"
+            return False, t("errors.topic_delete_failed", locale, error=str(e))
         finally:
             db.close()
 
     @staticmethod
-    def delete_all_topics(user_id: int) -> Tuple[bool, int, Optional[str]]:
+    def delete_all_topics(user_id: int, locale: Optional[str] = None) -> Tuple[bool, int, Optional[str]]:
         """
         Delete all topics for a user.
         
@@ -209,7 +212,8 @@ class TopicService:
         except Exception as e:
             db.rollback()
             logger.error(f"Error deleting all topics: {e}")
-            return False, 0, f"Error deleting topics: {str(e)}"
+            locale = locale or DEFAULT_LOCALE
+            return False, 0, t("errors.topic_delete_all_failed", locale, error=str(e))
         finally:
             db.close()
 

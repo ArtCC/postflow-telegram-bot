@@ -198,10 +198,7 @@ def get_scheduled_posts_keyboard(scheduled_posts: List[tuple], page: int = 0, pe
     # Add post buttons
     for post_id, preview, _ in page_posts:
         keyboard.append([
-            InlineKeyboardButton(
-                f"📝 {preview}",
-                callback_data=f"view_scheduled_{post_id}"
-            )
+            InlineKeyboardButton(f"📝 {preview}", callback_data=f"view_scheduled_{post_id}")
         ])
     
     # Add pagination buttons if needed
@@ -232,7 +229,7 @@ def get_drafts_keyboard(drafts: List[tuple], page: int = 0, per_page: int = 5, l
     for post_id, preview, _ in page_drafts:
         keyboard.append([
             InlineKeyboardButton(
-                f"📝 {preview}",
+                t("labels.post_preview", locale, preview=preview),
                 callback_data=f"preview_{post_id}"
             )
         ])

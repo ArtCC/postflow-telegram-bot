@@ -5,8 +5,9 @@ Helper functions for text formatting and manipulation.
 
 import re
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from bot.config import MAX_TWEET_LENGTH
+from bot.utils.i18n import DEFAULT_LOCALE, t
 
 
 def escape_markdown_v2(text: str) -> str:
@@ -33,7 +34,7 @@ def escape_markdown_v2(text: str) -> str:
     return result
 
 
-def format_datetime(dt: datetime, include_time: bool = True) -> str:
+def format_datetime(dt: datetime, include_time: bool = True, locale: Optional[str] = None) -> str:
     """
     Format datetime to human-readable string.
     
@@ -44,12 +45,17 @@ def format_datetime(dt: datetime, include_time: bool = True) -> str:
     Returns:
         Formatted datetime string
     """
+    locale = locale or DEFAULT_LOCALE
     if include_time:
-        return dt.strftime("%b %d, %Y at %H:%M")
-    return dt.strftime("%b %d, %Y")
+        return dt.strftime(t("datetime.formats.with_time", locale))
+    return dt.strftime(t("datetime.formats.date_only", locale))
 
 
-def split_into_tweets(content: str, max_length: int = MAX_TWEET_LENGTH) -> List[str]:
+def split_into_tweets(
+    content: str,
+    max_length: int = MAX_TWEET_LENGTH,
+    locale: Optional[str] = None,
+) -> List[str]:
     """
     Split long content into multiple tweets respecting character limit.
     Tries to split at sentence boundaries or spaces.
@@ -138,7 +144,7 @@ def truncate_text(text: str, max_length: int = 100, suffix: str = "...") -> str:
     return text[:max_length - len(suffix)] + suffix
 
 
-def format_relative_time(dt: datetime) -> str:
+def format_relative_time(dt: datetime, locale: Optional[str] = None) -> str:
     """
     Format datetime as relative time (e.g., "in 2 hours", "tomorrow").
     
@@ -151,28 +157,29 @@ def format_relative_time(dt: datetime) -> str:
     now = datetime.utcnow()
     delta = dt - now
     
+    locale = locale or DEFAULT_LOCALE
     if delta.total_seconds() < 0:
-        return "in the past"
+        return t("datetime.relative.past", locale)
     
     seconds = delta.total_seconds()
     
     if seconds < 3600:  # Less than 1 hour
         minutes = int(seconds / 60)
-        return f"in {minutes} min" if minutes > 1 else "in 1 min"
+        return t("datetime.relative.in_minutes", locale, minutes=minutes) if minutes > 1 else t("datetime.relative.in_minute", locale)
     
     elif seconds < 86400:  # Less than 1 day
         hours = int(seconds / 3600)
-        return f"in {hours} hours" if hours > 1 else "in 1 hour"
+        return t("datetime.relative.in_hours", locale, hours=hours) if hours > 1 else t("datetime.relative.in_hour", locale)
     
     elif seconds < 172800:  # Less than 2 days
-        return "tomorrow"
+        return t("datetime.relative.tomorrow", locale)
     
     elif seconds < 604800:  # Less than 1 week
         days = int(seconds / 86400)
-        return f"in {days} days"
+        return t("datetime.relative.in_days", locale, days=days)
     
     else:
-        return format_datetime(dt, include_time=False)
+        return format_datetime(dt, include_time=False, locale=locale)
 
 
 def count_chars(text: str) -> int:
