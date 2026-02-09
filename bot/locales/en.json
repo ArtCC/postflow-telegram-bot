@@ -51,7 +51,7 @@
   "settings": {
     "enabled": "✅ Enabled",
     "disabled": "⚪ Disabled",
-    "message": "⚙️ *SETTINGS*\n\n• Twitter API: {twitter_status}\n• OpenAI API: {openai_status}\n\nEdit `.env` and restart the bot to apply changes\\."
+    "message": "⚙️ *SETTINGS*\n\n• X API: {twitter_status}\n• OpenAI API: {openai_status}\n\nEdit `.env` and restart the bot to apply changes\\."
   },
   "status": {
     "twitter_connected": "🟢 Connected",
@@ -61,7 +61,7 @@
     "bot_online": "ONLINE",
     "db_healthy": "Healthy",
     "last_check_now": "Now",
-    "message": "📊 *SYSTEM STATUS*\n\n*Services*\n• Bot: `{bot_status}`\n• Twitter: {twitter_status}\n• OpenAI: {openai_status}\n• Database: `{db_status}`\n\n*Stats*\n• Total: `{total}`\n• Published: `{published}`\n• Scheduled: `{scheduled}`\n• Failed: `{failed}`\n\n🕐 Last check: `{last_check}`"
+    "message": "📊 *SYSTEM STATUS*\n\n*Services*\n• Bot: `{bot_status}`\n• X: {twitter_status}\n• OpenAI: {openai_status}\n• Database: `{db_status}`\n\n*Stats*\n• Total: `{total}`\n• Published: `{published}`\n• Scheduled: `{scheduled}`\n• Failed: `{failed}`\n\n🕐 Last check: `{last_check}`"
   },
   "ai": {
     "prompt": "🤖 *AI GENERATION*\n\nDescribe what you want to post\\.\nExample: `Thread on AI trends in 2026`\n\nType /cancel to abort\\.",
@@ -96,10 +96,10 @@
     "media_none": "None",
     "created_ai": "`AI`",
     "created_manual": "`Manual`",
-    "publishing": "🚀 *PUBLISHING*\n\n⏳ Posting to Twitter",
+    "publishing": "🚀 *PUBLISHING*\n\n⏳ Posting to X",
     "media_thread_blocked": "❌ *PUBLISH FAILED*\n\nMedia posts cannot be threads\\.",
-    "published": "✅ *PUBLISHED*\n\n• Post ID: `#{post_id}`\n• Tweet ID: `{tweet_id}`\n\n🔗 [View on Twitter]({tweet_url})",
-    "thread_published": "✅ *THREAD PUBLISHED*\n\n• Tweets: `{tweet_count}`\n• Post ID: `#{post_id}`\n\n🔗 [View on Twitter]({tweet_url})",
+    "published": "✅ *PUBLISHED*\n\n• Post ID: `#{post_id}`\n• X post ID: `{tweet_id}`\n\n🔗 [View on X]({tweet_url})",
+    "thread_published": "✅ *THREAD PUBLISHED*\n\n• Posts: `{tweet_count}`\n• Post ID: `#{post_id}`\n\n🔗 [View on X]({tweet_url})",
     "publish_failed": "❌ *PUBLISH FAILED*\n\n⚠️ {error}\n\nSaved as `#{post_id}`\\. You can retry\\.",
     "schedule_menu": "📅 *SCHEDULE POST*\n\nChoose a time or enter a custom date\\.",
     "schedule_time_in_1h": "in 1 hour",
@@ -126,14 +126,14 @@
     "scheduler_unavailable": "❌ Scheduler service not available\\. Restart the bot\\."
   },
   "preview": {
-    "thread": "🧵 *THREAD PREVIEW*\n\n*Summary*\n• Tweets: `{tweets}`\n• Chars: `{chars}`\n• Created: {created}\n• Media: `{media}`\n\n*Content*\n{content}\n\nSelect an action:",
+    "thread": "🧵 *THREAD PREVIEW*\n\n*Summary*\n• Posts: `{tweets}`\n• Chars: `{chars}`\n• Created: {created}\n• Media: `{media}`\n\n*Content*\n{content}\n\nSelect an action:",
     "single": "👁️ *POST PREVIEW*\n\n*Summary*\n• Chars: `{chars}/{max_chars}` {char_status}\n• Type: `{post_type}`\n• Created: {created}\n• Media: `{media}`\n\n*Content*\n{content}\n\nSelect an action:"
   },
   "scheduled": {
     "none": "📅 *NO SCHEDULED POSTS*\n\nCreate a post and choose Schedule to get started\\.",
     "item": "📌 *Post \\#{id}*\n{preview}\n⏰ {datetime} \\({tz}\\)\n⏳ {relative}",
     "list": "📅 *SCHEDULED POSTS* \\(`{count}`\\)\n\n{posts}\n\nSelect a post to view details\\.",
-    "notify_success": "✅ *SCHEDULED {post_type} PUBLISHED*\n\nPost `#{post_id}` is live\n\n🔗 [View on Twitter]({tweet_url})",
+    "notify_success": "✅ *SCHEDULED {post_type} PUBLISHED*\n\nPost `#{post_id}` is live\n\n🔗 [View on X]({tweet_url})",
     "notify_failed": "❌ *SCHEDULED POST FAILED*\n\nPost `#{post_id}` was not published\n\n📝 {error}"
   },
   "drafts": {
@@ -266,16 +266,16 @@
     "openai_key_not_configured": "OpenAI API key not configured",
     "openai_connected": "OpenAI API connected successfully",
     "openai_connection_detail": "Connection error: {error}",
-    "twitter_disabled": "Twitter API is not configured or disabled",
-    "twitter_no_tweets": "No tweets provided",
+    "twitter_disabled": "X API is not configured or disabled",
+    "twitter_no_tweets": "No posts provided",
     "twitter_rate_limit": "Rate limit exceeded. Please wait before posting again.",
     "twitter_auth_failed": "Authentication failed. Check your API credentials.",
-    "twitter_duplicate": "This tweet appears to be a duplicate.",
-    "twitter_too_long": "Tweet exceeds 280 character limit.",
+    "twitter_duplicate": "This post appears to be a duplicate.",
+    "twitter_too_long": "Post exceeds 280 character limit.",
     "twitter_connection": "Connection error. Check your internet connection.",
-    "twitter_unavailable": "Twitter service temporarily unavailable.",
-    "twitter_generic": "Twitter error: {error}",
-    "twitter_not_configured": "Twitter API credentials not configured",
+    "twitter_unavailable": "X service temporarily unavailable.",
+    "twitter_generic": "X error: {error}",
+    "twitter_not_configured": "X API credentials not configured",
     "twitter_connected": "Connected as @{username}",
     "twitter_connection_detail": "Connection error: {error}",
     "topic_name_too_short": "Topic name must be at least {min} characters",

@@ -376,6 +376,7 @@ postflow-telegram-bot/
 │   │   └── conversations.py   # Multi-step conversations
 │   ├── locales/
 │   │   └── en.json             # UI strings
+│   │   └── es.json             # UI strings
 │   ├── services/
 │   │   ├── __init__.py
 │   │   ├── twitter_service.py # Twitter API integration
