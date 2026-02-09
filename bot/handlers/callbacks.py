@@ -19,6 +19,8 @@ from bot.utils import (
     get_topic_delete_confirm_keyboard,
     get_topics_delete_all_confirm_keyboard,
     get_ai_with_topics_keyboard,
+    get_user_locale,
+    t,
 )
 from bot.handlers.commands import help_command
 from bot.services.topic_service import TopicService
@@ -28,9 +30,10 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     """Central callback router for all inline buttons."""
     query = update.callback_query
     user_id = query.from_user.id
+    locale = get_user_locale(query.from_user)
     
     if not is_authorized(user_id):
-        await query.answer("⛔ Not authorized", show_alert=True)
+        await query.answer(t("errors.not_authorized_alert", locale), show_alert=True)
         return
     
     await query.answer()  # Acknowledge the callback
@@ -74,13 +77,13 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         await show_topics_menu(query, user_id)
     
     elif data == "topics_add_disabled":
-        await query.answer("⚠️ Maximum topics reached! Delete one to add more.", show_alert=True)
+        await query.answer(t("topics.max_reached_alert", locale), show_alert=True)
     
     elif data == "topics_list":
         await show_topics_list(query, user_id)
     
     elif data == "topics_list_empty":
-        await query.answer("📋 No topics yet. Add one to get started!", show_alert=True)
+        await query.answer(t("topics.list_empty_alert", locale), show_alert=True)
     
     elif data.startswith("topics_view_"):
         topic_id = int(data.split("_")[-1])
@@ -110,10 +113,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     
     elif data == "ai_custom":
         await query.edit_message_text(
-            "🤖 *AI GENERATION*\n\n"
-            "Describe what you want to post\\.\n"
-            "Example: `Thread on AI trends in 2026`\n\n"
-            "Type /cancel to abort\\.",
+            t("topics.ai_custom", locale),
             parse_mode="MarkdownV2"
         )
         context.user_data['awaiting'] = 'ai_prompt'
@@ -153,10 +153,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     # Post creation callbacks
     elif data == "post_manual":
         await query.edit_message_text(
-            "✏️ *WRITE POST*\n\n"
-            "Send your post text\\.\n"
-            "Tip: long posts become threads\\.\n"
-            "Type /cancel to abort\\.",
+            t("posts.manual_prompt", locale),
             parse_mode="MarkdownV2"
         )
         context.user_data['awaiting'] = 'manual_post'
@@ -172,18 +169,14 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         if topic_count > 0:
             # Show topics selection
             await query.edit_message_text(
-                "🤖 *AI GENERATION*\n\n"
-                "Select a topic preset or write a custom prompt:",
+                t("topics.ai_intro", locale),
                 parse_mode="MarkdownV2",
-                reply_markup=get_ai_with_topics_keyboard(user_id)
+                reply_markup=get_ai_with_topics_keyboard(user_id, locale)
             )
         else:
             # Original behavior - no topics
             await query.edit_message_text(
-                "🤖 *AI GENERATION*\n\n"
-                "Describe what you want to post\\.\n"
-                "Example: `Thread on AI trends in 2026`\n\n"
-                "Type /cancel to abort\\.",
+                t("ai.prompt", locale),
                 parse_mode="MarkdownV2"
             )
             context.user_data['awaiting'] = 'ai_prompt'
@@ -245,74 +238,49 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     
     else:
         logger.warning(f"Unhandled callback data: {data}")
-        await query.answer("Feature coming soon!", show_alert=True)
+        await query.answer(t("errors.feature_coming_soon", locale), show_alert=True)
 
 
 async def show_main_menu(query) -> None:
     """Show the main menu."""
-    menu_message = (
-        "🎯 *MENU*\n\n"
-        "Select an option:"
-    )
+    locale = get_user_locale(query.from_user)
+    menu_message = f"{t('menu.title', locale)}\n\n{t('menu.select_option', locale)}"
     
     await query.edit_message_text(
         menu_message,
         parse_mode="MarkdownV2",
-        reply_markup=get_main_menu_keyboard()
+        reply_markup=get_main_menu_keyboard(locale)
     )
 
 
 async def show_help(query) -> None:
     """Show help information."""
-    help_message = (
-        "ℹ️ *HELP*\n\n"
-        "*Commands*\n"
-        "• `/start` \\- Welcome\n"
-        "• `/menu` \\- Main menu\n"
-        "• `/new` \\- New post\n"
-        "• `/plan` \\- Plan week\n"
-        "• `/topics` \\- Manage topics\n"
-        "• `/drafts` \\- Drafts\n"
-        "• `/scheduled` \\- Scheduled posts\n"
-        "• `/stats` \\- Statistics\n"
-        "• `/status` \\- System status\n"
-        "• `/settings` \\- Settings\n"
-        "• `/chatid` \\- Your user ID\n"
-        "• `/help` \\- Help\n"
-        "• `/author` \\- About the author\n"
-        "• `/cancel` \\- Cancel\n\n"
-        "*Highlights*\n"
-        "• Manual or AI posts\n"
-        "• Topic presets for AI\n"
-        "• Scheduling\n"
-        "• Threads for long posts\n"
-        "• Stats overview"
-    )
+    locale = get_user_locale(query.from_user)
+    help_message = t("help.message", locale)
     
     await query.edit_message_text(
         help_message,
         parse_mode="MarkdownV2",
-        reply_markup=get_back_keyboard()
+        reply_markup=get_back_keyboard(locale)
     )
 
 
 async def show_new_post_options(query) -> None:
     """Show new post creation options."""
-    message = (
-        "✍️ *NEW POST*\n\n"
-        "Choose a method:"
-    )
+    locale = get_user_locale(query.from_user)
+    message = f"{t('new_post.title', locale)}\n\n{t('new_post.choose_method', locale)}"
     
     await query.edit_message_text(
         message,
         parse_mode="MarkdownV2",
-        reply_markup=get_new_post_keyboard()
+        reply_markup=get_new_post_keyboard(locale)
     )
 
 
 async def show_statistics(query) -> None:
     """Show post statistics."""
     from bot.services.post_service import PostService
+    locale = get_user_locale(query.from_user)
     
     stats = PostService.get_post_statistics()
     
@@ -320,43 +288,43 @@ async def show_statistics(query) -> None:
     total_attempts = stats['published'] + stats['failed']
     success_rate = (stats['published'] / total_attempts * 100) if total_attempts > 0 else 0
     
-    stats_message = (
-        f"📊 *STATISTICS*\n\n"
-        f"*Overview*\n"
-        f"• Total: `{stats['total']}`\n"
-        f"• Published: `{stats['published']}`\n"
-        f"• Scheduled: `{stats['scheduled']}`\n"
-        f"• Draft: `{stats['draft']}`\n"
-        f"• Failed: `{stats['failed']}`\n\n"
-        f"*Performance*\n"
-        f"• Success rate: `{success_rate:.1f}%`"
+    stats_message = t(
+        "stats.message",
+        locale,
+        total=stats['total'],
+        published=stats['published'],
+        scheduled=stats['scheduled'],
+        draft=stats['draft'],
+        failed=stats['failed'],
+        success_rate=f"{success_rate:.1f}",
     )
     
     await query.edit_message_text(
         stats_message,
         parse_mode="MarkdownV2",
-        reply_markup=get_back_keyboard()
+        reply_markup=get_back_keyboard(locale)
     )
 
 
 async def show_settings(query) -> None:
     """Show settings (placeholder for future features)."""
     from bot.config import TWITTER_ENABLED, OPENAI_ENABLED
+    locale = get_user_locale(query.from_user)
     
-    twitter_status = "✅ Enabled" if TWITTER_ENABLED else "⚪ Disabled"
-    openai_status = "✅ Enabled" if OPENAI_ENABLED else "⚪ Disabled"
+    twitter_status = t("settings.enabled", locale) if TWITTER_ENABLED else t("settings.disabled", locale)
+    openai_status = t("settings.enabled", locale) if OPENAI_ENABLED else t("settings.disabled", locale)
     
-    settings_message = (
-        f"⚙️ *SETTINGS*\n\n"
-        f"• Twitter API: {escape_markdown_v2(twitter_status)}\n"
-        f"• OpenAI API: {escape_markdown_v2(openai_status)}\n\n"
-        f"Edit `.env` and restart the bot to apply changes\\."
+    settings_message = t(
+        "settings.message",
+        locale,
+        twitter_status=escape_markdown_v2(twitter_status),
+        openai_status=escape_markdown_v2(openai_status),
     )
     
     await query.edit_message_text(
         settings_message,
         parse_mode="MarkdownV2",
-        reply_markup=get_back_keyboard()
+        reply_markup=get_back_keyboard(locale)
     )
 
 
@@ -365,54 +333,66 @@ async def show_status(query) -> None:
     from bot.services.twitter_service import TwitterService
     from bot.services.openai_service import OpenAIService
     from bot.services.post_service import PostService
+    locale = get_user_locale(query.from_user)
     
     # Check service status
     twitter_service = TwitterService() if TWITTER_ENABLED else None
     openai_service = OpenAIService() if OPENAI_ENABLED else None
     
-    twitter_status = "🟢 Connected"
-    openai_status = "🟢 Available"
+    twitter_status = t("status.twitter_connected", locale)
+    openai_status = t("status.openai_available", locale)
     
     if twitter_service:
         success, message = twitter_service.test_connection()
         if success:
-            twitter_status = f"🟢 {escape_markdown_v2(message)}"
+            twitter_status = t(
+                "status.connected_detail",
+                locale,
+                message=escape_markdown_v2(message),
+            )
         else:
-            twitter_status = f"🔴 {escape_markdown_v2(message)}"
+            twitter_status = t(
+                "status.error_detail",
+                locale,
+                message=escape_markdown_v2(message),
+            )
     else:
-        twitter_status = "⚪ Not configured"
+        twitter_status = t("status.twitter_not_configured", locale)
     
     if openai_service:
         success, message = openai_service.test_connection()
         if success:
-            openai_status = "🟢 Available"
+            openai_status = t("status.openai_available", locale)
         else:
-            openai_status = f"🔴 {escape_markdown_v2(message[:50])}"
+            openai_status = t(
+                "status.error_detail",
+                locale,
+                message=escape_markdown_v2(message[:50]),
+            )
     else:
-        openai_status = "⚪ Disabled"
+        openai_status = t("status.openai_disabled", locale)
     
     # Get statistics
     stats = PostService.get_post_statistics()
     
-    status_message = (
-        f"📊 *SYSTEM STATUS*\n\n"
-        f"*Services*\n"
-        f"• Bot: `ONLINE`\n"
-        f"• Twitter: {twitter_status}\n"
-        f"• OpenAI: {openai_status}\n"
-        f"• Database: `Healthy`\n\n"
-        f"*Stats*\n"
-        f"• Total: `{stats['total']}`\n"
-        f"• Published: `{stats['published']}`\n"
-        f"• Scheduled: `{stats['scheduled']}`\n"
-        f"• Failed: `{stats['failed']}`\n\n"
-        f"🕐 Last check: `Now`"
+    status_message = t(
+        "status.message",
+        locale,
+        bot_status=t("status.bot_online", locale),
+        twitter_status=twitter_status,
+        openai_status=openai_status,
+        db_status=t("status.db_healthy", locale),
+        total=stats['total'],
+        published=stats['published'],
+        scheduled=stats['scheduled'],
+        failed=stats['failed'],
+        last_check=t("status.last_check_now", locale),
     )
     
     await query.edit_message_text(
         status_message,
         parse_mode="MarkdownV2",
-        reply_markup=get_back_keyboard()
+        reply_markup=get_back_keyboard(locale)
     )
 
 
@@ -420,156 +400,160 @@ async def show_status(query) -> None:
 
 async def show_topics_menu(query, user_id: int) -> None:
     """Show topics management menu."""
+    locale = get_user_locale(query.from_user)
     topic_count = TopicService.get_topic_count(user_id)
     from bot.services.topic_service import MAX_TOPICS_PER_USER
     
-    topics_message = (
-        f"🎯 *TOPIC PRESETS*\n\n"
-        f"Manage your topic presets for AI post generation\\.\n\n"
-        f"📊 *Usage:* `{topic_count}/{MAX_TOPICS_PER_USER}` topics\n\n"
-        f"Choose an option below\\."
+    topics_message = t(
+        "topics.menu",
+        locale,
+        count=topic_count,
+        max=MAX_TOPICS_PER_USER,
     )
     
     await query.edit_message_text(
         topics_message,
         parse_mode="MarkdownV2",
-        reply_markup=get_topics_menu_keyboard(user_id)
+        reply_markup=get_topics_menu_keyboard(user_id, locale)
     )
 
 
 async def show_topics_list(query, user_id: int) -> None:
     """Show list of user's topics."""
+    locale = get_user_locale(query.from_user)
     topics = TopicService.get_user_topics(user_id)
     
     if not topics:
         await query.edit_message_text(
-            "📋 *TOPICS LIST*\n\n"
-            "You don't have any topics yet\\.\n"
-            "Add one to get started\\!",
+            t("topics.list_empty", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_topics_menu_keyboard(user_id)
+            reply_markup=get_topics_menu_keyboard(user_id, locale)
         )
         return
     
     from bot.services.topic_service import MAX_TOPICS_PER_USER
     
     topics_text = "\n".join([f"• `{escape_markdown_v2(topic.name)}`" for topic in topics])
-    
-    topics_message = (
-        f"📋 *TOPICS LIST*\n\n"
-        f"Your topics \\({len(topics)}/{MAX_TOPICS_PER_USER}\\):\n\n"
-        f"{topics_text}\n\n"
-        f"Click on a topic to view details\\."
+    topics_message = t(
+        "topics.list_title",
+        locale,
+        count=len(topics),
+        max=MAX_TOPICS_PER_USER,
+        topics=topics_text,
     )
     
     await query.edit_message_text(
         topics_message,
         parse_mode="MarkdownV2",
-        reply_markup=get_topics_list_keyboard(user_id)
+        reply_markup=get_topics_list_keyboard(user_id, locale)
     )
 
 
 async def view_topic(query, topic_id: int) -> None:
     """View a specific topic."""
     topic = TopicService.get_topic_for_user(topic_id, query.from_user.id)
+    locale = get_user_locale(query.from_user)
     
     if not topic:
-        await query.answer("❌ Topic not found", show_alert=True)
+        await query.answer(t("topics.not_found_alert", locale), show_alert=True)
         return
     
     from bot.utils import format_datetime
     
-    topic_message = (
-        f"🎯 *TOPIC DETAILS*\n\n"
-        f"*Name:* `{escape_markdown_v2(topic.name)}`\n"
-        f"*Created:* {escape_markdown_v2(format_datetime(topic.created_at))}\n\n"
-        f"Use this topic when creating AI posts\\."
+    topic_message = t(
+        "topics.details",
+        locale,
+        name=escape_markdown_v2(topic.name),
+        created=escape_markdown_v2(format_datetime(topic.created_at)),
     )
     
     await query.edit_message_text(
         topic_message,
         parse_mode="MarkdownV2",
-        reply_markup=get_topics_list_keyboard(query.from_user.id)
+        reply_markup=get_topics_list_keyboard(query.from_user.id, locale)
     )
 
 
 async def show_topics_delete(query, user_id: int) -> None:
     """Show topics for deletion."""
+    locale = get_user_locale(query.from_user)
     topics = TopicService.get_user_topics(user_id)
     
     if not topics:
         await query.edit_message_text(
-            "🗑️ *DELETE TOPIC*\n\n"
-            "You don't have any topics to delete\\.",
+            t("topics.delete_empty", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_topics_menu_keyboard(user_id)
+            reply_markup=get_topics_menu_keyboard(user_id, locale)
         )
         return
     
     await query.edit_message_text(
-        "🗑️ *DELETE TOPIC*\n\n"
-        "Select a topic to delete:",
+        t("topics.delete_select", locale),
         parse_mode="MarkdownV2",
-        reply_markup=get_topics_delete_keyboard(user_id)
+        reply_markup=get_topics_delete_keyboard(user_id, locale)
     )
 
 
 async def confirm_delete_topic(query, topic_id: int) -> None:
     """Confirm deletion of a specific topic."""
     topic = TopicService.get_topic(topic_id)
+    locale = get_user_locale(query.from_user)
     
     if not topic:
-        await query.answer("❌ Topic not found", show_alert=True)
+        await query.answer(t("topics.not_found_alert", locale), show_alert=True)
         return
     
     await query.edit_message_text(
-        f"🗑️ *DELETE TOPIC*\n\n"
-        f"Are you sure you want to delete:\n"
-        f"`{escape_markdown_v2(topic.name)}`\n\n"
-        f"This action cannot be undone\\.",
+        t("topics.delete_confirm", locale, name=escape_markdown_v2(topic.name)),
         parse_mode="MarkdownV2",
-        reply_markup=get_topic_delete_confirm_keyboard(topic_id)
+        reply_markup=get_topic_delete_confirm_keyboard(topic_id, locale)
     )
 
 
 async def execute_delete_topic(query, user_id: int, topic_id: int) -> None:
     """Execute deletion of a topic."""
+    locale = get_user_locale(query.from_user)
     success, error_msg = TopicService.delete_topic(topic_id, user_id)
     
     if success:
-        await query.answer("✅ Topic deleted", show_alert=False)
+        await query.answer(t("topics.deleted_alert", locale), show_alert=False)
         remaining = TopicService.get_topic_count(user_id)
         if remaining > 0:
             await show_topics_delete(query, user_id)
         else:
             await query.edit_message_text(
-                "✅ *TOPIC DELETED*\n\n"
-                "No more topics left\\.",
+                t("topics.deleted_empty", locale),
                 parse_mode="MarkdownV2",
-                reply_markup=get_topics_menu_keyboard(user_id)
+                reply_markup=get_topics_menu_keyboard(user_id, locale)
             )
     else:
-        await query.answer(f"❌ {error_msg}", show_alert=True)
+        await query.answer(
+            t("errors.action_failed_plain", locale, error=error_msg),
+            show_alert=True,
+        )
 
 
 async def confirm_delete_all_topics(query) -> None:
     """Confirm deletion of all topics."""
+    locale = get_user_locale(query.from_user)
     await query.edit_message_text(
-        "🗑️ *DELETE ALL TOPICS*\n\n"
-        "⚠️ Are you sure you want to delete ALL topics?\n\n"
-        "This action cannot be undone\\.",
+        t("topics.delete_all_confirm", locale),
         parse_mode="MarkdownV2",
-        reply_markup=get_topics_delete_all_confirm_keyboard()
+        reply_markup=get_topics_delete_all_confirm_keyboard(locale)
     )
 
 
 async def execute_delete_all_topics(query, user_id: int) -> None:
     """Execute deletion of all topics."""
+    locale = get_user_locale(query.from_user)
     success, deleted_count, error_msg = TopicService.delete_all_topics(user_id)
     
     if success:
-        await query.answer(f"✅ Deleted {deleted_count} topic(s)", show_alert=True)
+        await query.answer(t("topics.deleted_all_alert", locale, count=deleted_count), show_alert=True)
         await show_topics_menu(query, user_id)
     else:
-        await query.answer(f"❌ {error_msg}", show_alert=True)
+        await query.answer(
+            t("errors.action_failed_plain", locale, error=error_msg),
+            show_alert=True,
+        )
 

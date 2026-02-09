@@ -28,6 +28,8 @@ from bot.utils import (
     get_posts_per_day_keyboard,
     get_plan_post_mode_keyboard,
     get_plan_confirm_keyboard,
+    get_user_locale,
+    t,
 )
 from bot.services.post_service import PostService
 from bot.services.twitter_service import TwitterService
@@ -112,17 +114,18 @@ async def notify_scheduled_post_result(bot, post_id: int, success: bool, tweet_i
     try:
         if success:
             tweet_url = f"https://twitter.com/i/web/status/{tweet_id}" if tweet_id else ""
-            post_type = "Thread" if is_thread else "Post"
-            message = (
-                f"✅ *SCHEDULED {post_type.upper()} PUBLISHED*\n\n"
-                f"Post `#{post_id}` is live\n\n"
-                f"🔗 [View on Twitter]({escape_markdown_v2(tweet_url)})"
+            post_type = t("posts.type_thread") if is_thread else t("posts.type_post")
+            message = t(
+                "scheduled.notify_success",
+                post_type=post_type.upper(),
+                post_id=post_id,
+                tweet_url=escape_markdown_v2(tweet_url),
             )
         else:
-            message = (
-                f"❌ *SCHEDULED POST FAILED*\n\n"
-                f"Post `#{post_id}` was not published\n\n"
-                f"📝 {escape_markdown_v2(error or 'Unknown error')}"
+            message = t(
+                "scheduled.notify_failed",
+                post_id=post_id,
+                error=escape_markdown_v2(error or t("errors.unknown_error")),
             )
         
         await bot.send_message(
@@ -139,6 +142,7 @@ async def notify_scheduled_post_result(bot, post_id: int, success: bool, tweet_i
 async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle text messages based on current context."""
     user_id = update.effective_user.id
+    locale = get_user_locale(update.effective_user)
     
     if not is_authorized(user_id):
         return
@@ -167,8 +171,8 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     else:
         # No specific action expected, show helpful message
         await update.message.reply_text(
-            "💡 Open the menu to continue",
-            reply_markup=get_back_keyboard()
+            t("menu.help", locale),
+            reply_markup=get_back_keyboard(locale)
         )
 
 
@@ -178,17 +182,20 @@ async def handle_photo_message(update: Update, context: ContextTypes.DEFAULT_TYP
     if not is_authorized(user_id):
         return
 
+    locale = get_user_locale(update.effective_user)
+
     awaiting = context.user_data.get('awaiting')
     if awaiting != 'image_post':
         await update.message.reply_text(
-            "💡 Use /new to create a post with image\.",
-            reply_markup=get_back_keyboard()
+            t("posts.image_use_new", locale),
+            parse_mode="MarkdownV2",
+            reply_markup=get_back_keyboard(locale)
         )
         return
 
     if not update.message.photo:
         await update.message.reply_text(
-            "❌ No image received\. Try again\.",
+            t("posts.image_no_received", locale),
             parse_mode="MarkdownV2"
         )
         return
@@ -201,7 +208,7 @@ async def handle_photo_message(update: Update, context: ContextTypes.DEFAULT_TYP
         context.user_data['pending_image_unique_id'] = photo.file_unique_id
         context.user_data['awaiting'] = 'image_caption'
         await update.message.reply_text(
-            "❌ Caption too long\. Send a shorter caption\.",
+            t("posts.image_caption_too_long", locale),
             parse_mode="MarkdownV2"
         )
         return
@@ -213,10 +220,11 @@ async def process_image_caption(update: Update, context: ContextTypes.DEFAULT_TY
     """Handle caption input after an image was received."""
     file_id = context.user_data.get('pending_image_file_id')
     unique_id = context.user_data.get('pending_image_unique_id')
+    locale = get_user_locale(update.effective_user)
 
     if not file_id or not unique_id:
         await update.message.reply_text(
-            "❌ Image data missing\. Start again with /new\.",
+            t("posts.image_data_missing", locale),
             parse_mode="MarkdownV2"
         )
         context.user_data['awaiting'] = None
@@ -224,7 +232,7 @@ async def process_image_caption(update: Update, context: ContextTypes.DEFAULT_TY
 
     if len(text) > MAX_TWEET_LENGTH:
         await update.message.reply_text(
-            "❌ Caption too long\. Keep it under 280 chars\.",
+            t("posts.image_caption_too_long", locale),
             parse_mode="MarkdownV2"
         )
         return
@@ -235,11 +243,9 @@ async def process_image_caption(update: Update, context: ContextTypes.DEFAULT_TY
 async def prompt_image_post(query, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Prompt user to send an image with optional caption."""
     context.user_data['awaiting'] = 'image_post'
+    locale = get_user_locale(query.from_user)
     await query.edit_message_text(
-        "🖼️ *IMAGE POST*\n\n"
-        "Send an image with an optional caption\.\n"
-        "Caption must be 280 chars or less\.\n"
-        "Type /cancel to abort\.",
+        t("posts.image_prompt", locale),
         parse_mode="MarkdownV2"
     )
 
@@ -249,12 +255,13 @@ async def _create_image_post(update: Update, context: ContextTypes.DEFAULT_TYPE,
     context.user_data['awaiting'] = None
     context.user_data.pop('pending_image_file_id', None)
     context.user_data.pop('pending_image_unique_id', None)
+    locale = get_user_locale(update.effective_user)
 
     try:
         telegram_file = await context.bot.get_file(file_id)
     except Exception as e:
         await update.message.reply_text(
-            "❌ Failed to fetch image from Telegram\.",
+            t("posts.image_fetch_failed", locale),
             parse_mode="MarkdownV2"
         )
         logger.error(f"Failed to fetch Telegram file: {e}")
@@ -271,7 +278,7 @@ async def _create_image_post(update: Update, context: ContextTypes.DEFAULT_TYPE,
         await telegram_file.download_to_drive(custom_path=media_path)
     except Exception as e:
         await update.message.reply_text(
-            "❌ Failed to download image\.",
+            t("posts.image_download_failed", locale),
             parse_mode="MarkdownV2"
         )
         logger.error(f"Failed to download Telegram file: {e}")
@@ -285,9 +292,9 @@ async def _create_image_post(update: Update, context: ContextTypes.DEFAULT_TYPE,
 
     if not post:
         await update.message.reply_text(
-            "❌ Failed to create the post\.",
+            t("posts.create_failed", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
 
@@ -307,8 +314,17 @@ def _init_weekly_plan(context: ContextTypes.DEFAULT_TYPE) -> None:
     }
 
 
-def _get_weekday_labels() -> list:
-    return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+def _get_weekday_labels(locale: Optional[str] = None) -> list:
+    locale = locale or "en"
+    return [
+        t("weekdays.mon", locale),
+        t("weekdays.tue", locale),
+        t("weekdays.wed", locale),
+        t("weekdays.thu", locale),
+        t("weekdays.fri", locale),
+        t("weekdays.sat", locale),
+        t("weekdays.sun", locale),
+    ]
 
 
 def _build_day_dates(selected_days: list, start_date: date) -> dict:
@@ -354,23 +370,20 @@ async def show_weekly_days(message_or_query, context: ContextTypes.DEFAULT_TYPE)
         _init_weekly_plan(context)
         weekly_plan = context.user_data["weekly_plan"]
 
-    message = (
-        "📆 *PLAN WEEK*\n\n"
-        "Select the days you want to publish:\n"
-        "Mon to Sun"
-    )
+    locale = get_user_locale(message_or_query.from_user)
+    message = t("weekly.plan", locale)
 
     if hasattr(message_or_query, "reply_text"):
         await message_or_query.reply_text(
             message,
             parse_mode="MarkdownV2",
-            reply_markup=get_weekday_selection_keyboard(weekly_plan["days"])
+            reply_markup=get_weekday_selection_keyboard(weekly_plan["days"], locale)
         )
     else:
         await message_or_query.edit_message_text(
             message,
             parse_mode="MarkdownV2",
-            reply_markup=get_weekday_selection_keyboard(weekly_plan["days"])
+            reply_markup=get_weekday_selection_keyboard(weekly_plan["days"], locale)
         )
 
 
@@ -397,18 +410,17 @@ async def confirm_weekly_days(query, context: ContextTypes.DEFAULT_TYPE) -> None
     """Confirm weekday selection and ask posts per day."""
     weekly_plan = context.user_data.get("weekly_plan")
     if not weekly_plan or not weekly_plan["days"]:
-        await query.answer("Select at least one day", show_alert=True)
+        locale = get_user_locale(query.from_user)
+        await query.answer(t("weekly.select_one_day_alert", locale), show_alert=True)
         return
 
-    message = (
-        "📝 *POSTS PER DAY*\n\n"
-        "How many posts per selected day?"
-    )
+    locale = get_user_locale(query.from_user)
+    message = t("weekly.posts_per_day", locale)
 
     await query.edit_message_text(
         message,
         parse_mode="MarkdownV2",
-        reply_markup=get_posts_per_day_keyboard()
+        reply_markup=get_posts_per_day_keyboard(locale)
     )
 
 
@@ -416,7 +428,8 @@ async def select_posts_per_day(query, context: ContextTypes.DEFAULT_TYPE) -> Non
     """Set posts per day and start time input."""
     weekly_plan = context.user_data.get("weekly_plan")
     if not weekly_plan:
-        await query.answer("Start again with /menu", show_alert=True)
+        locale = get_user_locale(query.from_user)
+        await query.answer(t("weekly.start_again_alert", locale), show_alert=True)
         return
 
     posts_per_day = int(query.data.split("_")[-1])
@@ -439,17 +452,21 @@ async def _prompt_times_for_current_day(message_or_query, context: ContextTypes.
     day_sequence = weekly_plan.get("day_sequence", [])
     idx = weekly_plan.get("day_index", 0)
 
+    locale = get_user_locale(message_or_query.from_user)
+
     if idx >= len(day_sequence):
         await _build_weekly_queue_and_start(message_or_query, context)
         return
 
     day_idx = day_sequence[idx]
-    day_label = _get_weekday_labels()[day_idx]
+    day_label = _get_weekday_labels(locale)[day_idx]
     posts_per_day = weekly_plan["posts_per_day"]
 
-    message = (
-        f"⏰ *TIMES FOR {day_label.upper()}*\n\n"
-        f"Enter {posts_per_day} time slots as `HH:MM`, separated by commas\."
+    message = t(
+        "weekly.times_prompt",
+        locale,
+        day_label=escape_markdown_v2(day_label.upper()),
+        count=posts_per_day,
     )
 
     context.user_data["awaiting"] = "weekly_times"
@@ -470,11 +487,12 @@ async def _prompt_times_for_current_day(message_or_query, context: ContextTypes.
 async def process_weekly_times(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str) -> None:
     """Process time list input for a selected day."""
     weekly_plan = context.user_data.get("weekly_plan")
+    locale = get_user_locale(update.effective_user)
     if not weekly_plan:
         await update.message.reply_text(
-            "❌ Planning session expired\. Use /menu to start again\.",
+            t("weekly.expired", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
 
@@ -484,7 +502,7 @@ async def process_weekly_times(update: Update, context: ContextTypes.DEFAULT_TYP
 
     if not times or len(times) != posts_per_day:
         await update.message.reply_text(
-            "❌ Invalid time list\. Use `HH:MM, HH:MM` with the correct count\.",
+            t("weekly.invalid_time_list", locale),
             parse_mode="MarkdownV2"
         )
         return
@@ -493,9 +511,9 @@ async def process_weekly_times(update: Update, context: ContextTypes.DEFAULT_TYP
     day_date = day_dates.get(day_idx)
     if not day_date:
         await update.message.reply_text(
-            "❌ Invalid day selection\. Use /menu to start again\.",
+            t("weekly.invalid_day_selection", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
 
@@ -506,7 +524,7 @@ async def process_weekly_times(update: Update, context: ContextTypes.DEFAULT_TYP
             slot_dt = USER_TIMEZONE.localize(slot_dt)
             if slot_dt <= now_local:
                 await update.message.reply_text(
-                    "❌ One or more times are in the past\. Enter future times\.",
+                    t("weekly.times_in_past", locale),
                     parse_mode="MarkdownV2"
                 )
                 return
@@ -543,17 +561,18 @@ async def _build_weekly_queue_and_start(message_or_query, context: ContextTypes.
     weekly_plan["current_index"] = 0
 
     if not queue:
+        locale = get_user_locale(message_or_query.from_user)
         if hasattr(message_or_query, "reply_text"):
             await message_or_query.reply_text(
-                "❌ No valid times to schedule\. Start again with /menu\.",
+                t("weekly.no_valid_times", locale),
                 parse_mode="MarkdownV2",
-                reply_markup=get_back_keyboard()
+                reply_markup=get_back_keyboard(locale)
             )
         else:
             await message_or_query.edit_message_text(
-                "❌ No valid times to schedule\. Start again with /menu\.",
+                t("weekly.no_valid_times", locale),
                 parse_mode="MarkdownV2",
-                reply_markup=get_back_keyboard()
+                reply_markup=get_back_keyboard(locale)
             )
         context.user_data.pop("weekly_plan", None)
         return
@@ -566,32 +585,37 @@ async def _show_weekly_post_mode(message_or_query, context: ContextTypes.DEFAULT
     queue = weekly_plan.get("queue", [])
     idx = weekly_plan.get("current_index", 0)
 
+    locale = get_user_locale(message_or_query.from_user)
+
     if idx >= len(queue):
         await _show_weekly_summary(message_or_query, context)
         return
 
     item = queue[idx]
-    day_label = escape_markdown_v2(_get_weekday_labels()[item["day_idx"]])
+    day_label = escape_markdown_v2(_get_weekday_labels(locale)[item["day_idx"]])
     time_str = escape_markdown_v2(item["time_str"])
     total = len(queue)
 
-    message = (
-        f"📆 *PLAN WEEK*\n\n"
-        f"Post {idx + 1}/{total} \\- {day_label} {time_str}\n\n"
-        "Choose how to create this post:"
+    message = t(
+        "weekly.post_mode",
+        locale,
+        index=idx + 1,
+        total=total,
+        day_label=day_label,
+        time_str=time_str,
     )
 
     if hasattr(message_or_query, "reply_text"):
         await message_or_query.reply_text(
             message,
             parse_mode="MarkdownV2",
-            reply_markup=get_plan_post_mode_keyboard()
+            reply_markup=get_plan_post_mode_keyboard(locale)
         )
     else:
         await message_or_query.edit_message_text(
             message,
             parse_mode="MarkdownV2",
-            reply_markup=get_plan_post_mode_keyboard()
+            reply_markup=get_plan_post_mode_keyboard(locale)
         )
 
 
@@ -600,23 +624,27 @@ async def prompt_weekly_manual(query, context: ContextTypes.DEFAULT_TYPE) -> Non
     weekly_plan = context.user_data.get("weekly_plan")
     if not weekly_plan:
         await query.edit_message_text(
-            "❌ Planning session expired\. Use /menu to start again\.",
+            t("weekly.expired", get_user_locale(query.from_user)),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(get_user_locale(query.from_user))
         )
         return
 
     queue = weekly_plan.get("queue", [])
     idx = weekly_plan.get("current_index", 0)
     item = queue[idx]
-    day_label = _get_weekday_labels()[item["day_idx"]]
+    locale = get_user_locale(query.from_user)
+    day_label = _get_weekday_labels(locale)[item["day_idx"]]
 
     context.user_data["awaiting"] = "weekly_manual_content"
 
     await query.edit_message_text(
-        f"✏️ *WRITE POST*\n\n"
-        f"{day_label} {item['time_str']}\n\n"
-        "Send the post text\. Type /cancel to abort\.",
+        t(
+            "weekly.manual_prompt",
+            locale,
+            day_label=escape_markdown_v2(day_label),
+            time_str=escape_markdown_v2(item['time_str']),
+        ),
         parse_mode="MarkdownV2"
     )
 
@@ -626,23 +654,27 @@ async def prompt_weekly_ai(query, context: ContextTypes.DEFAULT_TYPE) -> None:
     weekly_plan = context.user_data.get("weekly_plan")
     if not weekly_plan:
         await query.edit_message_text(
-            "❌ Planning session expired\. Use /menu to start again\.",
+            t("weekly.expired", get_user_locale(query.from_user)),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(get_user_locale(query.from_user))
         )
         return
 
     queue = weekly_plan.get("queue", [])
     idx = weekly_plan.get("current_index", 0)
     item = queue[idx]
-    day_label = _get_weekday_labels()[item["day_idx"]]
+    locale = get_user_locale(query.from_user)
+    day_label = _get_weekday_labels(locale)[item["day_idx"]]
 
     context.user_data["awaiting"] = "weekly_ai_prompt"
 
     await query.edit_message_text(
-        f"🤖 *AI PROMPT*\n\n"
-        f"{day_label} {item['time_str']}\n\n"
-        "Describe the post you want\. Type /cancel to abort\.",
+        t(
+            "weekly.ai_prompt",
+            locale,
+            day_label=escape_markdown_v2(day_label),
+            time_str=escape_markdown_v2(item['time_str']),
+        ),
         parse_mode="MarkdownV2"
     )
 
@@ -651,18 +683,18 @@ async def process_weekly_manual_content(update: Update, context: ContextTypes.DE
     """Save manual post content for the weekly plan."""
     context.user_data["awaiting"] = None
     weekly_plan = context.user_data.get("weekly_plan")
+    locale = get_user_locale(update.effective_user)
     if not weekly_plan:
         await update.message.reply_text(
-            "❌ Planning session expired\. Use /menu to start again\.",
+            t("weekly.expired", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
 
     if not content or len(content.strip()) == 0:
         await update.message.reply_text(
-            "⚠️ *EMPTY CONTENT*\n\n"
-            "Write something to create the post\.",
+            t("posts.empty_content", locale),
             parse_mode="MarkdownV2"
         )
         return
@@ -670,7 +702,7 @@ async def process_weekly_manual_content(update: Update, context: ContextTypes.DE
     post = PostService.create_post(content=content, created_by_ai=False)
     if not post:
         await update.message.reply_text(
-            "❌ Failed to create the post\.",
+            t("posts.create_failed", locale),
             parse_mode="MarkdownV2"
         )
         return
@@ -682,26 +714,24 @@ async def process_weekly_ai_prompt(update: Update, context: ContextTypes.DEFAULT
     """Generate AI content for the weekly plan."""
     context.user_data["awaiting"] = None
     weekly_plan = context.user_data.get("weekly_plan")
+    locale = get_user_locale(update.effective_user)
     if not weekly_plan:
         await update.message.reply_text(
-            "❌ Planning session expired\. Use /menu to start again\.",
+            t("weekly.expired", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
 
     generating_msg = await update.message.reply_text(
-        "🤖 *GENERATING*\n\n"
-        "⏳ Creating content with AI\.",
+        t("ai.generating", locale),
         parse_mode="MarkdownV2"
     )
 
     success, content, error = openai_service.generate_post(prompt)
     if not success:
         await generating_msg.edit_text(
-            f"🤖 *AI FAILED*\n\n"
-            f"❌ {escape_markdown_v2(error)}\n\n"
-            "Write the post manually\.",
+            t("ai.failed_weekly", locale, error=escape_markdown_v2(error)),
             parse_mode="MarkdownV2"
         )
         context.user_data["awaiting"] = "weekly_manual_content"
@@ -710,7 +740,7 @@ async def process_weekly_ai_prompt(update: Update, context: ContextTypes.DEFAULT
     post = PostService.create_post(content=content, created_by_ai=True, ai_prompt=prompt)
     if not post:
         await generating_msg.edit_text(
-            "❌ Failed to save the post\.",
+            t("posts.save_failed", locale),
             parse_mode="MarkdownV2"
         )
         return
@@ -756,43 +786,46 @@ async def _show_weekly_summary(message_or_query, context: ContextTypes.DEFAULT_T
         line = f"*{day}*: {time_list}"
         lines.append(line)
 
-    message = (
-        "✅ *REVIEW PLAN*\n\n"
-        f"Total posts: `{len(created)}`\n\n"
-        + "\n".join(lines)
+    locale = get_user_locale(message_or_query.from_user)
+    message = t(
+        "weekly.summary",
+        locale,
+        count=len(created),
+        lines="\n".join(lines),
     )
 
     if hasattr(message_or_query, "reply_text"):
         await message_or_query.reply_text(
             message,
             parse_mode="MarkdownV2",
-            reply_markup=get_plan_confirm_keyboard()
+            reply_markup=get_plan_confirm_keyboard(locale)
         )
     else:
         await message_or_query.edit_message_text(
             message,
             parse_mode="MarkdownV2",
-            reply_markup=get_plan_confirm_keyboard()
+            reply_markup=get_plan_confirm_keyboard(locale)
         )
 
 
 async def confirm_weekly_plan(query, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Schedule all posts in the weekly plan."""
     weekly_plan = context.user_data.get("weekly_plan")
+    locale = get_user_locale(query.from_user)
     if not weekly_plan:
         await query.edit_message_text(
-            "❌ Planning session expired\. Use /menu to start again\.",
+            t("weekly.expired", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
 
     scheduler_service = get_scheduler_service(context)
     if not scheduler_service:
         await query.edit_message_text(
-            "❌ Scheduler service not available\. Restart the bot\.",
+            t("posts.scheduler_unavailable", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
 
@@ -818,19 +851,19 @@ async def confirm_weekly_plan(query, context: ContextTypes.DEFAULT_TYPE) -> None
     context.user_data["awaiting"] = None
 
     if failed == 0:
-        message = f"✅ *SCHEDULED*\n\nAll posts scheduled: `{scheduled}`"
+        message = t("weekly.scheduled_all", locale, count=scheduled)
     else:
-        message = (
-            f"⚠️ *PARTIAL SCHEDULE*\n\n"
-            f"Scheduled: `{scheduled}`\n"
-            f"Failed: `{failed}`\n\n"
-            "Failed posts remain as drafts\."
+        message = t(
+            "weekly.scheduled_partial",
+            locale,
+            scheduled=scheduled,
+            failed=failed,
         )
 
     await query.edit_message_text(
         message,
         parse_mode="MarkdownV2",
-        reply_markup=get_back_keyboard()
+        reply_markup=get_back_keyboard(locale)
     )
 
 
@@ -844,35 +877,33 @@ async def cancel_weekly_plan(message_or_query, context: ContextTypes.DEFAULT_TYP
     context.user_data.pop("weekly_plan", None)
     context.user_data["awaiting"] = None
 
-    message = (
-        "🚫 *Cancelled*\n\n"
-        "Planning discarded\."
-    )
+    locale = get_user_locale(message_or_query.from_user)
+    message = t("weekly.cancelled", locale)
 
     if hasattr(message_or_query, "reply_text"):
         await message_or_query.reply_text(
             message,
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
     else:
         await message_or_query.edit_message_text(
             message,
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
 
 
 async def process_manual_post(update: Update, context: ContextTypes.DEFAULT_TYPE, content: str) -> None:
     """Process manually written post content."""
     context.user_data['awaiting'] = None
+    locale = get_user_locale(update.effective_user)
     
     if not content or len(content.strip()) == 0:
         await update.message.reply_text(
-            "⚠️ *EMPTY CONTENT*\n\n"
-            "Write something to create a post\\.",
+            t("posts.empty_content", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
@@ -881,9 +912,9 @@ async def process_manual_post(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     if not post:
         await update.message.reply_text(
-            "❌ Failed to create the post\\.",
+            t("posts.create_failed", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
@@ -895,21 +926,21 @@ async def process_edit_post(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     """Process edited post content."""
     context.user_data['awaiting'] = None
     post_id = context.user_data.pop('editing_post_id', None)
+    locale = get_user_locale(update.effective_user)
     
     if not post_id:
         await update.message.reply_text(
-            "❌ No post to edit\\.",
+            t("posts.no_post_to_edit", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
     if not content or len(content.strip()) == 0:
         await update.message.reply_text(
-            "⚠️ *EMPTY CONTENT*\n\n"
-            "Write something to update the post\\.",
+            t("posts.empty_content_update", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
@@ -918,14 +949,14 @@ async def process_edit_post(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     
     if not success:
         await update.message.reply_text(
-            "❌ Failed to update the post\\.",
+            t("posts.update_failed", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
     await update.message.reply_text(
-        "✅ *POST UPDATED*",
+        t("posts.updated", locale),
         parse_mode="MarkdownV2"
     )
     
@@ -936,16 +967,19 @@ async def process_edit_post(update: Update, context: ContextTypes.DEFAULT_TYPE, 
 async def handle_ai_with_topic(query, context: ContextTypes.DEFAULT_TYPE, topic_id: int) -> None:
     """Handle AI post generation with a topic preset."""
     topic = TopicService.get_topic_for_user(topic_id, query.from_user.id)
+    locale = get_user_locale(query.from_user)
     
     if not topic:
-        await query.answer("❌ Topic not found", show_alert=True)
+        await query.answer(t("topics.not_found_alert", locale), show_alert=True)
         return
     
     # Send "generating" message
     await query.edit_message_text(
-        f"🤖 *GENERATING*\n\n"
-        f"📝 Topic: `{escape_markdown_v2(topic.name)}`\n"
-        f"⏳ Creating content with AI\\.\\.",
+        t(
+            "ai.generating_topic",
+            locale,
+            topic=escape_markdown_v2(topic.name),
+        ),
         parse_mode="MarkdownV2"
     )
     
@@ -954,11 +988,9 @@ async def handle_ai_with_topic(query, context: ContextTypes.DEFAULT_TYPE, topic_
     
     if not success:
         await query.edit_message_text(
-            f"🤖 *AI FAILED*\n\n"
-            f"❌ {escape_markdown_v2(error)}\n\n"
-            f"Try again or choose a different topic\\.",
+            t("ai.failed_topic", locale, error=escape_markdown_v2(error)),
             parse_mode="MarkdownV2",
-            reply_markup=get_error_keyboard(show_retry=True)
+            reply_markup=get_error_keyboard(show_retry=True, locale=locale)
         )
         return
     
@@ -971,9 +1003,9 @@ async def handle_ai_with_topic(query, context: ContextTypes.DEFAULT_TYPE, topic_
     
     if not post:
         await query.edit_message_text(
-            "❌ Failed to save the post\\.",
+            t("posts.save_failed", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
@@ -984,11 +1016,11 @@ async def handle_ai_with_topic(query, context: ContextTypes.DEFAULT_TYPE, topic_
 async def process_ai_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE, prompt: str) -> None:
     """Process AI prompt and generate content."""
     context.user_data['awaiting'] = None
+    locale = get_user_locale(update.effective_user)
     
     # Send "generating" message
     generating_msg = await update.message.reply_text(
-        "🤖 *GENERATING*\n\n"
-        "⏳ Creating content with AI\\.\\.",
+        t("ai.generating", locale),
         parse_mode="MarkdownV2"
     )
     
@@ -997,11 +1029,9 @@ async def process_ai_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     
     if not success:
         await generating_msg.edit_text(
-            f"🤖 *AI FAILED*\n\n"
-            f"❌ {escape_markdown_v2(error)}\n\n"
-            f"Try a shorter or clearer prompt\\.",
+            t("ai.failed_prompt", locale, error=escape_markdown_v2(error)),
             parse_mode="MarkdownV2",
-            reply_markup=get_error_keyboard(show_retry=True)
+            reply_markup=get_error_keyboard(show_retry=True, locale=locale)
         )
         return
     
@@ -1014,9 +1044,9 @@ async def process_ai_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     
     if not post:
         await generating_msg.edit_text(
-            "❌ Failed to save the post\\.",
+            t("posts.save_failed", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
@@ -1028,19 +1058,20 @@ async def process_ai_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE, 
 async def show_post_preview(message, post_id: int) -> None:
     """Show preview of a post with action buttons."""
     post = PostService.get_post(post_id)
+    locale = get_user_locale(message.from_user)
     
     if not post:
         await message.reply_text(
-            "❌ Post not found\\.",
+            t("posts.not_found", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
     is_thread = post.is_thread()
     char_count = len(post.content)
     
-    media_label = "Image" if post.media_path else "None"
+    media_label = t("posts.media_image", locale) if post.media_path else t("posts.media_none", locale)
 
     if is_thread:
         tweets = split_into_tweets(post.content)
@@ -1053,64 +1084,63 @@ async def show_post_preview(message, post_id: int) -> None:
         if remaining > 0:
             thread_preview += f"\n\.\.\. \\+{remaining} more"
 
-        preview_message = (
-            f"🧵 *THREAD PREVIEW*\n\n"
-            f"*Summary*\n"
-            f"• Tweets: `{len(tweets)}`\n"
-            f"• Chars: `{char_count}`\n"
-            f"• Created: {'`AI`' if post.created_by_ai else '`Manual`'}\n"
-            f"• Media: `{media_label}`\n\n"
-            f"*Content*\n"
-            f"{thread_preview}\n\n"
-            f"Select an action:"
+        created_label = t("posts.created_ai", locale) if post.created_by_ai else t("posts.created_manual", locale)
+        preview_message = t(
+            "preview.thread",
+            locale,
+            tweets=len(tweets),
+            chars=char_count,
+            created=created_label,
+            media=media_label,
+            content=thread_preview,
         )
     else:
-        preview_message = (
-            f"👁️ *POST PREVIEW*\n\n"
-            f"*Summary*\n"
-            f"• Chars: `{char_count}/{MAX_TWEET_LENGTH}` {'✅' if char_count <= MAX_TWEET_LENGTH else '⚠️'}\n"
-            f"• Type: `Single`\n"
-            f"• Created: {'`AI`' if post.created_by_ai else '`Manual`'}\n"
-            f"• Media: `{media_label}`\n\n"
-            f"*Content*\n"
-            f"{escape_markdown_v2(post.content)}\n\n"
-            f"Select an action:"
+        created_label = t("posts.created_ai", locale) if post.created_by_ai else t("posts.created_manual", locale)
+        preview_message = t(
+            "preview.single",
+            locale,
+            chars=char_count,
+            max_chars=MAX_TWEET_LENGTH,
+            char_status="✅" if char_count <= MAX_TWEET_LENGTH else "⚠️",
+            post_type=t("posts.type_single", locale),
+            created=created_label,
+            media=media_label,
+            content=escape_markdown_v2(post.content),
         )
     
     await message.reply_text(
         preview_message,
         parse_mode="MarkdownV2",
-        reply_markup=get_post_preview_keyboard(post_id, is_thread)
+        reply_markup=get_post_preview_keyboard(post_id, is_thread, locale)
     )
 
 
 async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle publishing a post immediately."""
     post_id = int(query.data.split("_")[1])
+    locale = get_user_locale(query.from_user)
     
     post = PostService.get_post(post_id)
     if not post:
         await query.edit_message_text(
-            "❌ Post not found\\.",
+            t("posts.not_found", locale),
             parse_mode="MarkdownV2"
         )
         return
     
     # Update message to show publishing status
-        await query.edit_message_text(
-            "🚀 *PUBLISHING*\n\n"
-            "⏳ Posting to Twitter",
-            parse_mode="MarkdownV2"
-        )
+    await query.edit_message_text(
+        t("posts.publishing", locale),
+        parse_mode="MarkdownV2"
+    )
     
     # Publish based on post type
     if post.media_path:
         if post.is_thread():
             await query.edit_message_text(
-                "❌ *PUBLISH FAILED*\n\n"
-                "Media posts cannot be threads\.",
+                t("posts.media_thread_blocked", locale),
                 parse_mode="MarkdownV2",
-                reply_markup=get_back_keyboard()
+                reply_markup=get_back_keyboard(locale)
             )
             return
 
@@ -1125,12 +1155,15 @@ async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
             tweet_url = f"https://twitter.com/i/web/status/{tweet_id}"
 
             await query.edit_message_text(
-                f"✅ *PUBLISHED*\n\n"
-                f"• Post ID: `#{post_id}`\n"
-                f"• Tweet ID: `{tweet_id}`\n\n"
-                f"🔗 [View on Twitter]({escape_markdown_v2(tweet_url)})",
+                t(
+                    "posts.published",
+                    locale,
+                    post_id=post_id,
+                    tweet_id=tweet_id,
+                    tweet_url=escape_markdown_v2(tweet_url),
+                ),
                 parse_mode="MarkdownV2",
-                reply_markup=get_back_keyboard(),
+                reply_markup=get_back_keyboard(locale),
                 disable_web_page_preview=True
             )
         else:
@@ -1141,11 +1174,14 @@ async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
             )
 
             await query.edit_message_text(
-                f"❌ *PUBLISH FAILED*\n\n"
-                f"⚠️ {escape_markdown_v2(error or 'Unknown error')}\n\n"
-                f"Saved as `#{post_id}`\. You can retry\.",
+                t(
+                    "posts.publish_failed",
+                    locale,
+                    error=escape_markdown_v2(error or t("errors.unknown_error", locale)),
+                    post_id=post_id,
+                ),
                 parse_mode="MarkdownV2",
-                reply_markup=get_error_keyboard(show_retry=True)
+                reply_markup=get_error_keyboard(show_retry=True, locale=locale)
             )
         return
 
@@ -1164,12 +1200,15 @@ async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
             first_tweet_url = f"https://twitter.com/i/web/status/{tweet_ids[0]}"
             
             await query.edit_message_text(
-                f"✅ *THREAD PUBLISHED*\n\n"
-                f"• Tweets: `{len(tweet_ids)}`\n"
-                f"• Post ID: `#{post_id}`\n\n"
-                f"🔗 [View on Twitter]({escape_markdown_v2(first_tweet_url)})",
+                t(
+                    "posts.thread_published",
+                    locale,
+                    tweet_count=len(tweet_ids),
+                    post_id=post_id,
+                    tweet_url=escape_markdown_v2(first_tweet_url),
+                ),
                 parse_mode="MarkdownV2",
-                reply_markup=get_back_keyboard(),
+                reply_markup=get_back_keyboard(locale),
                 disable_web_page_preview=True
             )
         else:
@@ -1181,11 +1220,14 @@ async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
             )
             
             await query.edit_message_text(
-                f"❌ *PUBLISH FAILED*\n\n"
-                f"⚠️ {escape_markdown_v2(error or 'Unknown error')}\n\n"
-                f"Saved as `#{post_id}`\\. You can retry\\.",
+                t(
+                    "posts.publish_failed",
+                    locale,
+                    error=escape_markdown_v2(error or t("errors.unknown_error", locale)),
+                    post_id=post_id,
+                ),
                 parse_mode="MarkdownV2",
-                reply_markup=get_error_keyboard(show_retry=True)
+                reply_markup=get_error_keyboard(show_retry=True, locale=locale)
             )
     else:
         # Single tweet
@@ -1201,12 +1243,15 @@ async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
             tweet_url = f"https://twitter.com/i/web/status/{tweet_id}"
             
             await query.edit_message_text(
-                f"✅ *PUBLISHED*\n\n"
-                f"• Post ID: `#{post_id}`\n"
-                f"• Tweet ID: `{tweet_id}`\n\n"
-                f"🔗 [View on Twitter]({escape_markdown_v2(tweet_url)})",
+                t(
+                    "posts.published",
+                    locale,
+                    post_id=post_id,
+                    tweet_id=tweet_id,
+                    tweet_url=escape_markdown_v2(tweet_url),
+                ),
                 parse_mode="MarkdownV2",
-                reply_markup=get_back_keyboard(),
+                reply_markup=get_back_keyboard(locale),
                 disable_web_page_preview=True
             )
         else:
@@ -1217,33 +1262,35 @@ async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
             )
             
             await query.edit_message_text(
-                f"❌ *PUBLISH FAILED*\n\n"
-                f"⚠️ {escape_markdown_v2(error or 'Unknown error')}\n\n"
-                f"Saved as `#{post_id}`\\. You can retry\\.",
+                t(
+                    "posts.publish_failed",
+                    locale,
+                    error=escape_markdown_v2(error or t("errors.unknown_error", locale)),
+                    post_id=post_id,
+                ),
                 parse_mode="MarkdownV2",
-                reply_markup=get_error_keyboard(show_retry=True)
+                reply_markup=get_error_keyboard(show_retry=True, locale=locale)
             )
 
 
 async def handle_schedule_menu(query, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Show schedule options menu."""
     post_id = int(query.data.split("_")[1])
+    locale = get_user_locale(query.from_user)
     
-    schedule_message = (
-        "📅 *SCHEDULE POST*\n\n"
-        "Choose a time or enter a custom date\\."
-    )
+    schedule_message = t("posts.schedule_menu", locale)
     
     await query.edit_message_text(
         schedule_message,
         parse_mode="MarkdownV2",
-        reply_markup=get_schedule_keyboard(post_id)
+        reply_markup=get_schedule_keyboard(post_id, locale)
     )
 
 
 async def show_scheduled_posts(query, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Show list of scheduled posts."""
-    message, keyboard = build_scheduled_posts_list(page=0)
+    locale = get_user_locale(query.from_user)
+    message, keyboard = build_scheduled_posts_list(page=0, locale=locale)
     await query.edit_message_text(
         message,
         parse_mode="MarkdownV2",
@@ -1251,16 +1298,14 @@ async def show_scheduled_posts(query, context: ContextTypes.DEFAULT_TYPE) -> Non
     )
 
 
-def build_scheduled_posts_list(page: int = 0, per_page: int = 5):
+def build_scheduled_posts_list(page: int = 0, per_page: int = 5, locale: Optional[str] = None):
     """Build scheduled posts list message and keyboard."""
+    locale = locale or "en"
     scheduled = PostService.get_scheduled_posts()
 
     if not scheduled:
-        message = (
-            "📅 *NO SCHEDULED POSTS*\n\n"
-            "Create a post and choose Schedule to get started\\."
-        )
-        return message, get_back_keyboard()
+        message = t("scheduled.none", locale)
+        return message, get_back_keyboard(locale)
 
     posts_data = []
     for post, sched in scheduled:
@@ -1276,32 +1321,36 @@ def build_scheduled_posts_list(page: int = 0, per_page: int = 5):
     end = start + per_page
 
     posts_list = "\n\n".join([
-        f"📌 *Post \\#{pid}*\n"
-        f"{escape_markdown_v2(preview)}\n"
-        f"⏰ {escape_markdown_v2(format_datetime(scheduled_for))} \\({escape_markdown_v2(TZ)}\\)\n"
-        f"⏳ {escape_markdown_v2(format_relative_time(scheduled_for))}"
+        t(
+            "scheduled.item",
+            locale,
+            id=pid,
+            preview=escape_markdown_v2(preview),
+            datetime=escape_markdown_v2(format_datetime(scheduled_for)),
+            tz=escape_markdown_v2(TZ),
+            relative=escape_markdown_v2(format_relative_time(scheduled_for)),
+        )
         for pid, preview, scheduled_for in posts_data[start:end]
     ])
 
-    message = (
-        f"📅 *SCHEDULED POSTS* \\(`{count}`\\)\n\n"
-        f"{posts_list}\n\n"
-        f"Select a post to view details\\."
+    message = t(
+        "scheduled.list",
+        locale,
+        count=count,
+        posts=posts_list,
     )
 
-    return message, get_scheduled_posts_keyboard(posts_data, page=page, per_page=per_page)
+    return message, get_scheduled_posts_keyboard(posts_data, page=page, per_page=per_page, locale=locale)
 
 
-def build_drafts_list(page: int = 0, per_page: int = 5):
+def build_drafts_list(page: int = 0, per_page: int = 5, locale: Optional[str] = None):
     """Build drafts list message and keyboard."""
+    locale = locale or "en"
     drafts = PostService.get_draft_posts()
 
     if not drafts:
-        message = (
-            "📝 *NO DRAFTS*\n\n"
-            "Create a post and save it as a draft\\."
-        )
-        return message, get_back_keyboard()
+        message = t("drafts.none", locale)
+        return message, get_back_keyboard(locale)
 
     drafts_data = []
     for post in drafts:
@@ -1317,24 +1366,30 @@ def build_drafts_list(page: int = 0, per_page: int = 5):
     end = start + per_page
 
     drafts_list = "\n\n".join([
-        f"📝 *Draft \\#{pid}*\n"
-        f"{escape_markdown_v2(preview)}\n"
-        f"⏰ {escape_markdown_v2(format_datetime(created_at))} \\({escape_markdown_v2(TZ)}\\)"
+        t(
+            "drafts.item",
+            locale,
+            id=pid,
+            preview=escape_markdown_v2(preview),
+            datetime=escape_markdown_v2(format_datetime(created_at)),
+            tz=escape_markdown_v2(TZ),
+        )
         for pid, preview, created_at in drafts_data[start:end]
     ])
 
-    message = (
-        f"📝 *DRAFTS* \\(`{count}`\\)\n\n"
-        f"{drafts_list}\n\n"
-        f"Select a draft to view details\\."
+    message = t(
+        "drafts.list",
+        locale,
+        count=count,
+        drafts=drafts_list,
     )
-
-    return message, get_drafts_keyboard(drafts_data, page=page, per_page=per_page)
+    return message, get_drafts_keyboard(drafts_data, page=page, per_page=per_page, locale=locale)
 
 
 async def show_drafts(query, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Show list of drafts."""
-    message, keyboard = build_drafts_list(page=0)
+    locale = get_user_locale(query.from_user)
+    message, keyboard = build_drafts_list(page=0, locale=locale)
     await query.edit_message_text(
         message,
         parse_mode="MarkdownV2",
@@ -1347,7 +1402,8 @@ async def handle_preview_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
     post_id = int(query.data.split("_")[1])
     # Reuse the preview function
     # We need to create a fake message object for this
-    await query.edit_message_text("Loading preview...")
+    locale = get_user_locale(query.from_user)
+    await query.edit_message_text(t("posts.preview_loading", locale))
     # This is a workaround - in production you'd refactor this
     pass
 
@@ -1355,6 +1411,7 @@ async def handle_preview_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
 async def handle_delete_post(query, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle post deletion."""
     data = query.data
+    locale = get_user_locale(query.from_user)
     
     if data.startswith("confirm_delete_"):
         # Actually delete
@@ -1365,39 +1422,38 @@ async def handle_delete_post(query, context: ContextTypes.DEFAULT_TYPE) -> None:
         
         if success:
             await query.edit_message_text(
-                "✅ *POST DELETED*\n\n"
-                "Post removed\\.",
+                t("posts.delete_success", locale),
                 parse_mode="MarkdownV2",
-                reply_markup=get_back_keyboard()
+                reply_markup=get_back_keyboard(locale)
             )
         else:
             await query.edit_message_text(
-                "❌ Failed to delete the post\\.",
+                t("posts.delete_failed", locale),
                 parse_mode="MarkdownV2",
-                reply_markup=get_back_keyboard()
+                reply_markup=get_back_keyboard(locale)
             )
     else:
         # Show confirmation
         post_id = int(data.split("_")[1])
         
         await query.edit_message_text(
-            "⚠️ *CONFIRM DELETE*\n\n"
-            "This action cannot be undone\\.",
+            t("posts.delete_confirm", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_confirm_delete_keyboard(post_id)
+            reply_markup=get_confirm_delete_keyboard(post_id, locale=locale)
         )
 
 
 async def handle_edit_post(query, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle editing a post's content."""
     post_id = int(query.data.split("_")[1])
+    locale = get_user_locale(query.from_user)
     
     post = PostService.get_post(post_id)
     if not post:
         await query.edit_message_text(
-            "❌ Post not found\\.",
+            t("posts.not_found", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
@@ -1406,11 +1462,11 @@ async def handle_edit_post(query, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.user_data['awaiting'] = 'edit_post'
     
     await query.edit_message_text(
-        "✏️ *EDIT POST*\n\n"
-        f"*Current content*\n"
-        f"{escape_markdown_v2(post.content)}\n\n"
-        "Send the updated text\\.\n"
-        "Type /cancel to abort\\.",
+        t(
+            "posts.edit_prompt",
+            locale,
+            content=escape_markdown_v2(post.content),
+        ),
         parse_mode="MarkdownV2"
     )
 
@@ -1418,18 +1474,19 @@ async def handle_edit_post(query, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def show_post_preview_edit(query, post_id: int) -> None:
     """Show preview of a post with action buttons (for edit_message)."""
     post = PostService.get_post(post_id)
+    locale = get_user_locale(query.from_user)
     
     if not post:
         await query.edit_message_text(
-            "❌ Post not found\\.",
+            t("posts.not_found", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
     is_thread = post.is_thread()
     char_count = len(post.content)
-    media_label = "Image" if post.media_path else "None"
+    media_label = t("posts.media_image", locale) if post.media_path else t("posts.media_none", locale)
     
     if is_thread:
         tweets = split_into_tweets(post.content)
@@ -1442,34 +1499,34 @@ async def show_post_preview_edit(query, post_id: int) -> None:
         if remaining > 0:
             thread_preview += f"\n\.\.\. \\+{remaining} more"
 
-        preview_message = (
-            f"🧵 *THREAD PREVIEW*\n\n"
-            f"*Summary*\n"
-            f"• Tweets: `{len(tweets)}`\n"
-            f"• Chars: `{char_count}`\n"
-            f"• Created: {'`AI`' if post.created_by_ai else '`Manual`'}\n"
-            f"• Media: `{media_label}`\n\n"
-            f"*Content*\n"
-            f"{thread_preview}\n\n"
-            f"Select an action:"
+        created_label = t("posts.created_ai", locale) if post.created_by_ai else t("posts.created_manual", locale)
+        preview_message = t(
+            "preview.thread",
+            locale,
+            tweets=len(tweets),
+            chars=char_count,
+            created=created_label,
+            media=media_label,
+            content=thread_preview,
         )
     else:
-        preview_message = (
-            f"👁️ *POST PREVIEW*\n\n"
-            f"*Summary*\n"
-            f"• Chars: `{char_count}/{MAX_TWEET_LENGTH}` {'✅' if char_count <= MAX_TWEET_LENGTH else '⚠️'}\n"
-            f"• Type: `Single`\n"
-            f"• Created: {'`AI`' if post.created_by_ai else '`Manual`'}\n"
-            f"• Media: `{media_label}`\n\n"
-            f"*Content*\n"
-            f"{escape_markdown_v2(post.content)}\n\n"
-            f"Select an action:"
+        created_label = t("posts.created_ai", locale) if post.created_by_ai else t("posts.created_manual", locale)
+        preview_message = t(
+            "preview.single",
+            locale,
+            chars=char_count,
+            max_chars=MAX_TWEET_LENGTH,
+            char_status="✅" if char_count <= MAX_TWEET_LENGTH else "⚠️",
+            post_type=t("posts.type_single", locale),
+            created=created_label,
+            media=media_label,
+            content=escape_markdown_v2(post.content),
         )
     
     await query.edit_message_text(
         preview_message,
         parse_mode="MarkdownV2",
-        reply_markup=get_post_preview_keyboard(post_id, is_thread)
+        reply_markup=get_post_preview_keyboard(post_id, is_thread, locale)
     )
 
 
@@ -1479,26 +1536,27 @@ async def handle_quick_schedule(query, context: ContextTypes.DEFAULT_TYPE) -> No
     parts = data.split("_")
     post_id = int(parts[-1])
     schedule_type = parts[2]  # "1h", "3h", or "tomorrow"
+    locale = get_user_locale(query.from_user)
     
     # Work in user's timezone
     now_local = datetime.now(USER_TIMEZONE)
     
     if schedule_type == "1h":
         scheduled_time_local = now_local + timedelta(hours=1)
-        time_label = "in 1 hour"
+        time_label = t("posts.schedule_time_in_1h", locale)
     elif schedule_type == "3h":
         scheduled_time_local = now_local + timedelta(hours=3)
-        time_label = "in 3 hours"
+        time_label = t("posts.schedule_time_in_3h", locale)
     elif schedule_type == "tomorrow":
         # Tomorrow at 9:00 AM in user's timezone
         tomorrow = now_local + timedelta(days=1)
         scheduled_time_local = tomorrow.replace(hour=9, minute=0, second=0, microsecond=0)
-        time_label = "tomorrow at 9:00 AM"
+        time_label = t("posts.schedule_time_tomorrow_9am", locale)
     else:
         await query.edit_message_text(
-            "❌ Invalid schedule option\\.",
+            t("posts.schedule_invalid_option", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
@@ -1509,18 +1567,18 @@ async def handle_quick_schedule(query, context: ContextTypes.DEFAULT_TYPE) -> No
     post = PostService.get_post(post_id)
     if not post:
         await query.edit_message_text(
-            "❌ Post not found\\.",
+            t("posts.not_found", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
     scheduler_service = get_scheduler_service(context)
     if not scheduler_service:
         await query.edit_message_text(
-            "❌ Scheduler service not available\. Restart the bot\.",
+            t("posts.scheduler_unavailable", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
 
@@ -1536,33 +1594,34 @@ async def handle_quick_schedule(query, context: ContextTypes.DEFAULT_TYPE) -> No
         PostService.schedule_post(post_id, scheduled_time_utc, job_id)
         
         await query.edit_message_text(
-            f"✅ *POST SCHEDULED*\n\n"
-            f"⏰ {escape_markdown_v2(format_datetime(scheduled_time_local))} \\({escape_markdown_v2(TZ)}\\)\n"
-            f"⏳ {escape_markdown_v2(time_label)}",
+            t(
+                "posts.schedule_success",
+                locale,
+                datetime=escape_markdown_v2(format_datetime(scheduled_time_local)),
+                tz=escape_markdown_v2(TZ),
+                relative=escape_markdown_v2(time_label),
+            ),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
     else:
         await query.edit_message_text(
-            "❌ Failed to schedule the post\.",
+            t("posts.schedule_failed", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
 
 
 async def handle_custom_schedule_prompt(query, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Prompt user for custom schedule date/time."""
     post_id = int(query.data.split("_")[-1])
+    locale = get_user_locale(query.from_user)
     
     context.user_data['scheduling_post_id'] = post_id
     context.user_data['awaiting'] = 'custom_schedule'
     
     await query.edit_message_text(
-        f"📆 *CUSTOM SCHEDULE*\n\n"
-        f"Format: `YYYY\\-MM\\-DD HH:MM`\n"
-        f"Example: `2026\\-02\\-05 14:30`\n"
-        f"Timezone: `{escape_markdown_v2(TZ)}`\n\n"
-        f"Type /cancel to abort\\.",
+        t("posts.custom_schedule_prompt", locale, tz=escape_markdown_v2(TZ)),
         parse_mode="MarkdownV2"
     )
 
@@ -1571,12 +1630,13 @@ async def process_custom_schedule(update: Update, context: ContextTypes.DEFAULT_
     """Process custom schedule date input."""
     context.user_data['awaiting'] = None
     post_id = context.user_data.pop('scheduling_post_id', None)
+    locale = get_user_locale(update.effective_user)
     
     if not post_id:
         await update.message.reply_text(
-            "❌ No post to schedule\.",
+            t("posts.schedule_not_found", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
@@ -1588,10 +1648,9 @@ async def process_custom_schedule(update: Update, context: ContextTypes.DEFAULT_
         scheduled_time_utc = scheduled_time.astimezone(pytz.UTC)
     except ValueError:
         await update.message.reply_text(
-            "❌ *INVALID FORMAT*\n\n"
-            "Use: `YYYY\\-MM\\-DD HH:MM`\\.",
+            t("posts.invalid_datetime_format", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
@@ -1599,9 +1658,9 @@ async def process_custom_schedule(update: Update, context: ContextTypes.DEFAULT_
     now_local = datetime.now(USER_TIMEZONE)
     if scheduled_time <= now_local:
         await update.message.reply_text(
-            "❌ Scheduled time must be in the future\\.",
+            t("posts.schedule_time_past", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
@@ -1609,18 +1668,18 @@ async def process_custom_schedule(update: Update, context: ContextTypes.DEFAULT_
     post = PostService.get_post(post_id)
     if not post:
         await update.message.reply_text(
-            "❌ Post not found\\.",
+            t("posts.not_found", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
     scheduler_service = get_scheduler_service(context)
     if not scheduler_service:
         await update.message.reply_text(
-            "❌ Scheduler service not available\. Restart the bot\.",
+            t("posts.scheduler_unavailable", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
 
@@ -1637,29 +1696,34 @@ async def process_custom_schedule(update: Update, context: ContextTypes.DEFAULT_
         
         # Show confirmation with time in user's timezone
         await update.message.reply_text(
-            f"✅ *POST SCHEDULED*\n\n"
-            f"⏰ {escape_markdown_v2(format_datetime(scheduled_time))} \\({escape_markdown_v2(TZ)}\\)",
+            t(
+                "posts.schedule_success_simple",
+                locale,
+                datetime=escape_markdown_v2(format_datetime(scheduled_time)),
+                tz=escape_markdown_v2(TZ),
+            ),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
     else:
         await update.message.reply_text(
-            "❌ Failed to schedule the post\.",
+            t("posts.schedule_failed", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
 
 
 async def handle_view_scheduled_post(query, context: ContextTypes.DEFAULT_TYPE) -> None:
     """View details of a scheduled post."""
     post_id = int(query.data.split("_")[-1])
+    locale = get_user_locale(query.from_user)
     
     post = PostService.get_post(post_id)
     if not post or not post.scheduled_post:
         await query.edit_message_text(
-            "❌ Scheduled post not found\\.",
+            t("posts.scheduled_not_found", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
@@ -1670,15 +1734,16 @@ async def handle_view_scheduled_post(query, context: ContextTypes.DEFAULT_TYPE) 
     scheduled_for_local = scheduled_for_utc.astimezone(USER_TIMEZONE)
     
     await query.edit_message_text(
-        f"📅 *SCHEDULED POST*\n\n"
-        f"*Content*\n"
-        f"{escape_markdown_v2(truncate_text(post.content, 200))}\n\n"
-        f"*Schedule*\n"
-        f"⏰ {escape_markdown_v2(format_datetime(scheduled_for_local))} \\({escape_markdown_v2(TZ)}\\)\n"
-        f"⏳ {escape_markdown_v2(format_relative_time(scheduled_for_local))}\n\n"
-        f"Select an action:",
+        t(
+            "posts.scheduled_view",
+            locale,
+            content=escape_markdown_v2(truncate_text(post.content, 200)),
+            datetime=escape_markdown_v2(format_datetime(scheduled_for_local)),
+            tz=escape_markdown_v2(TZ),
+            relative=escape_markdown_v2(format_relative_time(scheduled_for_local)),
+        ),
         parse_mode="MarkdownV2",
-        reply_markup=get_scheduled_post_actions_keyboard(post_id)
+        reply_markup=get_scheduled_post_actions_keyboard(post_id, locale)
     )
 
 
@@ -1686,7 +1751,8 @@ async def handle_scheduled_page(query, context: ContextTypes.DEFAULT_TYPE) -> No
     """Handle pagination for scheduled posts."""
     page = int(query.data.split("_")[-1])
 
-    message, keyboard = build_scheduled_posts_list(page=page)
+    locale = get_user_locale(query.from_user)
+    message, keyboard = build_scheduled_posts_list(page=page, locale=locale)
     await query.edit_message_text(
         message,
         parse_mode="MarkdownV2",
@@ -1697,7 +1763,8 @@ async def handle_scheduled_page(query, context: ContextTypes.DEFAULT_TYPE) -> No
 async def handle_drafts_page(query, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle pagination for drafts list."""
     page = int(query.data.split("_")[-1])
-    message, keyboard = build_drafts_list(page=page)
+    locale = get_user_locale(query.from_user)
+    message, keyboard = build_drafts_list(page=page, locale=locale)
     await query.edit_message_text(
         message,
         parse_mode="MarkdownV2",
@@ -1708,16 +1775,13 @@ async def handle_drafts_page(query, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def handle_reschedule_prompt(query, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Prompt user to reschedule a post."""
     post_id = int(query.data.split("_")[-1])
+    locale = get_user_locale(query.from_user)
     
     context.user_data['rescheduling_post_id'] = post_id
     context.user_data['awaiting'] = 'reschedule'
     
     await query.edit_message_text(
-        f"📆 *RESCHEDULE POST*\n\n"
-        f"Format: `YYYY\\-MM\\-DD HH:MM`\n"
-        f"Example: `2026\\-02\\-05 14:30`\n"
-        f"Timezone: `{escape_markdown_v2(TZ)}`\n\n"
-        f"Type /cancel to abort\\.",
+        t("posts.reschedule_prompt", locale, tz=escape_markdown_v2(TZ)),
         parse_mode="MarkdownV2"
     )
 
@@ -1726,12 +1790,13 @@ async def process_reschedule(update: Update, context: ContextTypes.DEFAULT_TYPE,
     """Process reschedule date input."""
     context.user_data['awaiting'] = None
     post_id = context.user_data.pop('rescheduling_post_id', None)
+    locale = get_user_locale(update.effective_user)
     
     if not post_id:
         await update.message.reply_text(
-            "❌ No post to reschedule\.",
+            t("posts.reschedule_not_found", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
@@ -1743,10 +1808,9 @@ async def process_reschedule(update: Update, context: ContextTypes.DEFAULT_TYPE,
         new_time_utc = new_time_local.astimezone(pytz.UTC)
     except ValueError:
         await update.message.reply_text(
-            "❌ *INVALID FORMAT*\n\n"
-            "Use: `YYYY\\-MM\\-DD HH:MM`\\.",
+            t("posts.invalid_datetime_format", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
@@ -1754,9 +1818,9 @@ async def process_reschedule(update: Update, context: ContextTypes.DEFAULT_TYPE,
     now_local = datetime.now(USER_TIMEZONE)
     if new_time_local <= now_local:
         await update.message.reply_text(
-            "❌ Scheduled time must be in the future\\.",
+            t("posts.schedule_time_past", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
@@ -1764,9 +1828,9 @@ async def process_reschedule(update: Update, context: ContextTypes.DEFAULT_TYPE,
     post = PostService.get_post(post_id)
     if not post or not post.scheduled_post:
         await update.message.reply_text(
-            "❌ Scheduled post not found\\.",
+            t("posts.scheduled_not_found", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
     
@@ -1775,9 +1839,9 @@ async def process_reschedule(update: Update, context: ContextTypes.DEFAULT_TYPE,
     scheduler_service = get_scheduler_service(context)
     if not scheduler_service:
         await update.message.reply_text(
-            "❌ Scheduler service not available\. Restart the bot\.",
+            t("posts.scheduler_unavailable", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
         return
 
@@ -1790,14 +1854,18 @@ async def process_reschedule(update: Update, context: ContextTypes.DEFAULT_TYPE,
         
         # Show confirmation with time in user's timezone
         await update.message.reply_text(
-            f"✅ *POST RESCHEDULED*\n\n"
-            f"⏰ {escape_markdown_v2(format_datetime(new_time_local))} \\({escape_markdown_v2(TZ)}\\)",
+            t(
+                "posts.reschedule_success",
+                locale,
+                datetime=escape_markdown_v2(format_datetime(new_time_local)),
+                tz=escape_markdown_v2(TZ),
+            ),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )
     else:
         await update.message.reply_text(
-            "❌ Failed to reschedule the post\.",
+            t("posts.reschedule_failed", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_back_keyboard()
+            reply_markup=get_back_keyboard(locale)
         )

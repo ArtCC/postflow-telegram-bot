@@ -13,7 +13,7 @@ from telegram.ext import (
     filters,
 )
 
-from bot.utils import is_authorized, escape_markdown_v2, get_topics_menu_keyboard
+from bot.utils import is_authorized, escape_markdown_v2, get_topics_menu_keyboard, get_user_locale, t
 from bot.services.post_service import PostService
 from bot.services.topic_service import TopicService
 
@@ -38,10 +38,9 @@ async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     context.user_data.clear()
     
+    locale = get_user_locale(update.effective_user)
     await update.message.reply_text(
-        "🚫 *Cancelled*\n\n"
-        "Operation cancelled\\.\n"
-        "Use /menu to start again\\.",
+        t("conversation.cancelled", locale),
         parse_mode="MarkdownV2"
     )
     
@@ -75,14 +74,9 @@ async def prompt_add_topic(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     from bot.services.topic_service import MIN_TOPIC_NAME_LENGTH, MAX_TOPIC_NAME_LENGTH
 
     query = update.callback_query
+    locale = get_user_locale(query.from_user)
     await query.edit_message_text(
-        f"➕ *ADD TOPIC*\n\n"
-        f"Enter a topic name \\({MIN_TOPIC_NAME_LENGTH}\\-{MAX_TOPIC_NAME_LENGTH} characters\\):\n\n"
-        f"Examples:\n"
-        f"• `Python Programming`\n"
-        f"• `AI & Machine Learning`\n"
-        f"• `Tech News`\n\n"
-        f"Type /cancel to abort\\.",
+        t("topics.add_prompt", locale, min=MIN_TOPIC_NAME_LENGTH, max=MAX_TOPIC_NAME_LENGTH),
         parse_mode="MarkdownV2"
     )
 
@@ -100,22 +94,19 @@ async def add_topic_receive_name(update: Update, context: ContextTypes.DEFAULT_T
     
     # Create the topic
     success, topic, error_msg = TopicService.create_topic(user_id, topic_name)
+    locale = get_user_locale(update.effective_user)
     
     if success:
         await update.message.reply_text(
-            f"✅ *Topic Added*\n\n"
-            f"Topic `{escape_markdown_v2(topic.name)}` has been added to your presets\\.\n\n"
-            f"You can now use it when creating AI posts\\.",
+            t("topics.added", locale, name=escape_markdown_v2(topic.name)),
             parse_mode="MarkdownV2",
-            reply_markup=get_topics_menu_keyboard(user_id)
+            reply_markup=get_topics_menu_keyboard(user_id, locale)
         )
     else:
         await update.message.reply_text(
-            f"❌ *Error*\n\n"
-            f"{escape_markdown_v2(error_msg)}\n\n"
-            f"Please try again\\.",
+            t("topics.add_error", locale, error=escape_markdown_v2(error_msg)),
             parse_mode="MarkdownV2",
-            reply_markup=get_topics_menu_keyboard(user_id)
+            reply_markup=get_topics_menu_keyboard(user_id, locale)
         )
     
     return ConversationHandler.END

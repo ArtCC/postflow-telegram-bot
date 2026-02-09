@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.7] - 2026-02-09
+
+### Added
+- **Internationalization**: i18n helpers with locale detection and English fallback
+- **English locale**: Centralized UI strings in `bot/locales/en.json`
+- **Contributing guide**: New `CONTRIBUTING.md` with setup and i18n notes
+
+### Changed
+- **UI text**: Commands, callbacks, keyboards, and post flows now use i18n keys
+- **README**: Updated documentation to reference localization and contributing guide
+
 ## [0.0.6] - 2026-02-05
 
 ### Added
@@ -101,6 +112,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[0.0.7]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.3...v0.0.4

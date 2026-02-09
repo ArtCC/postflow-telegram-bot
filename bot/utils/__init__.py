@@ -33,6 +33,7 @@ from bot.utils.keyboards import (
     get_topics_delete_all_confirm_keyboard,
     get_ai_with_topics_keyboard,
 )
+from bot.utils.i18n import get_user_locale, t
 
 __all__ = [
     'is_authorized',
@@ -61,4 +62,6 @@ __all__ = [
     'get_topic_delete_confirm_keyboard',
     'get_topics_delete_all_confirm_keyboard',
     'get_ai_with_topics_keyboard',
+    'get_user_locale',
+    't',
 ]

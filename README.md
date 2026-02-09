@@ -30,6 +30,7 @@ A powerful Telegram bot for managing and scheduling social media posts with AI s
 - 🖼️ **Image Posts** - Publish posts with a single attached image
 - 💾 **Persistent Storage** - SQLite database for reliability
 - 🎨 **Beautiful UI** - Interactive menus and inline buttons
+- 🌐 **Localization Ready** - i18n support with English fallback
 
 ## 📋 Prerequisites
 
@@ -311,6 +312,10 @@ When a scheduled post is published (or fails), you'll receive a notification:
 - `/author` - About the author
 - `/cancel` - Cancel current operation
 
+### Internationalization
+
+The bot uses your Telegram `language_code` and falls back to English when a locale is not available.
+
 ### 📊 Statistics & Monitoring
 
 The bot tracks:
@@ -369,6 +374,8 @@ postflow-telegram-bot/
 │   │   ├── callbacks.py       # Button callback handlers
 │   │   ├── posts.py           # Post management logic
 │   │   └── conversations.py   # Multi-step conversations
+│   ├── locales/
+│   │   └── en.json             # UI strings
 │   ├── services/
 │   │   ├── __init__.py
 │   │   ├── twitter_service.py # Twitter API integration
@@ -380,6 +387,7 @@ postflow-telegram-bot/
 │       ├── __init__.py
 │       ├── auth.py            # Authorization helpers
 │       ├── formatting.py      # Text formatting utilities
+│       ├── i18n.py             # Localization helpers
 │       └── keyboards.py       # Telegram keyboard builders
 ├── data/                      # SQLite database (volume)
 ├── .env                       # Environment variables (not in git)
@@ -591,20 +599,14 @@ sudo chmod -R 755 ./data
 - [x] Weekly planning wizard (rolling 7-day window)
 - [x] Support for images in posts
 - [x] Topic presets for AI random post generation
+- [x] Additional locales (i18n)
 - [ ] Publication calendar with weekly view
 - [ ] Post templates
-- [ ] Multi-language bot UI
 - [ ] Multi-platform support (Instagram, LinkedIn, Facebook, etc.)
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) for setup, conventions, and i18n guidelines.
 
 ## 🎨 Bot Avatar
 
@@ -643,6 +645,6 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 ---
 
 <p align="left">
-  <sub>100% built with GitHub Copilot (Claude Opus 4.5)</sub><br>
+  <sub>100% built with GitHub Copilot (GPT-5.2-Codex)</sub><br>
   <sub>Arturo Carretero Calvo — 2026</sub>
 </p>
