@@ -20,10 +20,9 @@ A powerful Telegram bot for managing and scheduling social media posts with AI s
 - 🌍 **Timezone Support** - Configure your local timezone for scheduling
 - 🔔 **Notifications** - Get notified when scheduled posts are published
 - 🧵 **Auto Thread Creation** - Automatically splits long posts into threads (respects 280 char limit)
-🔗 View on X
 - 🎯 **Topic Presets** - Save favorite topics for quick AI post generation
 - 🔒 **Secure & Private** - Self-hosted, only you have access
- You need at least **Basic** access tier from X's Developer Portal to post. The Free tier has very limited posting capabilities.
+- 🐳 **Docker Ready** - Easy deployment with docker-compose
 - 📊 **Statistics** - Track your posting performance
 - 📝 **Drafts** - Save posts and finish later
 - 📆 **Weekly Planning** - Plan up to 7 days with multiple slots per day
@@ -37,27 +36,32 @@ A powerful Telegram bot for managing and scheduling social media posts with AI s
 
 - Docker and Docker Compose installed
 - A Telegram Bot Token from [@BotFather](https://t.me/botfather)
-- Twitter/X Developer Account with API credentials
-│   │   ├── commands.py        # Command handlers
-│   │   ├── callbacks.py       # Button callback handlers
-│   │   ├── posts.py           # Post management logic
-│   │   └── conversations.py   # Multi-step conversations
+- X Developer Account with API credentials
+- (Optional) OpenAI API key for AI features
+
+## 🚀 Quick Start
+
 ### 1. Get Your Telegram User ID
 
-1. Start a conversation with [@userinfobot](https://t.me/userinfobot) on Telegram
-2. It will reply with your User ID (a number like `123456789`)
-3. Save this number for the configuration
-│   │   ├── twitter_service.py # X API integration
-│   │   ├── openai_service.py  # OpenAI API integration
-│   │   │ 
-│   │   ├── post_service.py    # Post business logic
-│   │   └── topic_service.py   # Topic presets management
+- Open a chat with [@userinfobot](https://t.me/userinfobot)
+- It replies with your User ID
+- Copy the number into `TELEGRAM_USER_ID`
+
+Example reply:
+```
+Your user ID: 123456789
+```
+
+### 2. Get X API Credentials
+
+1. Go to [developer.twitter.com](https://developer.twitter.com)
+2. Create a new app or use existing one
 3. Generate API keys and access tokens
 4. You'll need:
-│       ├── auth.py            # Authorization helpers
-│       ├── formatting.py      # Text formatting utilities
-│       ├── i18n.py            # Localization helpers
-│       └── keyboards.py       # Telegram keyboard builders
+  - API Key
+  - API Secret
+  - Access Token
+  - Access Token Secret
 
 ### 3. Clone the Repository
 
