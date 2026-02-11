@@ -46,20 +46,20 @@
     "deleted_all_alert": "✅ Deleted {count} topic(s)"
   },
   "templates": {
-    "menu": "🧩 *TEMPLATES*\n\nManage your reusable post templates\.\n\n📊 *Usage:* `{count}/{max}` templates\n\nChoose an option below\.",
-    "list_empty": "📋 *TEMPLATES LIST*\n\nYou don't have any templates yet\.\nAdd one to get started\!",
-    "list_title": "📋 *TEMPLATES LIST*\n\nYour templates \({count}/{max}\):\n\n{templates}\n\nClick a template to view details\.",
+    "menu": "🧩 *TEMPLATES*\n\nManage your reusable post templates\\.\n\n📊 *Usage:* `{count}/{max}` templates\n\nChoose an option below\\.",
+    "list_empty": "📋 *TEMPLATES LIST*\n\nYou don't have any templates yet\\.\nAdd one to get started\\!",
+    "list_title": "📋 *TEMPLATES LIST*\n\nYour templates \\({count}/{max}\\):\n\n{templates}\n\nClick a template to view details\\.",
     "details": "🧩 *TEMPLATE DETAILS*\n\n*Name:* `{name}`\n*Created:* {created}\n*Updated:* {updated}\n\n*Content*\n{content}",
-    "delete_empty": "🗑️ *DELETE TEMPLATE*\n\nYou don't have any templates to delete\.",
+    "delete_empty": "🗑️ *DELETE TEMPLATE*\n\nYou don't have any templates to delete\\.",
     "delete_select": "🗑️ *DELETE TEMPLATE*\n\nSelect a template to delete:",
-    "delete_confirm": "🗑️ *DELETE TEMPLATE*\n\nAre you sure you want to delete:\n`{name}`\n\nThis action cannot be undone\.",
-    "deleted_empty": "✅ *TEMPLATE DELETED*\n\nNo more templates left\.",
-    "delete_all_confirm": "🗑️ *DELETE ALL TEMPLATES*\n\n⚠️ Are you sure you want to delete ALL templates?\n\nThis action cannot be undone\.",
-    "add_prompt_name": "➕ *ADD TEMPLATE*\n\nEnter a template name \({min}\-{max} characters\):\n\nExamples:\n• `Product launch`\n• `Weekly update`\n\nType /cancel to abort\.",
-    "add_prompt_content": "📝 *TEMPLATE CONTENT*\n\n*Template:* `{name}`\n\nSend the content for this template\.\nTip: long posts become threads\.\nType /cancel to abort\.",
-    "added": "✅ *Template Added*\n\nTemplate `{name}` has been added\.",
-    "add_error": "❌ *Error*\n\n{error}\n\nPlease try again\.",
-    "edit_prompt": "✏️ *EDIT TEMPLATE*\n\n*Template:* `{name}`\n\n*Current content*\n{content}\n\nSend the updated content\.\nType /cancel to abort\.",
+    "delete_confirm": "🗑️ *DELETE TEMPLATE*\n\nAre you sure you want to delete:\n`{name}`\n\nThis action cannot be undone\\.",
+    "deleted_empty": "✅ *TEMPLATE DELETED*\n\nNo more templates left\\.",
+    "delete_all_confirm": "🗑️ *DELETE ALL TEMPLATES*\n\n⚠️ Are you sure you want to delete ALL templates?\n\nThis action cannot be undone\\.",
+    "add_prompt_name": "➕ *ADD TEMPLATE*\n\nEnter a template name \\({min}\\-{max} characters\\):\n\nExamples:\n• `Product launch`\n• `Weekly update`\n\nType /cancel to abort\\.",
+    "add_prompt_content": "📝 *TEMPLATE CONTENT*\n\n*Template:* `{name}`\n\nSend the content for this template\\.\nTip: long posts become threads\\.\nType /cancel to abort\\.",
+    "added": "✅ *Template Added*\n\nTemplate `{name}` has been added\\.",
+    "add_error": "❌ *Error*\n\n{error}\n\nPlease try again\\.",
+    "edit_prompt": "✏️ *EDIT TEMPLATE*\n\n*Template:* `{name}`\n\n*Current content*\n{content}\n\nSend the updated content\\.\nType /cancel to abort\\.",
     "updated": "✅ *TEMPLATE UPDATED*",
     "update_error": "❌ *UPDATE FAILED*\n\n{error}",
     "use_title": "🧩 *USE TEMPLATE*\n\nSelect a template to create a post:",
@@ -195,7 +195,7 @@
     "cancelled": "🚫 *Cancelled*\n\nOperation cancelled\\.\nUse /menu to start again\\."
   },
   "help": {
-    "message": "ℹ️ *HELP*\n\n*Commands*\n• `/start` \\- Welcome\n• `/menu` \\- Main menu\n• `/new` \\- New post\n• `/plan` \\- Plan week\n• `/topics` \\- Manage topics\n• `/drafts` \\- Drafts\n• `/scheduled` \\- Scheduled posts\n• `/stats` \\- Statistics\n• `/status` \\- System status\n• `/settings` \\- Settings\n• `/chatid` \\- Your user ID\n• `/help` \\- Help\n• `/author` \\- About the author\n• `/cancel` \\- Cancel\n\n*Highlights*\n• Manual or AI posts\n• Topic presets for AI\n• Scheduling\n• Threads for long posts\n• Stats overview""message": "ℹ️ *HELP*\n\n*Commands*\n• `/start` \\- Welcome\n• `/menu` \\- Main menu\n• `/new` \\- New post\n• `/plan` \\- Plan week\n• `/topics` \\- Manage topics\n• `/templates` \\- Manage templates\n• `/drafts` \\- Drafts\n• `/scheduled` \\- Scheduled posts\n• `/stats` \\- Statistics\n• `/status` \\- System status\n• `/settings` \\- Settings\n• `/chatid` \\- Your user ID\n• `/help` \\- Help\n• `/author` \\- About the author\n• `/cancel` \\- Cancel\n\n*Highlights*\n• Manual or AI posts\n• Topic presets for AI\n• Templates for quick posts\n• Scheduling\n• Threads for long posts\n• Stats overview"
+    "message": "ℹ️ *HELP*\n\n*Commands*\n• `/start` \\- Welcome\n• `/menu` \\- Main menu\n• `/new` \\- New post\n• `/plan` \\- Plan week\n• `/topics` \\- Manage topics\n• `/templates` \\- Manage templates\n• `/drafts` \\- Drafts\n• `/scheduled` \\- Scheduled posts\n• `/stats` \\- Statistics\n• `/status` \\- System status\n• `/settings` \\- Settings\n• `/chatid` \\- Your user ID\n• `/help` \\- Help\n• `/author` \\- About the author\n• `/cancel` \\- Cancel\n\n*Highlights*\n• Manual or AI posts\n• Topic presets for AI\n• Templates for quick posts\n• Scheduling\n• Threads for long posts\n• Stats overview"
   },
   "commands": {
     "start": "Welcome message and authorization check",
