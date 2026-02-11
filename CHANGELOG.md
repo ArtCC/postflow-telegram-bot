@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.9] - 2026-02-11
+
+### Added
+- **German locale**: Added `de` translations
+- **French locale**: Added `fr` translations
+
+### Fixed
+- **Templates navigation**: Back action from empty template lists now returns to templates menu
+- **Scheduling cleanup**: Scheduler jobs are canceled when deleting scheduled posts
+- **Relative time**: Scheduled post timestamps now use timezone-aware calculations
+- **Drafts menu**: Drafts button label now uses the correct i18n key
+- **MarkdownV2**: Escaped new menu/help strings in locales
+
 ## [0.0.8] - 2026-02-11
 
 ### Added
@@ -129,6 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[0.0.9]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.5...v0.0.6

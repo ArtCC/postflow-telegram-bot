@@ -403,8 +403,10 @@ postflow-telegram-bot/
 │   │   ├── posts.py           # Post management logic
 │   │   └── conversations.py   # Multi-step conversations
 │   ├── locales/
+│   │   ├── de.json            # UI strings
 │   │   ├── en.json            # UI strings
 │   │   └── es.json            # UI strings
+│   │   ├── fr.json            # UI strings
 │   │   └── it.json            # UI strings
 │   ├── services/
 │   │   ├── __init__.py
