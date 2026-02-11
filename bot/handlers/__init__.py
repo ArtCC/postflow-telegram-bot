@@ -17,12 +17,14 @@ from bot.handlers.commands import (
     stats_command,
     status_command,
     topics_command,
+    templates_command,
 )
 from bot.handlers.callbacks import handle_callback
 from bot.handlers.conversations import (
     post_conversation_handler,
     schedule_conversation_handler,
     topic_conversation_handler,
+    template_conversation_handler,
 )
 
 __all__ = [
@@ -39,8 +41,10 @@ __all__ = [
     'stats_command',
     'status_command',
     'topics_command',
+    'templates_command',
     'handle_callback',
     'post_conversation_handler',
     'schedule_conversation_handler',
     'topic_conversation_handler',
+    'template_conversation_handler',
 ]

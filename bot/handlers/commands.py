@@ -7,11 +7,22 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.config import logger, TELEGRAM_USER_ID, TWITTER_ENABLED, OPENAI_ENABLED
-from bot.utils import is_authorized, escape_markdown_v2, get_main_menu_keyboard, get_back_keyboard, get_new_post_keyboard, get_topics_menu_keyboard, get_user_locale, t
+from bot.utils import (
+    is_authorized,
+    escape_markdown_v2,
+    get_main_menu_keyboard,
+    get_back_keyboard,
+    get_new_post_keyboard,
+    get_topics_menu_keyboard,
+    get_templates_menu_keyboard,
+    get_user_locale,
+    t,
+)
 from bot.services.post_service import PostService
 from bot.services.twitter_service import TwitterService
 from bot.services.openai_service import OpenAIService
 from bot.services.topic_service import TopicService
+from bot.services.template_service import TemplateService
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -378,5 +389,34 @@ async def topics_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         topics_message,
         parse_mode="MarkdownV2",
         reply_markup=get_topics_menu_keyboard(user_id, locale)
+    )
+
+
+async def templates_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /templates command."""
+    user_id = update.effective_user.id
+    locale = get_user_locale(update.effective_user)
+
+    if not is_authorized(user_id):
+        await update.message.reply_text(
+            t("errors.not_authorized_md", locale),
+            parse_mode="MarkdownV2"
+        )
+        return
+
+    template_count = TemplateService.get_template_count(user_id)
+    from bot.services.template_service import MAX_TEMPLATES_PER_USER
+
+    templates_message = t(
+        "templates.menu",
+        locale,
+        count=template_count,
+        max=MAX_TEMPLATES_PER_USER,
+    )
+
+    await update.message.reply_text(
+        templates_message,
+        parse_mode="MarkdownV2",
+        reply_markup=get_templates_menu_keyboard(user_id, locale)
     )
 

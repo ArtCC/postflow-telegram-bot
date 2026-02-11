@@ -37,6 +37,7 @@ from bot.services.twitter_service import TwitterService
 from bot.services.openai_service import OpenAIService
 from bot.services.scheduler_service import SchedulerService
 from bot.services.topic_service import TopicService
+from bot.services.template_service import TemplateService
 from bot.database import PostStatus
 import pytz
 import os
@@ -1012,6 +1013,28 @@ async def handle_ai_with_topic(query, context: ContextTypes.DEFAULT_TYPE, topic_
         return
     
     # Show preview
+    await show_post_preview_edit(query, post.id)
+
+
+async def create_post_from_template(query, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Create a post from a template and show preview."""
+    template_id = int(query.data.split("_")[-1])
+    locale = get_user_locale(query.from_user)
+
+    template = TemplateService.get_template_for_user(template_id, query.from_user.id)
+    if not template:
+        await query.answer(t("templates.not_found_alert", locale), show_alert=True)
+        return
+
+    post = PostService.create_post(content=template.content, created_by_ai=False)
+    if not post:
+        await query.edit_message_text(
+            t("posts.create_failed", locale),
+            parse_mode="MarkdownV2",
+            reply_markup=get_back_keyboard(locale)
+        )
+        return
+
     await show_post_preview_edit(query, post.id)
 
 

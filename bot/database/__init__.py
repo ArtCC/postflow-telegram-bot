@@ -4,7 +4,7 @@ SQLAlchemy models and database management.
 """
 
 from bot.database.database import init_db, get_session, Session
-from bot.database.models import Post, Thread, ScheduledPost, PostStatus
+from bot.database.models import Post, Thread, ScheduledPost, PostStatus, Template
 
 __all__ = [
     'init_db',
@@ -14,4 +14,5 @@ __all__ = [
     'Thread',
     'ScheduledPost',
     'PostStatus',
+    'Template',
 ]

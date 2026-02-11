@@ -22,6 +22,9 @@ def get_main_menu_keyboard(locale: Optional[str] = None) -> InlineKeyboardMarkup
         ],
         [
             InlineKeyboardButton(t("buttons.topics", locale), callback_data="topics_menu"),
+            InlineKeyboardButton(t("buttons.templates", locale), callback_data="templates_menu"),
+        ],
+        [
             InlineKeyboardButton(t("buttons.status", locale), callback_data="status"),
         ],
     ]
@@ -40,6 +43,7 @@ def get_new_post_keyboard(locale: Optional[str] = None) -> InlineKeyboardMarkup:
     locale = locale or DEFAULT_LOCALE
     keyboard = [
         [InlineKeyboardButton(t("buttons.plan_week", locale), callback_data="plan_week")],
+        [InlineKeyboardButton(t("buttons.templates", locale), callback_data="post_template")],
         [InlineKeyboardButton(t("buttons.image", locale), callback_data="post_image")],
         [InlineKeyboardButton(t("buttons.write_manual", locale), callback_data="post_manual")],
     ]
@@ -50,6 +54,119 @@ def get_new_post_keyboard(locale: Optional[str] = None) -> InlineKeyboardMarkup:
         keyboard.insert(0, [InlineKeyboardButton(t("buttons.ai", locale), callback_data="post_ai")])
     
     keyboard.append([InlineKeyboardButton(t("buttons.back", locale), callback_data="menu")])
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_templates_menu_keyboard(user_id: int, locale: Optional[str] = None) -> InlineKeyboardMarkup:
+    """Create keyboard for templates management menu."""
+    locale = locale or DEFAULT_LOCALE
+    from bot.services.template_service import TemplateService, MAX_TEMPLATES_PER_USER
+
+    has_max = TemplateService.has_reached_max_templates(user_id)
+    template_count = TemplateService.get_template_count(user_id)
+
+    keyboard = []
+
+    if has_max:
+        keyboard.append([InlineKeyboardButton(t("buttons.add_template_max", locale, max=MAX_TEMPLATES_PER_USER), callback_data="templates_add_disabled")])
+    else:
+        keyboard.append([InlineKeyboardButton(t("buttons.add_template", locale), callback_data="templates_add")])
+
+    if template_count > 0:
+        keyboard.append([InlineKeyboardButton(t("buttons.list_templates", locale, count=template_count), callback_data="templates_list")])
+        keyboard.append([InlineKeyboardButton(t("buttons.use_template", locale), callback_data="templates_use")])
+        keyboard.append([InlineKeyboardButton(t("buttons.delete_template", locale), callback_data="templates_delete")])
+        keyboard.append([InlineKeyboardButton(t("buttons.delete_all", locale), callback_data="templates_delete_all")])
+    else:
+        keyboard.append([InlineKeyboardButton(t("buttons.list_templates", locale, count=0), callback_data="templates_list_empty")])
+        keyboard.append([InlineKeyboardButton(t("buttons.use_template", locale), callback_data="templates_use_empty")])
+
+    keyboard.append([InlineKeyboardButton(t("buttons.back_menu", locale), callback_data="menu")])
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_templates_list_keyboard(user_id: int, locale: Optional[str] = None) -> InlineKeyboardMarkup:
+    """Create keyboard showing list of templates."""
+    locale = locale or DEFAULT_LOCALE
+    from bot.services.template_service import TemplateService
+
+    templates = TemplateService.get_user_templates(user_id)
+    keyboard = []
+
+    for template in templates:
+        keyboard.append([InlineKeyboardButton(f"🧩 {template.name}", callback_data=f"templates_view_{template.id}")])
+
+    keyboard.append([InlineKeyboardButton(t("buttons.back", locale), callback_data="templates_menu")])
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_templates_use_keyboard(
+    user_id: int,
+    locale: Optional[str] = None,
+    back_callback: str = "templates_menu"
+) -> InlineKeyboardMarkup:
+    """Create keyboard for choosing a template to use."""
+    locale = locale or DEFAULT_LOCALE
+    from bot.services.template_service import TemplateService
+
+    templates = TemplateService.get_user_templates(user_id)
+    keyboard = []
+
+    for template in templates:
+        keyboard.append([InlineKeyboardButton(f"🧩 {template.name}", callback_data=f"templates_use_{template.id}")])
+
+    keyboard.append([InlineKeyboardButton(t("buttons.back", locale), callback_data=back_callback)])
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_templates_delete_keyboard(user_id: int, locale: Optional[str] = None) -> InlineKeyboardMarkup:
+    """Create keyboard for deleting templates."""
+    locale = locale or DEFAULT_LOCALE
+    from bot.services.template_service import TemplateService
+
+    templates = TemplateService.get_user_templates(user_id)
+    keyboard = []
+
+    for template in templates:
+        keyboard.append([InlineKeyboardButton(f"🗑️ {template.name}", callback_data=f"templates_delete_confirm_{template.id}")])
+
+    keyboard.append([InlineKeyboardButton(t("buttons.back", locale), callback_data="templates_menu")])
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_template_delete_confirm_keyboard(template_id: int, locale: Optional[str] = None) -> InlineKeyboardMarkup:
+    """Create keyboard for template deletion confirmation."""
+    locale = locale or DEFAULT_LOCALE
+    keyboard = [
+        [
+            InlineKeyboardButton(t("buttons.delete_confirm", locale), callback_data=f"templates_delete_execute_{template_id}"),
+            InlineKeyboardButton(t("buttons.cancel", locale), callback_data="templates_menu"),
+        ],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_templates_delete_all_confirm_keyboard(locale: Optional[str] = None) -> InlineKeyboardMarkup:
+    """Create keyboard for delete all templates confirmation."""
+    locale = locale or DEFAULT_LOCALE
+    keyboard = [
+        [
+            InlineKeyboardButton(t("buttons.delete_all_confirm", locale), callback_data="templates_delete_all_execute"),
+            InlineKeyboardButton(t("buttons.cancel", locale), callback_data="templates_menu"),
+        ],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_template_view_keyboard(template_id: int, locale: Optional[str] = None) -> InlineKeyboardMarkup:
+    """Create keyboard for template details view."""
+    locale = locale or DEFAULT_LOCALE
+    keyboard = [
+        [InlineKeyboardButton(t("buttons.use_template", locale), callback_data=f"templates_use_{template_id}")],
+        [InlineKeyboardButton(t("buttons.edit", locale), callback_data=f"templates_edit_{template_id}")],
+        [InlineKeyboardButton(t("buttons.delete", locale), callback_data=f"templates_delete_confirm_{template_id}")],
+        [InlineKeyboardButton(t("buttons.back", locale), callback_data="templates_list")],
+    ]
     return InlineKeyboardMarkup(keyboard)
 
 

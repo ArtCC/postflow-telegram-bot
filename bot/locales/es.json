@@ -45,6 +45,31 @@
     "deleted_alert": "✅ Tema eliminado",
     "deleted_all_alert": "✅ Eliminados {count} tema(s)"
   },
+  "templates": {
+    "menu": "🧩 *PLANTILLAS*\n\nGestiona tus plantillas reutilizables\.\n\n📊 *Uso:* `{count}/{max}` plantillas\n\nElige una opcion a continuacion\.",
+    "list_empty": "📋 *LISTA DE PLANTILLAS*\n\nAun no tienes plantillas\.\nAgrega una para empezar\!",
+    "list_title": "📋 *LISTA DE PLANTILLAS*\n\nTus plantillas \({count}/{max}\):\n\n{templates}\n\nPulsa una plantilla para ver detalles\.",
+    "details": "🧩 *DETALLES DE PLANTILLA*\n\n*Nombre:* `{name}`\n*Creada:* {created}\n*Actualizada:* {updated}\n\n*Contenido*\n{content}",
+    "delete_empty": "🗑️ *ELIMINAR PLANTILLA*\n\nNo tienes plantillas para borrar\.",
+    "delete_select": "🗑️ *ELIMINAR PLANTILLA*\n\nSelecciona una plantilla para borrar:",
+    "delete_confirm": "🗑️ *ELIMINAR PLANTILLA*\n\nSeguro que quieres eliminar:\n`{name}`\n\nEsta accion no se puede deshacer\.",
+    "deleted_empty": "✅ *PLANTILLA ELIMINADA*\n\nNo quedan plantillas\.",
+    "delete_all_confirm": "🗑️ *ELIMINAR TODAS LAS PLANTILLAS*\n\n⚠️ Seguro que quieres eliminar TODAS las plantillas?\n\nEsta accion no se puede deshacer\.",
+    "add_prompt_name": "➕ *AGREGAR PLANTILLA*\n\nIntroduce un nombre de plantilla \({min}\-{max} caracteres\):\n\nEjemplos:\n• `Lanzamiento producto`\n• `Resumen semanal`\n\nEscribe /cancel para cancelar\.",
+    "add_prompt_content": "📝 *CONTENIDO DE PLANTILLA*\n\n*Plantilla:* `{name}`\n\nEnvia el contenido de esta plantilla\.\nConsejo: los posts largos se convierten en hilos\.\nEscribe /cancel para cancelar\.",
+    "added": "✅ *Plantilla agregada*\n\nLa plantilla `{name}` se ha agregado\.",
+    "add_error": "❌ *Error*\n\n{error}\n\nIntentalo de nuevo\.",
+    "edit_prompt": "✏️ *EDITAR PLANTILLA*\n\n*Plantilla:* `{name}`\n\n*Contenido actual*\n{content}\n\nEnvia el contenido actualizado\.\nEscribe /cancel para cancelar\.",
+    "updated": "✅ *PLANTILLA ACTUALIZADA*",
+    "update_error": "❌ *FALLO AL ACTUALIZAR*\n\n{error}",
+    "use_title": "🧩 *USAR PLANTILLA*\n\nSelecciona una plantilla para crear un post:",
+    "max_reached_alert": "⚠️ Has alcanzado el maximo de plantillas! Elimina una para agregar mas.",
+    "list_empty_alert": "📋 Aun no hay plantillas. Agrega una para empezar!",
+    "use_empty_alert": "📋 Aun no hay plantillas. Agrega una para usarlas.",
+    "not_found_alert": "❌ Plantilla no encontrada",
+    "deleted_alert": "✅ Plantilla eliminada",
+    "deleted_all_alert": "✅ Eliminadas {count} plantilla(s)"
+  },
   "stats": {
     "message": "📊 *ESTADISTICAS*\n\n*Resumen*\n• Total: `{total}`\n• Publicados: `{published}`\n• Programados: `{scheduled}`\n• Borradores: `{draft}`\n• Fallidos: `{failed}`\n\n*Rendimiento*\n• Tasa de exito: `{success_rate}%`"
   },
@@ -170,7 +195,7 @@
     "cancelled": "🚫 *Cancelado*\n\nOperacion cancelada\\.\nUsa /menu para empezar de nuevo\\."
   },
   "help": {
-    "message": "ℹ️ *AYUDA*\n\n*Comandos*\n• `/start` - Bienvenida\n• `/menu` - Menu principal\n• `/new` - Nuevo post\n• `/plan` - Plan semanal\n• `/topics` - Gestionar temas\n• `/drafts` - Borradores\n• `/scheduled` - Programados\n• `/stats` - Estadisticas\n• `/status` - Estado del sistema\n• `/settings` - Ajustes\n• `/chatid` - Tu ID de usuario\n• `/help` - Ayuda\n• `/author` - Sobre el autor\n• `/cancel` - Cancelar\n\n*Destacados*\n• Posts manuales o con IA\n• Temas predefinidos para IA\n• Programacion\n• Hilos para posts largos\n• Estadisticas"
+    "message": "ℹ️ *AYUDA*\n\n*Comandos*\n• `/start` - Bienvenida\n• `/menu` - Menu principal\n• `/new` - Nuevo post\n• `/plan` - Plan semanal\n• `/topics` - Gestionar temas\n• `/templates` - Gestionar plantillas\n• `/drafts` - Borradores\n• `/scheduled` - Programados\n• `/stats` - Estadisticas\n• `/status` - Estado del sistema\n• `/settings` - Ajustes\n• `/chatid` - Tu ID de usuario\n• `/help` - Ayuda\n• `/author` - Sobre el autor\n• `/cancel` - Cancelar\n\n*Destacados*\n• Posts manuales o con IA\n• Temas predefinidos para IA\n• Plantillas para posts rapidos\n• Programacion\n• Hilos para posts largos\n• Estadisticas"
   },
   "commands": {
     "start": "Mensaje de bienvenida y autorizacion",
@@ -179,6 +204,7 @@
     "plan": "Plan semanal",
     "topics": "Gestionar temas",
     "drafts": "Borradores",
+    "templates": "Gestionar plantillas",
     "scheduled": "Programados",
     "stats": "Estadisticas",
     "status": "Comprobar estado del bot y APIs",
@@ -195,6 +221,7 @@
     "calendar": "🗓️ Calendario",
     "stats": "📊 Estadisticas",
     "topics": "🎯 Temas",
+    "templates": "🧩 Plantillas",
     "status": "🔄 Estado",
     "back_menu": "🔙 Menu",
     "back": "🔙 Volver",
@@ -228,7 +255,12 @@
     "add_topic_max": "➕ Agregar tema (Max {max})",
     "list_topics": "📋 Listar temas ({count})",
     "delete_topic": "🗑️ Eliminar tema",
-    "custom_prompt": "✏️ Prompt personalizado"
+    "custom_prompt": "✏️ Prompt personalizado",
+    "add_template": "➕ Agregar plantilla",
+    "add_template_max": "➕ Agregar plantilla (Max {max})",
+    "list_templates": "📋 Listar plantillas ({count})",
+    "use_template": "🧩 Usar plantilla",
+    "delete_template": "🗑️ Eliminar plantilla"
   },
   "datetime": {
     "formats": {
@@ -293,6 +325,17 @@
     "topic_create_failed": "Error al crear el tema: {error}",
     "topic_delete_failed": "Error al eliminar el tema: {error}",
     "topic_delete_all_failed": "Error al eliminar los temas: {error}",
+    "template_name_too_short": "El nombre de la plantilla debe tener al menos {min} caracteres",
+    "template_name_too_long": "El nombre de la plantilla debe tener como maximo {max} caracteres",
+    "template_content_empty": "El contenido de la plantilla no puede estar vacio",
+    "template_content_too_long": "El contenido de la plantilla debe tener como maximo {max} caracteres",
+    "template_max_reached": "Se alcanzo el maximo de {max} plantillas. Elimina una para agregar mas.",
+    "template_already_exists": "La plantilla '{name}' ya existe",
+    "template_not_found": "Plantilla no encontrada o sin permisos",
+    "template_create_failed": "Error al crear la plantilla: {error}",
+    "template_update_failed": "Error al actualizar la plantilla: {error}",
+    "template_delete_failed": "Error al eliminar la plantilla: {error}",
+    "template_delete_all_failed": "Error al eliminar las plantillas: {error}",
     "unexpected": "━━━━━━━━━━━━━━━━━━━━━━\n❌ *ERROR*\n━━━━━━━━━━━━━━━━━━━━━━\n\nOcurrio un error inesperado\\.\n\nIntenta de nuevo o usa /menu\\."
   }
 }

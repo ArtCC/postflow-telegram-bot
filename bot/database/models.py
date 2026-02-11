@@ -105,3 +105,18 @@ class Topic(Base):
 
     def __repr__(self):
         return f"<Topic(id={self.id}, user_id={self.user_id}, name='{self.name}')>"
+
+
+class Template(Base):
+    """Template model - reusable post templates per user"""
+    __tablename__ = "templates"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, nullable=False)
+    name = Column(String(50), nullable=False)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<Template(id={self.id}, user_id={self.user_id}, name='{self.name}')>"

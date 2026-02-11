@@ -21,6 +21,7 @@ A powerful Telegram bot for managing and scheduling social media posts with AI s
 - 🔔 **Notifications** - Get notified when scheduled posts are published
 - 🧵 **Auto Thread Creation** - Automatically splits long posts into threads (respects 280 char limit)
 - 🎯 **Topic Presets** - Save favorite topics for quick AI post generation
+- 🧩 **Templates** - Reusable content blocks for quick posts
 - 🔒 **Secure & Private** - Self-hosted, only you have access
 - 🐳 **Docker Ready** - Easy deployment with docker-compose
 - 📊 **Statistics** - Track your posting performance
@@ -207,6 +208,12 @@ docker logs -f postflow-bot
 4. Review generated content
 5. Publish or schedule
 
+#### Template Post
+1. Click "✍️ New" → "🧩 Templates"
+2. Choose a template
+3. Review the prefilled content
+4. Edit if needed, then publish or schedule
+
 ### Managing Topic Presets
 
 Topic presets allow you to quickly generate AI posts on your favorite subjects.
@@ -230,6 +237,14 @@ Topic presets allow you to quickly generate AI posts on your favorite subjects.
 - **Delete All**: Clear all topics (with confirmation)
 
 > **Note:** Topics require OpenAI to be configured. Each topic generates unique content every time and is limited to a single post (max 280 characters).
+
+### Managing Templates
+
+1. Click "🧩 Templates" in main menu or use `/templates`
+2. Add a template (name + content)
+3. List templates to view details
+4. Edit content or delete when needed
+5. Use a template to create a post in one tap
 
 #### Weekly Plan
 1. Click "✍️ New" → "📆 Plan Week"
@@ -315,6 +330,7 @@ When a scheduled post is published (or fails), you'll receive a notification:
 - `/new` - New post
 - `/plan` - Plan week
 - `/topics` - Manage topic presets
+- `/templates` - Manage templates
 - `/drafts` - List drafts
 - `/scheduled` - List scheduled posts
 - `/stats` - Show statistics
@@ -395,7 +411,8 @@ postflow-telegram-bot/
 │   │   ├── openai_service.py  # OpenAI API integration
 │   │   ├── scheduler_service.py # APScheduler management
 │   │   ├── post_service.py    # Post business logic
-│   │   └── topic_service.py   # Topic presets management
+│   │   ├── topic_service.py   # Topic presets management
+│   │   └── template_service.py # Templates management
 │   └── utils/
 │       ├── __init__.py
 │       ├── auth.py            # Authorization helpers
@@ -614,7 +631,7 @@ sudo chmod -R 755 ./data
 - [x] Topic presets for AI random post generation
 - [x] Additional locales (i18n)
 - [x] Publication calendar with weekly view
-- [ ] Post templates
+- [x] Post templates
 
 ### Phase 3: Future Features
 

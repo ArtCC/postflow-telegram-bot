@@ -19,11 +19,19 @@ from bot.utils import (
     get_topic_delete_confirm_keyboard,
     get_topics_delete_all_confirm_keyboard,
     get_ai_with_topics_keyboard,
+    get_templates_menu_keyboard,
+    get_templates_list_keyboard,
+    get_templates_use_keyboard,
+    get_templates_delete_keyboard,
+    get_template_delete_confirm_keyboard,
+    get_templates_delete_all_confirm_keyboard,
+    get_template_view_keyboard,
     get_user_locale,
     t,
 )
 from bot.handlers.commands import help_command
 from bot.services.topic_service import TopicService
+from bot.services.template_service import TemplateService
 
 
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -75,6 +83,46 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     
     elif data == "settings":
         await show_settings(query)
+
+    # Templates management callbacks
+    elif data == "templates_menu":
+        await show_templates_menu(query, user_id)
+
+    elif data == "templates_add_disabled":
+        await query.answer(t("templates.max_reached_alert", locale), show_alert=True)
+
+    elif data == "templates_list":
+        await show_templates_list(query, user_id)
+
+    elif data == "templates_list_empty":
+        await query.answer(t("templates.list_empty_alert", locale), show_alert=True)
+
+    elif data == "templates_use":
+        await show_templates_use(query, user_id, back_callback="templates_menu")
+
+    elif data == "templates_use_empty":
+        await query.answer(t("templates.use_empty_alert", locale), show_alert=True)
+
+    elif data.startswith("templates_view_"):
+        template_id = int(data.split("_")[-1])
+        await view_template(query, template_id)
+
+    elif data == "templates_delete":
+        await show_templates_delete(query, user_id)
+
+    elif data.startswith("templates_delete_confirm_"):
+        template_id = int(data.split("_")[-1])
+        await confirm_delete_template(query, template_id)
+
+    elif data.startswith("templates_delete_execute_"):
+        template_id = int(data.split("_")[-1])
+        await execute_delete_template(query, user_id, template_id)
+
+    elif data == "templates_delete_all":
+        await confirm_delete_all_templates(query)
+
+    elif data == "templates_delete_all_execute":
+        await execute_delete_all_templates(query, user_id)
 
     # Topics management callbacks
     elif data == "topics_menu":
@@ -184,6 +232,13 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 parse_mode="MarkdownV2"
             )
             context.user_data['awaiting'] = 'ai_prompt'
+
+    elif data == "post_template":
+        template_count = TemplateService.get_template_count(user_id)
+        if template_count > 0:
+            await show_templates_use(query, user_id, back_callback="new_post")
+        else:
+            await query.answer(t("templates.use_empty_alert", locale), show_alert=True)
     
     # Handle other callback patterns
     elif data.startswith("publish_"):
@@ -232,6 +287,10 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     elif data.startswith("drafts_page_"):
         from bot.handlers.posts import handle_drafts_page
         await handle_drafts_page(query, context)
+
+    elif data.startswith("templates_use_"):
+        from bot.handlers.posts import create_post_from_template
+        await create_post_from_template(query, context)
     
     elif data.startswith("reschedule_"):
         from bot.handlers.posts import handle_reschedule_prompt
@@ -543,6 +602,187 @@ async def execute_delete_all_topics(query, user_id: int) -> None:
     if success:
         await query.answer(t("topics.deleted_all_alert", locale, count=deleted_count), show_alert=True)
         await show_topics_menu(query, user_id)
+    else:
+        await query.answer(f"❌ {error_msg}", show_alert=True)
+
+
+# Templates management functions
+
+async def show_templates_menu(query, user_id: int) -> None:
+    """Show templates management menu."""
+    locale = get_user_locale(query.from_user)
+    template_count = TemplateService.get_template_count(user_id)
+    from bot.services.template_service import MAX_TEMPLATES_PER_USER
+
+    templates_message = t(
+        "templates.menu",
+        locale,
+        count=template_count,
+        max=MAX_TEMPLATES_PER_USER,
+    )
+
+    await query.edit_message_text(
+        templates_message,
+        parse_mode="MarkdownV2",
+        reply_markup=get_templates_menu_keyboard(user_id, locale)
+    )
+
+
+async def show_templates_list(query, user_id: int) -> None:
+    """Show list of user's templates."""
+    locale = get_user_locale(query.from_user)
+    templates = TemplateService.get_user_templates(user_id)
+
+    if not templates:
+        await query.edit_message_text(
+            t("templates.list_empty", locale),
+            parse_mode="MarkdownV2",
+            reply_markup=get_templates_menu_keyboard(user_id, locale)
+        )
+        return
+
+    from bot.services.template_service import MAX_TEMPLATES_PER_USER
+
+    templates_text = "\n".join([
+        f"• `{escape_markdown_v2(template.name)}`"
+        for template in templates
+    ])
+    templates_message = t(
+        "templates.list_title",
+        locale,
+        count=len(templates),
+        max=MAX_TEMPLATES_PER_USER,
+        templates=templates_text,
+    )
+
+    await query.edit_message_text(
+        templates_message,
+        parse_mode="MarkdownV2",
+        reply_markup=get_templates_list_keyboard(user_id, locale)
+    )
+
+
+async def show_templates_use(query, user_id: int, back_callback: str) -> None:
+    """Show templates list for creating a post."""
+    locale = get_user_locale(query.from_user)
+    templates = TemplateService.get_user_templates(user_id)
+
+    if not templates:
+        await query.edit_message_text(
+            t("templates.list_empty", locale),
+            parse_mode="MarkdownV2",
+            reply_markup=get_templates_menu_keyboard(user_id, locale)
+        )
+        return
+
+    await query.edit_message_text(
+        t("templates.use_title", locale),
+        parse_mode="MarkdownV2",
+        reply_markup=get_templates_use_keyboard(user_id, locale, back_callback=back_callback)
+    )
+
+
+async def view_template(query, template_id: int) -> None:
+    """View a specific template."""
+    template = TemplateService.get_template_for_user(template_id, query.from_user.id)
+    locale = get_user_locale(query.from_user)
+
+    if not template:
+        await query.answer(t("templates.not_found_alert", locale), show_alert=True)
+        return
+
+    from bot.utils import format_datetime
+
+    template_message = t(
+        "templates.details",
+        locale,
+        name=escape_markdown_v2(template.name),
+        created=escape_markdown_v2(format_datetime(template.created_at, locale=locale)),
+        updated=escape_markdown_v2(format_datetime(template.updated_at, locale=locale)),
+        content=escape_markdown_v2(template.content),
+    )
+
+    await query.edit_message_text(
+        template_message,
+        parse_mode="MarkdownV2",
+        reply_markup=get_template_view_keyboard(template_id, locale)
+    )
+
+
+async def show_templates_delete(query, user_id: int) -> None:
+    """Show templates for deletion."""
+    locale = get_user_locale(query.from_user)
+    templates = TemplateService.get_user_templates(user_id)
+
+    if not templates:
+        await query.edit_message_text(
+            t("templates.delete_empty", locale),
+            parse_mode="MarkdownV2",
+            reply_markup=get_templates_menu_keyboard(user_id, locale)
+        )
+        return
+
+    await query.edit_message_text(
+        t("templates.delete_select", locale),
+        parse_mode="MarkdownV2",
+        reply_markup=get_templates_delete_keyboard(user_id, locale)
+    )
+
+
+async def confirm_delete_template(query, template_id: int) -> None:
+    """Confirm deletion of a specific template."""
+    template = TemplateService.get_template_for_user(template_id, query.from_user.id)
+    locale = get_user_locale(query.from_user)
+
+    if not template:
+        await query.answer(t("templates.not_found_alert", locale), show_alert=True)
+        return
+
+    await query.edit_message_text(
+        t("templates.delete_confirm", locale, name=escape_markdown_v2(template.name)),
+        parse_mode="MarkdownV2",
+        reply_markup=get_template_delete_confirm_keyboard(template_id, locale)
+    )
+
+
+async def execute_delete_template(query, user_id: int, template_id: int) -> None:
+    """Execute deletion of a template."""
+    locale = get_user_locale(query.from_user)
+    success, error_msg = TemplateService.delete_template(template_id, user_id, locale=locale)
+
+    if success:
+        await query.answer(t("templates.deleted_alert", locale), show_alert=False)
+        remaining = TemplateService.get_template_count(user_id)
+        if remaining > 0:
+            await show_templates_delete(query, user_id)
+        else:
+            await query.edit_message_text(
+                t("templates.deleted_empty", locale),
+                parse_mode="MarkdownV2",
+                reply_markup=get_templates_menu_keyboard(user_id, locale)
+            )
+    else:
+        await query.answer(f"❌ {error_msg}", show_alert=True)
+
+
+async def confirm_delete_all_templates(query) -> None:
+    """Confirm deletion of all templates."""
+    locale = get_user_locale(query.from_user)
+    await query.edit_message_text(
+        t("templates.delete_all_confirm", locale),
+        parse_mode="MarkdownV2",
+        reply_markup=get_templates_delete_all_confirm_keyboard(locale)
+    )
+
+
+async def execute_delete_all_templates(query, user_id: int) -> None:
+    """Execute deletion of all templates."""
+    locale = get_user_locale(query.from_user)
+    success, deleted_count, error_msg = TemplateService.delete_all_templates(user_id, locale=locale)
+
+    if success:
+        await query.answer(t("templates.deleted_all_alert", locale, count=deleted_count), show_alert=True)
+        await show_templates_menu(query, user_id)
     else:
         await query.answer(f"❌ {error_msg}", show_alert=True)
 

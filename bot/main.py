@@ -34,10 +34,11 @@ from bot.handlers import (
     stats_command,
     status_command,
     topics_command,
+    templates_command,
     handle_callback,
 )
 from bot.handlers.posts import handle_text_message, handle_photo_message, publish_scheduled_post
-from bot.handlers.conversations import cancel_command, topic_conversation_handler
+from bot.handlers.conversations import cancel_command, topic_conversation_handler, template_conversation_handler
 from bot.services.scheduler_service import SchedulerService
 from bot.services.post_service import PostService
 
@@ -55,6 +56,7 @@ async def setup_bot_commands(application: Application) -> None:
         BotCommand("new", t("commands.new", locale)),
         BotCommand("plan", t("commands.plan", locale)),
         BotCommand("topics", t("commands.topics", locale)),
+        BotCommand("templates", t("commands.templates", locale)),
         BotCommand("drafts", t("commands.drafts", locale)),
         BotCommand("scheduled", t("commands.scheduled", locale)),
         BotCommand("stats", t("commands.stats", locale)),
@@ -170,6 +172,7 @@ def main() -> None:
     application.add_handler(CommandHandler("new", new_command))
     application.add_handler(CommandHandler("plan", plan_command))
     application.add_handler(CommandHandler("topics", topics_command))
+    application.add_handler(CommandHandler("templates", templates_command))
     application.add_handler(CommandHandler("drafts", drafts_command))
     application.add_handler(CommandHandler("scheduled", scheduled_command))
     application.add_handler(CommandHandler("stats", stats_command))
@@ -181,6 +184,7 @@ def main() -> None:
     
     # Register conversation handlers
     application.add_handler(topic_conversation_handler)
+    application.add_handler(template_conversation_handler)
     
     # Register callback handler (for inline buttons)
     application.add_handler(CallbackQueryHandler(handle_callback))

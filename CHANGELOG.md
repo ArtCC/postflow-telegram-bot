@@ -12,10 +12,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Calendar navigation**: Inline keyboard to move between weeks
 - **Range query**: Scheduled posts fetched by week window for calendar view
 - **Calendar UI strings**: New i18n keys for calendar labels and empty state
+- **Templates**: Reusable post templates with create, edit, delete, and use flows
+- **Templates storage**: New database table and service layer for templates
+- **Templates UI strings**: New i18n keys for template menus and prompts
 
 ### Changed
 - **Scheduled list**: Calendar entry added to the scheduled posts menu
 - **README**: Documented weekly calendar view and marked roadmap item as complete
+- **Main menu**: Added templates entry and template option in new post flow
+- **Help output**: Added `/templates` command
 
 ## [0.0.7] - 2026-02-09
 

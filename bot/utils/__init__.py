@@ -33,6 +33,13 @@ from bot.utils.keyboards import (
     get_topic_delete_confirm_keyboard,
     get_topics_delete_all_confirm_keyboard,
     get_ai_with_topics_keyboard,
+    get_templates_menu_keyboard,
+    get_templates_list_keyboard,
+    get_templates_use_keyboard,
+    get_templates_delete_keyboard,
+    get_template_delete_confirm_keyboard,
+    get_templates_delete_all_confirm_keyboard,
+    get_template_view_keyboard,
 )
 from bot.utils.i18n import get_user_locale, t
 
@@ -64,6 +71,13 @@ __all__ = [
     'get_topic_delete_confirm_keyboard',
     'get_topics_delete_all_confirm_keyboard',
     'get_ai_with_topics_keyboard',
+    'get_templates_menu_keyboard',
+    'get_templates_list_keyboard',
+    'get_templates_use_keyboard',
+    'get_templates_delete_keyboard',
+    'get_template_delete_confirm_keyboard',
+    'get_templates_delete_all_confirm_keyboard',
+    'get_template_view_keyboard',
     'get_user_locale',
     't',
 ]

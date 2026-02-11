@@ -45,6 +45,31 @@
     "deleted_alert": "✅ Topic deleted",
     "deleted_all_alert": "✅ Deleted {count} topic(s)"
   },
+  "templates": {
+    "menu": "🧩 *TEMPLATES*\n\nManage your reusable post templates\.\n\n📊 *Usage:* `{count}/{max}` templates\n\nChoose an option below\.",
+    "list_empty": "📋 *TEMPLATES LIST*\n\nYou don't have any templates yet\.\nAdd one to get started\!",
+    "list_title": "📋 *TEMPLATES LIST*\n\nYour templates \({count}/{max}\):\n\n{templates}\n\nClick a template to view details\.",
+    "details": "🧩 *TEMPLATE DETAILS*\n\n*Name:* `{name}`\n*Created:* {created}\n*Updated:* {updated}\n\n*Content*\n{content}",
+    "delete_empty": "🗑️ *DELETE TEMPLATE*\n\nYou don't have any templates to delete\.",
+    "delete_select": "🗑️ *DELETE TEMPLATE*\n\nSelect a template to delete:",
+    "delete_confirm": "🗑️ *DELETE TEMPLATE*\n\nAre you sure you want to delete:\n`{name}`\n\nThis action cannot be undone\.",
+    "deleted_empty": "✅ *TEMPLATE DELETED*\n\nNo more templates left\.",
+    "delete_all_confirm": "🗑️ *DELETE ALL TEMPLATES*\n\n⚠️ Are you sure you want to delete ALL templates?\n\nThis action cannot be undone\.",
+    "add_prompt_name": "➕ *ADD TEMPLATE*\n\nEnter a template name \({min}\-{max} characters\):\n\nExamples:\n• `Product launch`\n• `Weekly update`\n\nType /cancel to abort\.",
+    "add_prompt_content": "📝 *TEMPLATE CONTENT*\n\n*Template:* `{name}`\n\nSend the content for this template\.\nTip: long posts become threads\.\nType /cancel to abort\.",
+    "added": "✅ *Template Added*\n\nTemplate `{name}` has been added\.",
+    "add_error": "❌ *Error*\n\n{error}\n\nPlease try again\.",
+    "edit_prompt": "✏️ *EDIT TEMPLATE*\n\n*Template:* `{name}`\n\n*Current content*\n{content}\n\nSend the updated content\.\nType /cancel to abort\.",
+    "updated": "✅ *TEMPLATE UPDATED*",
+    "update_error": "❌ *UPDATE FAILED*\n\n{error}",
+    "use_title": "🧩 *USE TEMPLATE*\n\nSelect a template to create a post:",
+    "max_reached_alert": "⚠️ Maximum templates reached! Delete one to add more.",
+    "list_empty_alert": "📋 No templates yet. Add one to get started!",
+    "use_empty_alert": "📋 No templates yet. Add one to use templates.",
+    "not_found_alert": "❌ Template not found",
+    "deleted_alert": "✅ Template deleted",
+    "deleted_all_alert": "✅ Deleted {count} template(s)"
+  },
   "stats": {
     "message": "📊 *STATISTICS*\n\n*Overview*\n• Total: `{total}`\n• Published: `{published}`\n• Scheduled: `{scheduled}`\n• Draft: `{draft}`\n• Failed: `{failed}`\n\n*Performance*\n• Success rate: `{success_rate}%`"
   },
@@ -170,7 +195,7 @@
     "cancelled": "🚫 *Cancelled*\n\nOperation cancelled\\.\nUse /menu to start again\\."
   },
   "help": {
-    "message": "ℹ️ *HELP*\n\n*Commands*\n• `/start` \\- Welcome\n• `/menu` \\- Main menu\n• `/new` \\- New post\n• `/plan` \\- Plan week\n• `/topics` \\- Manage topics\n• `/drafts` \\- Drafts\n• `/scheduled` \\- Scheduled posts\n• `/stats` \\- Statistics\n• `/status` \\- System status\n• `/settings` \\- Settings\n• `/chatid` \\- Your user ID\n• `/help` \\- Help\n• `/author` \\- About the author\n• `/cancel` \\- Cancel\n\n*Highlights*\n• Manual or AI posts\n• Topic presets for AI\n• Scheduling\n• Threads for long posts\n• Stats overview"
+    "message": "ℹ️ *HELP*\n\n*Commands*\n• `/start` \\- Welcome\n• `/menu` \\- Main menu\n• `/new` \\- New post\n• `/plan` \\- Plan week\n• `/topics` \\- Manage topics\n• `/drafts` \\- Drafts\n• `/scheduled` \\- Scheduled posts\n• `/stats` \\- Statistics\n• `/status` \\- System status\n• `/settings` \\- Settings\n• `/chatid` \\- Your user ID\n• `/help` \\- Help\n• `/author` \\- About the author\n• `/cancel` \\- Cancel\n\n*Highlights*\n• Manual or AI posts\n• Topic presets for AI\n• Scheduling\n• Threads for long posts\n• Stats overview""message": "ℹ️ *HELP*\n\n*Commands*\n• `/start` \\- Welcome\n• `/menu` \\- Main menu\n• `/new` \\- New post\n• `/plan` \\- Plan week\n• `/topics` \\- Manage topics\n• `/templates` \\- Manage templates\n• `/drafts` \\- Drafts\n• `/scheduled` \\- Scheduled posts\n• `/stats` \\- Statistics\n• `/status` \\- System status\n• `/settings` \\- Settings\n• `/chatid` \\- Your user ID\n• `/help` \\- Help\n• `/author` \\- About the author\n• `/cancel` \\- Cancel\n\n*Highlights*\n• Manual or AI posts\n• Topic presets for AI\n• Templates for quick posts\n• Scheduling\n• Threads for long posts\n• Stats overview"
   },
   "commands": {
     "start": "Welcome message and authorization check",
@@ -179,6 +204,7 @@
     "plan": "Plan week",
     "topics": "Manage topic presets",
     "drafts": "Drafts",
+    "templates": "Manage templates",
     "scheduled": "Scheduled posts",
     "stats": "Statistics",
     "status": "Check bot and API status",
@@ -195,6 +221,7 @@
     "calendar": "🗓️ Calendar",
     "stats": "📊 Stats",
     "topics": "🎯 Topics",
+    "templates": "🧩 Templates",
     "status": "🔄 Status",
     "back_menu": "🔙 Menu",
     "back": "🔙 Back",
@@ -228,7 +255,12 @@
     "add_topic_max": "➕ Add Topic (Max {max})",
     "list_topics": "📋 List Topics ({count})",
     "delete_topic": "🗑️ Delete Topic",
-    "custom_prompt": "✏️ Custom Prompt"
+    "custom_prompt": "✏️ Custom Prompt",
+    "add_template": "➕ Add Template",
+    "add_template_max": "➕ Add Template (Max {max})",
+    "list_templates": "📋 List Templates ({count})",
+    "use_template": "🧩 Use Template",
+    "delete_template": "🗑️ Delete Template"
   },
   "datetime": {
     "formats": {
@@ -293,6 +325,17 @@
     "topic_create_failed": "Error creating topic: {error}",
     "topic_delete_failed": "Error deleting topic: {error}",
     "topic_delete_all_failed": "Error deleting topics: {error}",
+    "template_name_too_short": "Template name must be at least {min} characters",
+    "template_name_too_long": "Template name must be at most {max} characters",
+    "template_content_empty": "Template content cannot be empty",
+    "template_content_too_long": "Template content must be at most {max} characters",
+    "template_max_reached": "Maximum of {max} templates reached. Delete one to add more.",
+    "template_already_exists": "Template '{name}' already exists",
+    "template_not_found": "Template not found or unauthorized",
+    "template_create_failed": "Error creating template: {error}",
+    "template_update_failed": "Error updating template: {error}",
+    "template_delete_failed": "Error deleting template: {error}",
+    "template_delete_all_failed": "Error deleting templates: {error}",
     "unexpected": "━━━━━━━━━━━━━━━━━━━━━━\n❌ *ERROR*\n━━━━━━━━━━━━━━━━━━━━━━\n\nAn unexpected error occurred\\.\n\nPlease try again or use /menu\\."
   }
 }
