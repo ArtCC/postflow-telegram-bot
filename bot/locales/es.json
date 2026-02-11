@@ -183,7 +183,7 @@
     "invalid_day_selection": "❌ Seleccion de dia invalida\\. Usa /menu para empezar de nuevo\\.",
     "times_in_past": "❌ Uno o mas horarios estan en el pasado\\. Introduce horarios futuros\\.",
     "no_valid_times": "❌ No hay horarios validos para programar\\. Empieza de nuevo con /menu\\.",
-    "post_mode": "📆 *PLAN SEMANAL*\n\nPost {index}/{total} - {day_label} {time_str}\n\nElige como crear este post:",
+    "post_mode": "📆 *PLAN SEMANAL*\n\nPost {index}/{total} \\- {day_label} {time_str}\n\nElige como crear este post:",
     "manual_prompt": "✏️ *ESCRIBE EL POST*\n\n{day_label} {time_str}\n\nEnvia el texto del post\\. Escribe /cancel para cancelar\\.",
     "ai_prompt": "🤖 *PROMPT IA*\n\n{day_label} {time_str}\n\nDescribe el post que quieres\\. Escribe /cancel para cancelar\\.",
     "summary": "✅ *REVISA EL PLAN*\n\nTotal de posts: `{count}`\n\n{lines}",
@@ -195,7 +195,7 @@
     "cancelled": "🚫 *Cancelado*\n\nOperacion cancelada\\.\nUsa /menu para empezar de nuevo\\."
   },
   "help": {
-    "message": "ℹ️ *AYUDA*\n\n*Comandos*\n• `/start` - Bienvenida\n• `/menu` - Menu principal\n• `/new` - Nuevo post\n• `/plan` - Plan semanal\n• `/topics` - Gestionar temas\n• `/templates` - Gestionar plantillas\n• `/drafts` - Borradores\n• `/scheduled` - Programados\n• `/stats` - Estadisticas\n• `/status` - Estado del sistema\n• `/settings` - Ajustes\n• `/chatid` - Tu ID de usuario\n• `/help` - Ayuda\n• `/author` - Sobre el autor\n• `/cancel` - Cancelar\n\n*Destacados*\n• Posts manuales o con IA\n• Temas predefinidos para IA\n• Plantillas para posts rapidos\n• Programacion\n• Hilos para posts largos\n• Estadisticas"
+    "message": "ℹ️ *AYUDA*\n\n*Comandos*\n• `/start` \\- Bienvenida\n• `/menu` \\- Menu principal\n• `/new` \\- Nuevo post\n• `/plan` \\- Plan semanal\n• `/topics` \\- Gestionar temas\n• `/templates` \\- Gestionar plantillas\n• `/drafts` \\- Borradores\n• `/scheduled` \\- Programados\n• `/stats` \\- Estadisticas\n• `/status` \\- Estado del sistema\n• `/settings` \\- Ajustes\n• `/chatid` \\- Tu ID de usuario\n• `/help` \\- Ayuda\n• `/author` \\- Sobre el autor\n• `/cancel` \\- Cancelar\n\n*Destacados*\n• Posts manuales o con IA\n• Temas predefinidos para IA\n• Plantillas para posts rapidos\n• Programacion\n• Hilos para posts largos\n• Estadisticas"
   },
   "commands": {
     "start": "Mensaje de bienvenida y autorizacion",

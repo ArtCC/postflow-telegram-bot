@@ -405,6 +405,7 @@ postflow-telegram-bot/
 │   ├── locales/
 │   │   ├── en.json            # UI strings
 │   │   └── es.json            # UI strings
+│   │   └── it.json            # UI strings
 │   ├── services/
 │   │   ├── __init__.py
 │   │   ├── twitter_service.py # X API integration
