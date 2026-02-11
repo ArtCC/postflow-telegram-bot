@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.8] - 2026-02-11
+
+### Added
+- **Weekly calendar view**: Scheduled posts grouped by day with week navigation
+- **Calendar navigation**: Inline keyboard to move between weeks
+- **Range query**: Scheduled posts fetched by week window for calendar view
+- **Calendar UI strings**: New i18n keys for calendar labels and empty state
+
+### Changed
+- **Scheduled list**: Calendar entry added to the scheduled posts menu
+- **README**: Documented weekly calendar view and marked roadmap item as complete
+
 ## [0.0.7] - 2026-02-09
 
 ### Added
@@ -112,6 +124,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[0.0.8]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.4...v0.0.5

@@ -129,6 +129,12 @@
     "thread": "🧵 *VISTA PREVIA DEL HILO*\n\n*Resumen*\n• Posts: `{tweets}`\n• Chars: `{chars}`\n• Creado: {created}\n• Media: `{media}`\n\n*Contenido*\n{content}\n\nSelecciona una accion:",
     "single": "👁️ *VISTA PREVIA DEL POST*\n\n*Resumen*\n• Chars: `{chars}/{max_chars}` {char_status}\n• Tipo: `{post_type}`\n• Creado: {created}\n• Media: `{media}`\n\n*Contenido*\n{content}\n\nSelecciona una accion:"
   },
+  "calendar": {
+    "weekly_view": "🗓️ *CALENDARIO SEMANAL*\n\n{range}\n\n{days}\n\nZona horaria: `{tz}`",
+    "week_range": "Semana del {start} \\- {end}",
+    "empty": "No hay posts programados esta semana\\.",
+    "image_only": "Post con imagen"
+  },
   "scheduled": {
     "none": "📅 *NO HAY POSTS PROGRAMADOS*\n\nCrea un post y elige Programar para empezar\\.",
     "item": "📌 *Post \\#{id}*\n{preview}\n⏰ {datetime} \\({tz}\\)\n⏳ {relative}",
@@ -186,6 +192,7 @@
     "new": "✍️ Nuevo",
     "drafts": "📝 Borradores",
     "scheduled": "📅 Programados",
+    "calendar": "🗓️ Calendario",
     "stats": "📊 Estadisticas",
     "topics": "🎯 Temas",
     "status": "🔄 Estado",

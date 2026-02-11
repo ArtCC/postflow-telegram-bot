@@ -129,6 +129,12 @@
     "thread": "🧵 *THREAD PREVIEW*\n\n*Summary*\n• Posts: `{tweets}`\n• Chars: `{chars}`\n• Created: {created}\n• Media: `{media}`\n\n*Content*\n{content}\n\nSelect an action:",
     "single": "👁️ *POST PREVIEW*\n\n*Summary*\n• Chars: `{chars}/{max_chars}` {char_status}\n• Type: `{post_type}`\n• Created: {created}\n• Media: `{media}`\n\n*Content*\n{content}\n\nSelect an action:"
   },
+  "calendar": {
+    "weekly_view": "🗓️ *WEEKLY CALENDAR*\n\n{range}\n\n{days}\n\nTimezone: `{tz}`",
+    "week_range": "Week of {start} \\- {end}",
+    "empty": "No scheduled posts this week\\.",
+    "image_only": "Image post"
+  },
   "scheduled": {
     "none": "📅 *NO SCHEDULED POSTS*\n\nCreate a post and choose Schedule to get started\\.",
     "item": "📌 *Post \\#{id}*\n{preview}\n⏰ {datetime} \\({tz}\\)\n⏳ {relative}",
@@ -186,6 +192,7 @@
     "new": "✍️ New",
     "drafts": "📝 Drafts",
     "scheduled": "📅 Scheduled",
+    "calendar": "🗓️ Calendar",
     "stats": "📊 Stats",
     "topics": "🎯 Topics",
     "status": "🔄 Status",

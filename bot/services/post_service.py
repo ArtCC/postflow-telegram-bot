@@ -301,6 +301,42 @@ class PostService:
         except Exception as e:
             logger.error(f"Failed to get scheduled posts: {e}")
             return []
+
+    @staticmethod
+    def get_scheduled_posts_between(
+        start_utc: datetime,
+        end_utc: datetime
+    ) -> List[Tuple[Post, ScheduledPost]]:
+        """
+        Get scheduled posts between two UTC datetimes.
+
+        Args:
+            start_utc: Inclusive UTC start datetime
+            end_utc: Exclusive UTC end datetime
+
+        Returns:
+            List of (Post, ScheduledPost) tuples
+        """
+        try:
+            with get_session() as session:
+                results = (
+                    session.query(Post, ScheduledPost)
+                    .join(ScheduledPost)
+                    .filter(ScheduledPost.status == "pending")
+                    .filter(Post.status == PostStatus.SCHEDULED)
+                    .filter(ScheduledPost.scheduled_for >= start_utc)
+                    .filter(ScheduledPost.scheduled_for < end_utc)
+                    .order_by(ScheduledPost.scheduled_for)
+                    .all()
+                )
+                for post, scheduled in results:
+                    _ = post.threads
+                    session.expunge(post)
+                    session.expunge(scheduled)
+                return results
+        except Exception as e:
+            logger.error(f"Failed to get scheduled posts in range: {e}")
+            return []
     
     @staticmethod
     def schedule_post(

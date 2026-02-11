@@ -24,6 +24,7 @@ from bot.utils import (
     get_error_keyboard,
     get_back_keyboard,
     get_drafts_keyboard,
+    get_weekly_calendar_keyboard,
     get_weekday_selection_keyboard,
     get_posts_per_day_keyboard,
     get_plan_post_mode_keyboard,
@@ -1306,7 +1307,7 @@ def build_scheduled_posts_list(page: int = 0, per_page: int = 5, locale: Optiona
 
     if not scheduled:
         message = t("scheduled.none", locale)
-        return message, get_back_keyboard(locale)
+        return message, get_scheduled_posts_keyboard([], page=0, per_page=per_page, locale=locale)
 
     posts_data = []
     for post, sched in scheduled:
@@ -1342,6 +1343,88 @@ def build_scheduled_posts_list(page: int = 0, per_page: int = 5, locale: Optiona
     )
 
     return message, get_scheduled_posts_keyboard(posts_data, page=page, per_page=per_page, locale=locale)
+
+
+def _get_week_start(date_local: date) -> date:
+    return date_local - timedelta(days=date_local.weekday())
+
+
+def _format_date_only(date_local: date, locale: str) -> str:
+    return date_local.strftime(t("datetime.formats.date_only", locale))
+
+
+def _build_weekly_calendar_message(week_offset: int, locale: str) -> str:
+    today_local = datetime.now(USER_TIMEZONE).date()
+    week_start = _get_week_start(today_local) + timedelta(weeks=week_offset)
+    week_end = week_start + timedelta(days=6)
+
+    start_local = USER_TIMEZONE.localize(datetime.combine(week_start, datetime.min.time()))
+    end_local = USER_TIMEZONE.localize(datetime.combine(week_end + timedelta(days=1), datetime.min.time()))
+
+    scheduled = PostService.get_scheduled_posts_between(
+        start_local.astimezone(pytz.UTC),
+        end_local.astimezone(pytz.UTC),
+    )
+
+    posts_by_date = {}
+    for post, sched in scheduled:
+        scheduled_for_utc = sched.scheduled_for
+        if scheduled_for_utc.tzinfo is None:
+            scheduled_for_utc = pytz.UTC.localize(scheduled_for_utc)
+        scheduled_for_local = scheduled_for_utc.astimezone(USER_TIMEZONE)
+        day_date = scheduled_for_local.date()
+        posts_by_date.setdefault(day_date, []).append((scheduled_for_local, post))
+
+    day_sections = []
+    for day_date in sorted(posts_by_date.keys()):
+        day_label = _get_weekday_labels(locale)[day_date.weekday()]
+        date_str = _format_date_only(day_date, locale)
+        header = escape_markdown_v2(f"{day_label} {date_str}")
+
+        lines = [f"*{header}*"]
+        for scheduled_for_local, post in sorted(posts_by_date[day_date], key=lambda x: x[0]):
+            time_str = escape_markdown_v2(scheduled_for_local.strftime("%H:%M"))
+            preview = truncate_text(post.content or "", 34)
+            if not preview.strip():
+                preview = t("calendar.image_only", locale)
+            preview = escape_markdown_v2(preview)
+            lines.append(f"\\- {time_str} \\#{post.id} {preview}")
+        day_sections.append("\n".join(lines))
+
+    days_text = "\n\n".join(day_sections) if day_sections else t("calendar.empty", locale)
+
+    range_label = t(
+        "calendar.week_range",
+        locale,
+        start=escape_markdown_v2(_format_date_only(week_start, locale)),
+        end=escape_markdown_v2(_format_date_only(week_end, locale)),
+    )
+
+    return t(
+        "calendar.weekly_view",
+        locale,
+        range=range_label,
+        days=days_text,
+        tz=escape_markdown_v2(TZ),
+    )
+
+
+async def show_weekly_calendar(query, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Show weekly publication calendar view."""
+    locale = get_user_locale(query.from_user)
+    week_offset = 0
+    if query.data.startswith("calendar_week_"):
+        try:
+            week_offset = int(query.data.split("_")[-1])
+        except ValueError:
+            week_offset = 0
+
+    message = _build_weekly_calendar_message(week_offset, locale)
+    await query.edit_message_text(
+        message,
+        parse_mode="MarkdownV2",
+        reply_markup=get_weekly_calendar_keyboard(week_offset, locale),
+    )
 
 
 def build_drafts_list(page: int = 0, per_page: int = 5, locale: Optional[str] = None):

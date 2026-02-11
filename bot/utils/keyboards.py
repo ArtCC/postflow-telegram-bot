@@ -189,6 +189,8 @@ def get_scheduled_posts_keyboard(scheduled_posts: List[tuple], page: int = 0, pe
     """
     locale = locale or DEFAULT_LOCALE
     keyboard = []
+
+    keyboard.append([InlineKeyboardButton(t("buttons.calendar", locale), callback_data="calendar_week_0")])
     
     # Calculate pagination
     start = page * per_page
@@ -214,6 +216,20 @@ def get_scheduled_posts_keyboard(scheduled_posts: List[tuple], page: int = 0, pe
     # Add back button
     keyboard.append([InlineKeyboardButton(t("buttons.back_menu", locale), callback_data="menu")])
     
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_weekly_calendar_keyboard(week_offset: int = 0, locale: Optional[str] = None) -> InlineKeyboardMarkup:
+    """Create keyboard for weekly calendar navigation."""
+    locale = locale or DEFAULT_LOCALE
+    keyboard = [
+        [
+            InlineKeyboardButton(t("buttons.previous", locale), callback_data=f"calendar_week_{week_offset - 1}"),
+            InlineKeyboardButton(t("buttons.next", locale), callback_data=f"calendar_week_{week_offset + 1}"),
+        ],
+        [InlineKeyboardButton(t("buttons.scheduled", locale), callback_data="scheduled")],
+        [InlineKeyboardButton(t("buttons.back_menu", locale), callback_data="menu")],
+    ]
     return InlineKeyboardMarkup(keyboard)
 
 

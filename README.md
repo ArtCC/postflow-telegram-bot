@@ -20,13 +20,14 @@ A powerful Telegram bot for managing and scheduling social media posts with AI s
 - 🌍 **Timezone Support** - Configure your local timezone for scheduling
 - 🔔 **Notifications** - Get notified when scheduled posts are published
 - 🧵 **Auto Thread Creation** - Automatically splits long posts into threads (respects 280 char limit)
-- 🐦 **Twitter/X Integration** - Direct publishing to Twitter
+🔗 View on X
 - 🎯 **Topic Presets** - Save favorite topics for quick AI post generation
 - 🔒 **Secure & Private** - Self-hosted, only you have access
-- 🐳 **Docker Ready** - Easy deployment with docker-compose
+ You need at least **Basic** access tier from X's Developer Portal to post. The Free tier has very limited posting capabilities.
 - 📊 **Statistics** - Track your posting performance
 - 📝 **Drafts** - Save posts and finish later
 - 📆 **Weekly Planning** - Plan up to 7 days with multiple slots per day
+- 🗓️ **Weekly Calendar View** - Review scheduled posts by week
 - 🖼️ **Image Posts** - Publish posts with a single attached image
 - 💾 **Persistent Storage** - SQLite database for reliability
 - 🎨 **Beautiful UI** - Interactive menus and inline buttons
@@ -37,26 +38,26 @@ A powerful Telegram bot for managing and scheduling social media posts with AI s
 - Docker and Docker Compose installed
 - A Telegram Bot Token from [@BotFather](https://t.me/botfather)
 - Twitter/X Developer Account with API credentials
-- (Optional) OpenAI API key for AI features
-
-## 🚀 Quick Start
-
+│   │   ├── commands.py        # Command handlers
+│   │   ├── callbacks.py       # Button callback handlers
+│   │   ├── posts.py           # Post management logic
+│   │   └── conversations.py   # Multi-step conversations
 ### 1. Get Your Telegram User ID
 
 1. Start a conversation with [@userinfobot](https://t.me/userinfobot) on Telegram
 2. It will reply with your User ID (a number like `123456789`)
 3. Save this number for the configuration
-
-### 2. Get Twitter API Credentials
-
-1. Go to [developer.twitter.com](https://developer.twitter.com)
-2. Create a new app or use existing one
+│   │   ├── twitter_service.py # X API integration
+│   │   ├── openai_service.py  # OpenAI API integration
+│   │   │ 
+│   │   ├── post_service.py    # Post business logic
+│   │   └── topic_service.py   # Topic presets management
 3. Generate API keys and access tokens
 4. You'll need:
-   - API Key
-   - API Secret
-   - Access Token
-   - Access Token Secret
+│       ├── auth.py            # Authorization helpers
+│       ├── formatting.py      # Text formatting utilities
+│       ├── i18n.py            # Localization helpers
+│       └── keyboards.py       # Telegram keyboard builders
 
 ### 3. Clone the Repository
 
@@ -269,7 +270,7 @@ When a scheduled post is published (or fails), you'll receive a notification:
 ```
 🎉 SCHEDULED POST PUBLISHED
 ✅ Your scheduled post #123 has been published successfully!
-🔗 View on Twitter
+🔗 View on X
 ```
 
 **Failure notification:**
@@ -288,6 +289,13 @@ When a scheduled post is published (or fails), you'll receive a notification:
    - 👁️ View details
    - ✏️ Edit schedule time
    - 🗑️ Delete
+
+### Weekly Calendar View
+
+1. Open "📅 Scheduled" in the main menu
+2. Tap "🗓️ Calendar" to see the current week
+3. Navigate weeks with Previous/Next buttons
+4. Review scheduled posts grouped by day and time
 
 ### Managing Drafts
 
@@ -352,7 +360,7 @@ Access statistics via the "📊 Statistics" button in the main menu or with `/st
          │                  │
          ▼                  ▼
 ┌──────────────┐   ┌──────────────┐
-│ Twitter API  │   │  OpenAI API  │
+│   X API      │   │  OpenAI API  │
 └──────────────┘   └──────────────┘
 ```
 
@@ -375,11 +383,11 @@ postflow-telegram-bot/
 │   │   ├── posts.py           # Post management logic
 │   │   └── conversations.py   # Multi-step conversations
 │   ├── locales/
-│   │   └── en.json             # UI strings
-│   │   └── es.json             # UI strings
+│   │   ├── en.json            # UI strings
+│   │   └── es.json            # UI strings
 │   ├── services/
 │   │   ├── __init__.py
-│   │   ├── twitter_service.py # Twitter API integration
+│   │   ├── twitter_service.py # X API integration
 │   │   ├── openai_service.py  # OpenAI API integration
 │   │   ├── scheduler_service.py # APScheduler management
 │   │   ├── post_service.py    # Post business logic
@@ -388,7 +396,7 @@ postflow-telegram-bot/
 │       ├── __init__.py
 │       ├── auth.py            # Authorization helpers
 │       ├── formatting.py      # Text formatting utilities
-│       ├── i18n.py             # Localization helpers
+│       ├── i18n.py            # Localization helpers
 │       └── keyboards.py       # Telegram keyboard builders
 ├── data/                      # SQLite database (volume)
 ├── .env                       # Environment variables (not in git)
@@ -494,9 +502,9 @@ The bot uses the pre-built image from `ghcr.io/artcc/postflow-telegram-bot:lates
 
 ## ❓ FAQ
 
-### Can I use this bot for multiple Twitter accounts?
+### Can I use this bot for multiple X accounts?
 
-Currently, the bot is designed for single-user, single-account use. Each instance manages one Twitter account. To manage multiple accounts, deploy separate instances with different configurations.
+Currently, the bot is designed for single-user, single-account use. Each instance manages one X account. To manage multiple accounts, deploy separate instances with different configurations.
 
 ### Does the bot store my API keys securely?
 
@@ -514,9 +522,9 @@ Yes. OpenAI is optional. If you don't configure `OPENAI_API_KEY`, the bot will w
 
 Topic presets are saved keywords that trigger AI to generate posts on specific subjects. You can save up to 10 topics (e.g., "Python", "AI News", "Tech Tips"). When creating an AI post, select a topic button and the AI generates unique content about that subject each time. Topics require OpenAI to be configured.
 
-### What Twitter API plan do I need?
+### What X API plan do I need?
 
-You need at least **Basic** access tier from Twitter's Developer Portal to post tweets. The Free tier has very limited posting capabilities.
+You need at least **Basic** access tier from X's Developer Portal to post. The Free tier has very limited posting capabilities.
 
 ## 🐛 Troubleshooting
 
@@ -536,7 +544,7 @@ You need at least **Basic** access tier from Twitter's Developer Portal to post 
   docker-compose restart
   ```
 
-### Twitter API errors
+### X API errors
 
 **Error: 401 Unauthorized**
 - Check your API credentials in `.env`
@@ -544,7 +552,7 @@ You need at least **Basic** access tier from Twitter's Developer Portal to post 
 - Regenerate tokens if needed at developer.twitter.com
 
 **Error: 429 Rate Limit**
-- Twitter API has rate limits
+- X API has rate limits
 - Wait for rate limit reset (shown in error message)
 - Posts are saved and can be retried
 
@@ -594,15 +602,18 @@ sudo chmod -R 755 ./data
 - [x] Timezone support (TZ configuration)
 - [x] Notifications for scheduled posts
 
-### Phase 2: Future Features
+### Phase 2: New Features
 
 - [x] Draft system
 - [x] Weekly planning wizard (rolling 7-day window)
 - [x] Support for images in posts
 - [x] Topic presets for AI random post generation
 - [x] Additional locales (i18n)
-- [ ] Publication calendar with weekly view
+- [x] Publication calendar with weekly view
 - [ ] Post templates
+
+### Phase 3: Future Features
+
 - [ ] Multi-platform support (Instagram, LinkedIn, Facebook, etc.)
 
 ## 🤝 Contributing
@@ -627,7 +638,7 @@ To set this image as your bot's profile picture:
 ## 🙏 Acknowledgments
 
 - [python-telegram-bot](https://github.com/python-telegram-bot/python-telegram-bot) - Excellent Telegram Bot API wrapper
-- [Tweepy](https://github.com/tweepy/tweepy) - Twitter API library
+- [Tweepy](https://github.com/tweepy/tweepy) - X API library
 - [OpenAI](https://openai.com) - AI content generation
 - [APScheduler](https://github.com/agronholm/apscheduler) - Advanced Python Scheduler
 

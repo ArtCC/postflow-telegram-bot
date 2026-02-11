@@ -62,6 +62,10 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         from bot.handlers.posts import show_scheduled_posts
         await show_scheduled_posts(query, context)
 
+    elif data.startswith("calendar_week_"):
+        from bot.handlers.posts import show_weekly_calendar
+        await show_weekly_calendar(query, context)
+
     elif data == "drafts":
         from bot.handlers.posts import show_drafts
         await show_drafts(query, context)
