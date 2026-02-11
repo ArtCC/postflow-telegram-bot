@@ -3,7 +3,7 @@ Callback Handlers
 Central router for all inline button callbacks.
 """
 
-from telegram import Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 from bot.config import logger, TWITTER_ENABLED, OPENAI_ENABLED
@@ -234,11 +234,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             context.user_data['awaiting'] = 'ai_prompt'
 
     elif data == "post_template":
-        template_count = TemplateService.get_template_count(user_id)
-        if template_count > 0:
-            await show_templates_use(query, user_id, back_callback="new_post")
-        else:
-            await query.answer(t("templates.use_empty_alert", locale), show_alert=True)
+        await show_templates_use(query, user_id, back_callback="new_post")
     
     # Handle other callback patterns
     elif data.startswith("publish_"):

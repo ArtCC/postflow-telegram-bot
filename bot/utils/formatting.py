@@ -154,7 +154,10 @@ def format_relative_time(dt: datetime, locale: Optional[str] = None) -> str:
     Returns:
         Relative time string
     """
-    now = datetime.utcnow()
+    if dt.tzinfo is None:
+        now = datetime.utcnow()
+    else:
+        now = datetime.now(dt.tzinfo)
     delta = dt - now
     
     locale = locale or DEFAULT_LOCALE

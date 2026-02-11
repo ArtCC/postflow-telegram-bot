@@ -361,10 +361,7 @@ def get_drafts_keyboard(drafts: List[tuple], page: int = 0, per_page: int = 5, l
 
     for post_id, preview, _ in page_drafts:
         keyboard.append([
-            InlineKeyboardButton(
-                t("labels.post_preview", locale, preview=preview),
-                callback_data=f"preview_{post_id}"
-            )
+            InlineKeyboardButton(f"📝 {preview}", callback_data=f"preview_{post_id}")
         ])
 
     nav_buttons = []
@@ -390,7 +387,7 @@ def get_scheduled_post_actions_keyboard(post_id: int, locale: Optional[str] = No
             InlineKeyboardButton(t("buttons.reschedule", locale), callback_data=f"reschedule_{post_id}"),
         ],
         [
-            InlineKeyboardButton(t("buttons.delete", locale), callback_data=f"confirm_delete_scheduled_{post_id}"),
+            InlineKeyboardButton(t("buttons.delete", locale), callback_data=f"delete_scheduled_{post_id}"),
         ],
         [InlineKeyboardButton(t("buttons.back", locale), callback_data="scheduled")],
     ]

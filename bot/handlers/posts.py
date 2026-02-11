@@ -1519,14 +1519,22 @@ async def handle_delete_post(query, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle post deletion."""
     data = query.data
     locale = get_user_locale(query.from_user)
-    
+
     if data.startswith("confirm_delete_"):
         # Actually delete
         parts = data.split("_")
         post_id = int(parts[-1])
-        
+        is_scheduled = data.startswith("confirm_delete_scheduled_")
+
+        if is_scheduled:
+            post = PostService.get_post(post_id)
+            if post and post.scheduled_post and post.scheduled_post.job_id:
+                scheduler_service = get_scheduler_service(context)
+                if scheduler_service:
+                    scheduler_service.cancel_post(post.scheduled_post.job_id)
+
         success = PostService.delete_post(post_id)
-        
+
         if success:
             await query.edit_message_text(
                 t("posts.delete_success", locale),
@@ -1541,12 +1549,14 @@ async def handle_delete_post(query, context: ContextTypes.DEFAULT_TYPE) -> None:
             )
     else:
         # Show confirmation
-        post_id = int(data.split("_")[1])
-        
+        parts = data.split("_")
+        post_id = int(parts[-1])
+        is_scheduled = data.startswith("delete_scheduled_")
+
         await query.edit_message_text(
             t("posts.delete_confirm", locale),
             parse_mode="MarkdownV2",
-            reply_markup=get_confirm_delete_keyboard(post_id, locale=locale)
+            reply_markup=get_confirm_delete_keyboard(post_id, is_scheduled=is_scheduled, locale=locale)
         )
 
 
