@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.10] - 2026-03-10
+
+### Added
+- **Persistent keyboard**: Added global `ReplyKeyboardMarkup` with quick access to New, Scheduled, Drafts and Menu — shown on `/start`.
+- **Keyboard routing**: Persistent keyboard buttons now route to their equivalent commands.
+- **Typing indicator**: Bot shows typing action before AI generation (prompt, topic, weekly plan).
+
+### Fixed
+- **Error iconography**: `⛔` replaced with `❌` in all `not_authorized` messages across all locales (UX guidelines).
+- **Delete confirmation**: Confirmation prompt now explicitly mentions the post ID being deleted.
+
 ## [0.0.9] - 2026-02-11
 
 ### Added
@@ -142,6 +153,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[0.0.10]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.9...v0.0.10
 [0.0.9]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/artcc/postflow-telegram-bot/compare/v0.0.6...v0.0.7

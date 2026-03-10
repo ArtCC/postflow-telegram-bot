@@ -4,7 +4,7 @@ Helper functions for creating inline keyboards.
 """
 
 from typing import List, Optional
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 from bot.utils.i18n import DEFAULT_LOCALE, t
 
 
@@ -534,4 +534,20 @@ def get_ai_with_topics_keyboard(user_id: int, locale: Optional[str] = None) -> I
     keyboard.append([InlineKeyboardButton(t("buttons.back", locale), callback_data="new_post")])
     
     return InlineKeyboardMarkup(keyboard)
+
+
+def get_persistent_keyboard(locale: Optional[str] = None) -> ReplyKeyboardMarkup:
+    """Create the persistent reply keyboard for global navigation (2×2 compact layout)."""
+    locale = locale or DEFAULT_LOCALE
+    keyboard = [
+        [
+            KeyboardButton(t("buttons.kb_new", locale)),
+            KeyboardButton(t("buttons.kb_scheduled", locale)),
+        ],
+        [
+            KeyboardButton(t("buttons.kb_drafts", locale)),
+            KeyboardButton(t("buttons.kb_menu", locale)),
+        ],
+    ]
+    return ReplyKeyboardMarkup(keyboard, resize_keyboard=True, is_persistent=True)
 

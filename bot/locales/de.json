@@ -146,7 +146,7 @@
     "preview_loading": "Vorschau wird geladen...",
     "delete_success": "✅ *POST GELÖSCHT*\n\nPost entfernt\\.",
     "delete_failed": "❌ Post konnte nicht gelöscht werden\\.",
-    "delete_confirm": "⚠️ *LÖSCHEN BESTÄTIGEN*\n\nDiese Aktion kann nicht rückgängig gemacht werden\\.",
+    "delete_confirm": "⚠️ *LÖSCHEN BESTÄTIGEN*\n\nPost `#{post_id}` löschen?\n\nDiese Aktion kann nicht rükgängig gemacht werden\\.",
     "edit_prompt": "✏️ *POST BEARBEITEN*\n\n*Aktueller Inhalt*\n{content}\n\nSende den aktualisierten Text\\.\nTippe /cancel zum Abbrechen\\.",
     "scheduler_unavailable": "❌ Scheduler-Dienst nicht verfügbar\\. Starte den Bot neu\\."
   },
@@ -260,7 +260,11 @@
     "add_template_max": "➕ Vorlage hinzufügen (Max {max})",
     "list_templates": "📋 Vorlagenliste ({count})",
     "use_template": "🧩 Vorlage verwenden",
-    "delete_template": "🗑️ Vorlage löschen"
+    "delete_template": "🗑️ Vorlage löschen",
+    "kb_new": "✍️ Neu",
+    "kb_scheduled": "📅 Geplant",
+    "kb_drafts": "📝 Entwürfe",
+    "kb_menu": "🎯 Menü"
   },
   "datetime": {
     "formats": {
@@ -287,9 +291,9 @@
     "sun": "So"
   },
   "errors": {
-    "not_authorized": "⛔ Du bist nicht berechtigt, diesen Bot zu verwenden.",
-    "not_authorized_md": "⛔ Du bist nicht berechtigt, diesen Bot zu verwenden\\.",
-    "not_authorized_alert": "⛔ Nicht berechtigt",
+    "not_authorized": "❌ Du bist nicht berechtigt, diesen Bot zu verwenden.",
+    "not_authorized_md": "❌ Du bist nicht berechtigt, diesen Bot zu verwenden\\.",
+    "not_authorized_alert": "❌ Nicht berechtigt",
     "feature_coming_soon": "Funktion kommt bald!",
     "unknown_error": "Unbekannter Fehler",
     "media_posts_cannot_be_threads": "Medien-Posts können keine Threads sein",

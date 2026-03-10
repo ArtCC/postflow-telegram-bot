@@ -172,11 +172,24 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     elif awaiting == 'reschedule':
         await process_reschedule(update, context, text)
     else:
-        # No specific action expected, show helpful message
-        await update.message.reply_text(
-            t("menu.help", locale),
-            reply_markup=get_back_keyboard(locale)
-        )
+        # Route persistent keyboard button presses
+        if text == t("buttons.kb_new", locale):
+            from bot.handlers.commands import new_command
+            await new_command(update, context)
+        elif text == t("buttons.kb_scheduled", locale):
+            from bot.handlers.commands import scheduled_command
+            await scheduled_command(update, context)
+        elif text == t("buttons.kb_drafts", locale):
+            from bot.handlers.commands import drafts_command
+            await drafts_command(update, context)
+        elif text == t("buttons.kb_menu", locale):
+            from bot.handlers.commands import menu_command
+            await menu_command(update, context)
+        else:
+            await update.message.reply_text(
+                t("menu.help", locale),
+                reply_markup=get_back_keyboard(locale)
+            )
 
 
 async def handle_photo_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -726,6 +739,8 @@ async def process_weekly_ai_prompt(update: Update, context: ContextTypes.DEFAULT
         )
         return
 
+    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+
     generating_msg = await update.message.reply_text(
         t("ai.generating", locale),
         parse_mode="MarkdownV2"
@@ -985,7 +1000,9 @@ async def handle_ai_with_topic(query, context: ContextTypes.DEFAULT_TYPE, topic_
         ),
         parse_mode="MarkdownV2"
     )
-    
+
+    await context.bot.send_chat_action(chat_id=query.message.chat_id, action="typing")
+
     # Generate content with topic
     success, content, error = openai_service.generate_post_with_topic(topic.name, locale=locale)
     
@@ -1042,7 +1059,9 @@ async def process_ai_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     """Process AI prompt and generate content."""
     context.user_data['awaiting'] = None
     locale = get_user_locale(update.effective_user)
-    
+
+    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+
     # Send "generating" message
     generating_msg = await update.message.reply_text(
         t("ai.generating", locale),
@@ -1554,7 +1573,7 @@ async def handle_delete_post(query, context: ContextTypes.DEFAULT_TYPE) -> None:
         is_scheduled = data.startswith("delete_scheduled_")
 
         await query.edit_message_text(
-            t("posts.delete_confirm", locale),
+            t("posts.delete_confirm", locale, post_id=post_id),
             parse_mode="MarkdownV2",
             reply_markup=get_confirm_delete_keyboard(post_id, is_scheduled=is_scheduled, locale=locale)
         )

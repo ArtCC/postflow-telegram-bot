@@ -146,7 +146,7 @@
     "preview_loading": "Cargando vista previa...",
     "delete_success": "✅ *POST ELIMINADO*\n\nPost eliminado\\.",
     "delete_failed": "❌ No se pudo eliminar el post\\.",
-    "delete_confirm": "⚠️ *CONFIRMAR ELIMINACION*\n\nEsta accion no se puede deshacer\\.",
+    "delete_confirm": "⚠️ *CONFIRMAR ELIMINACION*\n\n¿Eliminar el post `#{post_id}`?\n\nEsta accion no se puede deshacer\\.",
     "edit_prompt": "✏️ *EDITAR POST*\n\n*Contenido actual*\n{content}\n\nEnvia el texto actualizado\\.\nEscribe /cancel para cancelar\\.",
     "scheduler_unavailable": "❌ Servicio de programacion no disponible\\. Reinicia el bot\\."
   },
@@ -260,7 +260,11 @@
     "add_template_max": "➕ Agregar plantilla (Max {max})",
     "list_templates": "📋 Listar plantillas ({count})",
     "use_template": "🧩 Usar plantilla",
-    "delete_template": "🗑️ Eliminar plantilla"
+    "delete_template": "🗑️ Eliminar plantilla",
+    "kb_new": "✍️ Nuevo",
+    "kb_scheduled": "📅 Programados",
+    "kb_drafts": "📝 Borradores",
+    "kb_menu": "🎯 Menú"
   },
   "datetime": {
     "formats": {
@@ -287,9 +291,9 @@
     "sun": "Dom"
   },
   "errors": {
-    "not_authorized": "⛔ No estas autorizado para usar este bot.",
-    "not_authorized_md": "⛔ No estas autorizado para usar este bot\\.",
-    "not_authorized_alert": "⛔ No autorizado",
+    "not_authorized": "❌ No estas autorizado para usar este bot.",
+    "not_authorized_md": "❌ No estas autorizado para usar este bot\\.",
+    "not_authorized_alert": "❌ No autorizado",
     "feature_coming_soon": "Funcion disponible proximamente!",
     "unknown_error": "Error desconocido",
     "media_posts_cannot_be_threads": "Los posts con imagen no pueden ser hilos",

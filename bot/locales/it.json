@@ -146,7 +146,7 @@
     "preview_loading": "Caricamento anteprima...",
     "delete_success": "✅ *POST ELIMINATO*\n\nPost rimosso\\.",
     "delete_failed": "❌ Impossibile eliminare il post\\.",
-    "delete_confirm": "⚠️ *CONFERMA ELIMINAZIONE*\n\nQuesta azione non puo' essere annullata\\.",
+    "delete_confirm": "⚠️ *CONFERMA ELIMINAZIONE*\n\nEliminare il post `#{post_id}`?\n\nQuesta azione non puo' essere annullata\\.",
     "edit_prompt": "✏️ *MODIFICA POST*\n\n*Contenuto attuale*\n{content}\n\nInvia il testo aggiornato\\.\nDigita /cancel per annullare\\.",
     "scheduler_unavailable": "❌ Servizio scheduler non disponibile\\. Riavvia il bot\\."
   },
@@ -260,7 +260,11 @@
     "add_template_max": "➕ Aggiungi template (Max {max})",
     "list_templates": "📋 Elenca template ({count})",
     "use_template": "🧩 Usa template",
-    "delete_template": "🗑️ Elimina template"
+    "delete_template": "🗑️ Elimina template",
+    "kb_new": "✍️ Nuovo",
+    "kb_scheduled": "📅 Programmati",
+    "kb_drafts": "📝 Bozze",
+    "kb_menu": "🎯 Menu"
   },
   "datetime": {
     "formats": {
@@ -287,9 +291,9 @@
     "sun": "Dom"
   },
   "errors": {
-    "not_authorized": "⛔ Non sei autorizzato a usare questo bot.",
-    "not_authorized_md": "⛔ Non sei autorizzato a usare questo bot\\.",
-    "not_authorized_alert": "⛔ Non autorizzato",
+    "not_authorized": "❌ Non sei autorizzato a usare questo bot.",
+    "not_authorized_md": "❌ Non sei autorizzato a usare questo bot\\.",
+    "not_authorized_alert": "❌ Non autorizzato",
     "feature_coming_soon": "Funzione disponibile a breve!",
     "unknown_error": "Errore sconosciuto",
     "media_posts_cannot_be_threads": "I post con immagine non possono essere thread",

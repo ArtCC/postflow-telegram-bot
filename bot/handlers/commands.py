@@ -15,6 +15,7 @@ from bot.utils import (
     get_new_post_keyboard,
     get_topics_menu_keyboard,
     get_templates_menu_keyboard,
+    get_persistent_keyboard,
     get_user_locale,
     t,
 )
@@ -49,7 +50,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         await update.message.reply_text(
             welcome_message,
             parse_mode="MarkdownV2",
-            reply_markup=get_main_menu_keyboard(locale)
+            reply_markup=get_persistent_keyboard(locale)
         )
     else:
         unauthorized_message = f"{welcome_message}\n\n{t('start.unauthorized_suffix', locale, user_id=user_id)}"

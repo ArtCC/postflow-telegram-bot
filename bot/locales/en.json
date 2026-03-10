@@ -146,7 +146,7 @@
     "preview_loading": "Loading preview...",
     "delete_success": "✅ *POST DELETED*\n\nPost removed\\.",
     "delete_failed": "❌ Failed to delete the post\\.",
-    "delete_confirm": "⚠️ *CONFIRM DELETE*\n\nThis action cannot be undone\\.",
+    "delete_confirm": "⚠️ *CONFIRM DELETE*\n\nDelete post `#{post_id}`?\n\nThis action cannot be undone\\.",
     "edit_prompt": "✏️ *EDIT POST*\n\n*Current content*\n{content}\n\nSend the updated text\\.\nType /cancel to abort\\.",
     "scheduler_unavailable": "❌ Scheduler service not available\\. Restart the bot\\."
   },
@@ -260,7 +260,11 @@
     "add_template_max": "➕ Add Template (Max {max})",
     "list_templates": "📋 List Templates ({count})",
     "use_template": "🧩 Use Template",
-    "delete_template": "🗑️ Delete Template"
+    "delete_template": "🗑️ Delete template",
+    "kb_new": "✍️ New",
+    "kb_scheduled": "📅 Scheduled",
+    "kb_drafts": "📝 Drafts",
+    "kb_menu": "🎯 Menu"
   },
   "datetime": {
     "formats": {
@@ -287,9 +291,9 @@
     "sun": "Sun"
   },
   "errors": {
-    "not_authorized": "⛔ You are not authorized to use this bot.",
-    "not_authorized_md": "⛔ You are not authorized to use this bot\\.",
-    "not_authorized_alert": "⛔ Not authorized",
+    "not_authorized": "❌ You are not authorized to use this bot.",
+    "not_authorized_md": "❌ You are not authorized to use this bot\\.",
+    "not_authorized_alert": "❌ Not authorized",
     "feature_coming_soon": "Feature coming soon!",
     "unknown_error": "Unknown error",
     "media_posts_cannot_be_threads": "Media posts cannot be threads",
