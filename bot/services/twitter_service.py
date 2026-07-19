@@ -7,12 +7,17 @@ import tweepy
 from typing import List, Optional, Tuple
 from bot.config import (
     logger,
+    TWITTER_BACKEND,
     TWITTER_API_KEY,
     TWITTER_API_SECRET,
     TWITTER_ACCESS_TOKEN,
     TWITTER_ACCESS_TOKEN_SECRET,
     TWITTER_ENABLED,
+    XQUIK_API_BASE_URL,
+    XQUIK_API_KEY,
+    XQUIK_ACCOUNT,
 )
+from bot.services.xquik_client import XquikClient, is_xquik_pending_id
 from bot.utils.i18n import DEFAULT_LOCALE, t
 
 
@@ -29,8 +34,18 @@ class TwitterService:
         self.client = None
         self.api = None
         self.enabled = TWITTER_ENABLED
+        self.backend = TWITTER_BACKEND
         
         if self.enabled:
+            if self.backend == "xquik":
+                self.client = XquikClient(
+                    XQUIK_API_KEY,
+                    XQUIK_ACCOUNT,
+                    base_url=XQUIK_API_BASE_URL,
+                )
+                logger.info("Xquik posting backend initialized")
+                return
+
             try:
                 # Log credential status (not the actual values!)
                 logger.info(f"Twitter API Key configured: {bool(TWITTER_API_KEY)}")
@@ -89,6 +104,9 @@ class TwitterService:
             return False, None, t("errors.twitter_disabled", locale)
         
         try:
+            if self.backend == "xquik":
+                return self.client.create_tweet(text=text)
+
             response = self.client.create_tweet(text=text)
             tweet_id = response.data['id']
             logger.info(f"Tweet posted successfully: {tweet_id}")
@@ -111,6 +129,9 @@ class TwitterService:
             Tuple of (success, tweet_id, error_message)
         """
         locale = locale or DEFAULT_LOCALE
+        if self.backend == "xquik":
+            return False, None, t("errors.xquik_media_unsupported", locale)
+
         if not self.is_enabled() or self.api is None:
             return False, None, t("errors.twitter_disabled", locale)
 
@@ -142,6 +163,9 @@ class TwitterService:
         
         if not tweets:
             return False, [], t("errors.twitter_no_tweets", locale)
+
+        if self.backend == "xquik":
+            return False, [], t("errors.xquik_threads_unsupported", locale)
         
         tweet_ids = []
         previous_tweet_id = None
@@ -183,6 +207,9 @@ class TwitterService:
             Tuple of (success, error_message)
         """
         locale = locale or DEFAULT_LOCALE
+        if self.backend == "xquik":
+            return False, t("errors.xquik_delete_unsupported", locale)
+
         if not self.is_enabled():
             return False, t("errors.twitter_disabled", locale)
         
@@ -206,7 +233,7 @@ class TwitterService:
         Returns:
             Tweet data or None if failed
         """
-        if not self.is_enabled():
+        if not self.is_enabled() or self.backend == "xquik" or is_xquik_pending_id(tweet_id):
             return None
         
         try:
@@ -265,6 +292,11 @@ class TwitterService:
             Tuple of (success, message)
         """
         locale = locale or DEFAULT_LOCALE
+        if self.backend == "xquik":
+            if self.is_enabled():
+                return True, t("errors.twitter_connected", locale, username="Xquik")
+            return False, t("errors.twitter_not_configured", locale)
+
         if not self.enabled:
             return False, t("errors.twitter_not_configured", locale)
         

@@ -124,6 +124,7 @@
     "publishing": "🚀 *PUBLISHING*\n\n⏳ Posting to X",
     "media_thread_blocked": "❌ *PUBLISH FAILED*\n\nMedia posts cannot be threads\\.",
     "published": "✅ *PUBLISHED*\n\n• Post ID: `#{post_id}`\n• X post ID: `{tweet_id}`\n\n🔗 [View on X]({tweet_url})",
+    "published_pending": "✅ *SENT TO X*\n\n• Post ID: `#{post_id}`\n• Confirmation: `{action_id}`\n\nXquik accepted the write and confirmation is pending\\.",
     "thread_published": "✅ *THREAD PUBLISHED*\n\n• Posts: `{tweet_count}`\n• Post ID: `#{post_id}`\n\n🔗 [View on X]({tweet_url})",
     "publish_failed": "❌ *PUBLISH FAILED*\n\n⚠️ {error}\n\nSaved as `#{post_id}`\\. You can retry\\.",
     "schedule_menu": "📅 *SCHEDULE POST*\n\nChoose a time or enter a custom date\\.",
@@ -165,6 +166,7 @@
     "item": "📌 *Post \\#{id}*\n{preview}\n⏰ {datetime} \\({tz}\\)\n⏳ {relative}",
     "list": "📅 *SCHEDULED POSTS* \\(`{count}`\\)\n\n{posts}\n\nSelect a post to view details\\.",
     "notify_success": "✅ *SCHEDULED {post_type} PUBLISHED*\n\nPost `#{post_id}` is live\n\n🔗 [View on X]({tweet_url})",
+    "notify_pending": "✅ *SCHEDULED POST SENT TO X*\n\nPost `#{post_id}` was accepted\n\nConfirmation: `{action_id}`",
     "notify_failed": "❌ *SCHEDULED POST FAILED*\n\nPost `#{post_id}` was not published\n\n📝 {error}"
   },
   "drafts": {
@@ -317,6 +319,9 @@
     "twitter_too_long": "Post exceeds 280 character limit.",
     "twitter_connection": "Connection error. Check your internet connection.",
     "twitter_unavailable": "X service temporarily unavailable.",
+    "xquik_media_unsupported": "Xquik backend currently supports text posts only.",
+    "xquik_threads_unsupported": "Xquik backend currently supports single text posts only.",
+    "xquik_delete_unsupported": "Xquik backend does not support deleting posts from this bot.",
     "twitter_generic": "X error: {error}",
     "twitter_not_configured": "X API credentials not configured",
     "twitter_connected": "Connected as @{username}",

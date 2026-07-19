@@ -31,10 +31,16 @@ except pytz.exceptions.UnknownTimeZoneError:
     raise ValueError(f"Invalid timezone: {TZ}. Use format like 'Europe/Madrid', 'America/New_York', etc.")
 
 # Twitter/X API credentials
+TWITTER_BACKEND = os.getenv("TWITTER_BACKEND", "twitter").strip().lower()
 TWITTER_API_KEY = os.getenv("TWITTER_API_KEY")
 TWITTER_API_SECRET = os.getenv("TWITTER_API_SECRET")
 TWITTER_ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
 TWITTER_ACCESS_TOKEN_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
+
+# Xquik API credentials for the optional posting backend
+XQUIK_API_KEY = os.getenv("XQUIK_API_KEY")
+XQUIK_ACCOUNT = os.getenv("XQUIK_ACCOUNT")
+XQUIK_API_BASE_URL = os.getenv("XQUIK_API_BASE_URL", "https://xquik.com")
 
 # OpenAI API (optional)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
@@ -63,7 +69,16 @@ except ValueError:
     raise ValueError("TELEGRAM_USER_ID must be a valid integer")
 
 # Check Twitter credentials
-TWITTER_ENABLED = all([
+if TWITTER_BACKEND not in {"twitter", "xquik"}:
+    logger.warning(f"Unknown TWITTER_BACKEND '{TWITTER_BACKEND}'. Falling back to twitter.")
+    TWITTER_BACKEND = "twitter"
+
+XQUIK_ENABLED = TWITTER_BACKEND == "xquik" and all([
+    XQUIK_API_KEY,
+    XQUIK_ACCOUNT,
+])
+
+TWITTER_ENABLED = XQUIK_ENABLED if TWITTER_BACKEND == "xquik" else all([
     TWITTER_API_KEY,
     TWITTER_API_SECRET,
     TWITTER_ACCESS_TOKEN,
@@ -71,7 +86,7 @@ TWITTER_ENABLED = all([
 ])
 
 if not TWITTER_ENABLED:
-    logger.warning("Twitter API credentials not configured. Publishing features will be disabled.")
+    logger.warning("X publishing credentials not configured. Publishing features will be disabled.")
 
 # Check OpenAI
 OPENAI_ENABLED = bool(OPENAI_API_KEY)
@@ -84,6 +99,7 @@ Path(DATABASE_PATH).parent.mkdir(parents=True, exist_ok=True)
 Path(MEDIA_PATH).mkdir(parents=True, exist_ok=True)
 
 logger.info(f"Bot configured for user ID: {TELEGRAM_USER_ID}")
+logger.info(f"X posting backend: {TWITTER_BACKEND}")
 logger.info(f"Twitter API: {'Enabled' if TWITTER_ENABLED else 'Disabled'}")
 logger.info(f"OpenAI API: {'Enabled' if OPENAI_ENABLED else 'Disabled'}")
 logger.info(f"Database: {DATABASE_PATH}")
