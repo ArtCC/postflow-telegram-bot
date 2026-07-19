@@ -64,6 +64,9 @@ Your user ID: 123456789
   - Access Token
   - Access Token Secret
 
+Alternatively, set `TWITTER_BACKEND=xquik` with `XQUIK_API_KEY` and `XQUIK_ACCOUNT`
+to publish text posts through Xquik.
+
 ### 3. Clone the Repository
 
 ```bash
@@ -90,11 +93,18 @@ TELEGRAM_USER_ID=123456789
 # Examples: Europe/Madrid, America/New_York, Asia/Tokyo
 TZ=Europe/Madrid
 
+# Posting backend: twitter (default) or xquik
+TWITTER_BACKEND=twitter
+
 # Twitter/X API Credentials
 TWITTER_API_KEY=your_api_key_here
 TWITTER_API_SECRET=your_api_secret_here
 TWITTER_ACCESS_TOKEN=your_access_token_here
 TWITTER_ACCESS_TOKEN_SECRET=your_access_token_secret_here
+
+# Xquik API Credentials (used when TWITTER_BACKEND=xquik)
+XQUIK_API_KEY=your_xquik_api_key_here
+XQUIK_ACCOUNT=your_x_account_username_or_id
 
 # OpenAI API (optional - leave empty to disable AI features)
 OPENAI_API_KEY=sk-your-openai-api-key-here
@@ -125,10 +135,13 @@ services:
       - TZ=${TZ}
       
       # Twitter/X API Credentials
+      - TWITTER_BACKEND=${TWITTER_BACKEND:-twitter}
       - TWITTER_API_KEY=${TWITTER_API_KEY}
       - TWITTER_API_SECRET=${TWITTER_API_SECRET}
       - TWITTER_ACCESS_TOKEN=${TWITTER_ACCESS_TOKEN}
       - TWITTER_ACCESS_TOKEN_SECRET=${TWITTER_ACCESS_TOKEN_SECRET}
+      - XQUIK_API_KEY=${XQUIK_API_KEY:-}
+      - XQUIK_ACCOUNT=${XQUIK_ACCOUNT:-}
       
       # OpenAI API (optional)
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
@@ -682,5 +695,7 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 <p align="left">
   <sub>100% built with GitHub Copilot (GPT-5.2-Codex)</sub><br>
-  <sub>Arturo Carretero Calvo — 2026</sub>
+  <sub>Arturo Carretero Calvo - 2026</sub>
 </p>
+
+Xquik is an independent third-party service. Not affiliated with X Corp. "Twitter" and "X" are trademarks of X Corp.

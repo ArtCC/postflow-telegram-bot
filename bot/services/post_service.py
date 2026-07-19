@@ -133,8 +133,7 @@ class PostService:
                 post.status = status
                 if twitter_id:
                     post.twitter_id = twitter_id
-                if error_message:
-                    post.error_message = error_message
+                post.error_message = error_message
                 if status == PostStatus.PUBLISHED:
                     post.published_at = datetime.utcnow()
                 

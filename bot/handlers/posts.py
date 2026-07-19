@@ -34,6 +34,7 @@ from bot.utils import (
 )
 from bot.services.post_service import PostService
 from bot.services.twitter_service import TwitterService
+from bot.services.xquik_client import tweet_url_for_id, xquik_action_id
 from bot.services.openai_service import OpenAIService
 from bot.services.scheduler_service import SchedulerService
 from bot.services.topic_service import TopicService
@@ -116,14 +117,21 @@ async def notify_scheduled_post_result(bot, post_id: int, success: bool, tweet_i
     """Send notification to user about scheduled post result."""
     try:
         if success:
-            tweet_url = f"https://twitter.com/i/web/status/{tweet_id}" if tweet_id else ""
+            tweet_url = tweet_url_for_id(tweet_id)
             post_type = t("posts.type_thread") if is_thread else t("posts.type_post")
-            message = t(
-                "scheduled.notify_success",
-                post_type=post_type.upper(),
-                post_id=post_id,
-                tweet_url=escape_markdown_v2(tweet_url),
-            )
+            if tweet_url:
+                message = t(
+                    "scheduled.notify_success",
+                    post_type=post_type.upper(),
+                    post_id=post_id,
+                    tweet_url=escape_markdown_v2(tweet_url),
+                )
+            else:
+                message = t(
+                    "scheduled.notify_pending",
+                    post_id=post_id,
+                    action_id=escape_markdown_v2(xquik_action_id(tweet_id) or "pending"),
+                )
         else:
             message = t(
                 "scheduled.notify_failed",
@@ -1196,15 +1204,17 @@ async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
                 twitter_id=tweet_id
             )
 
-            tweet_url = f"https://twitter.com/i/web/status/{tweet_id}"
+            tweet_url = tweet_url_for_id(tweet_id)
+            message_key = "posts.published" if tweet_url else "posts.published_pending"
 
             await query.edit_message_text(
                 t(
-                    "posts.published",
+                    message_key,
                     locale,
                     post_id=post_id,
                     tweet_id=tweet_id,
-                    tweet_url=escape_markdown_v2(tweet_url),
+                    action_id=escape_markdown_v2(xquik_action_id(tweet_id) or "pending"),
+                    tweet_url=escape_markdown_v2(tweet_url or ""),
                 ),
                 parse_mode="MarkdownV2",
                 reply_markup=get_back_keyboard(locale),
@@ -1241,15 +1251,17 @@ async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
                 twitter_id=tweet_ids[0]  # Store first tweet ID
             )
             
-            first_tweet_url = f"https://twitter.com/i/web/status/{tweet_ids[0]}"
+            first_tweet_url = tweet_url_for_id(tweet_ids[0])
+            message_key = "posts.thread_published" if first_tweet_url else "posts.published_pending"
             
             await query.edit_message_text(
                 t(
-                    "posts.thread_published",
+                    message_key,
                     locale,
                     tweet_count=len(tweet_ids),
                     post_id=post_id,
-                    tweet_url=escape_markdown_v2(first_tweet_url),
+                    action_id=escape_markdown_v2(xquik_action_id(tweet_ids[0]) or "pending"),
+                    tweet_url=escape_markdown_v2(first_tweet_url or ""),
                 ),
                 parse_mode="MarkdownV2",
                 reply_markup=get_back_keyboard(locale),
@@ -1284,15 +1296,17 @@ async def handle_publish_post(query, context: ContextTypes.DEFAULT_TYPE) -> None
                 twitter_id=tweet_id
             )
             
-            tweet_url = f"https://twitter.com/i/web/status/{tweet_id}"
+            tweet_url = tweet_url_for_id(tweet_id)
+            message_key = "posts.published" if tweet_url else "posts.published_pending"
             
             await query.edit_message_text(
                 t(
-                    "posts.published",
+                    message_key,
                     locale,
                     post_id=post_id,
                     tweet_id=tweet_id,
-                    tweet_url=escape_markdown_v2(tweet_url),
+                    action_id=escape_markdown_v2(xquik_action_id(tweet_id) or "pending"),
+                    tweet_url=escape_markdown_v2(tweet_url or ""),
                 ),
                 parse_mode="MarkdownV2",
                 reply_markup=get_back_keyboard(locale),
